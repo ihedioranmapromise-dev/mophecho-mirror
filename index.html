@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Moph Echo Mirror</title>
+    <style>
+        /* --- The Architect's Dark Temple --- */
+        body {
+            background-color: #0a0a0f;
+            color: #d0d0e0;
+            font-family: 'Segoe UI', sans-serif;
+            padding: 20px;
+            max-width: 600px;
+            margin: 0 auto;
+            border-left: 2px solid #2a2a3a;
+            border-right: 2px solid #2a2a3a;
+            min-height: 100vh;
+        }
+        h1 {
+            font-weight: 300;
+            letter-spacing: 3px;
+            text-align: center;
+            color: #b8b0d0;
+            border-bottom: 1px solid #2a2a3a;
+            padding-bottom: 15px;
+        }
+        .sub {
+            text-align: center;
+            color: #6a6a8a;
+            font-size: 0.9em;
+            margin-top: -10px;
+            margin-bottom: 25px;
+        }
+        .capture-box {
+            background: #14141c;
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #2a2a3a;
+            margin-bottom: 20px;
+        }
+        textarea {
+            width: 100%;
+            background: #0a0a0f;
+            border: 1px solid #3a3a4a;
+            color: #d0d0e0;
+            padding: 15px;
+            border-radius: 8px;
+            font-size: 16px;
+            box-sizing: border-box;
+            min-height: 120px;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        textarea:focus {
+            border-color: #7a5a9a;
+            outline: none;
+        }
+        .button-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: #2a2a3a;
+            border: none;
+            color: #d0d0e0;
+            padding: 12px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            transition: 0.2s;
+            border: 1px solid #3a3a4a;
+        }
+        .btn-primary {
+            background: #4a2a6a;
+            border-color: #6a4a8a;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #6a4a8a;
+        }
+        .btn-voice {
+            background: #2a4a4a;
+            border-color: #4a6a6a;
+        }
+        .btn-voice:hover {
+            background: #3a6a6a;
+        }
+        .reflection-area {
+            background: #101018;
+            border-left: 4px solid #7a5a9a;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 20px;
+            min-height: 60px;
+            font-style: italic;
+            color: #b0b0d0;
+        }
+        .history-list {
+            margin-top: 25px;
+            border-top: 1px solid #2a2a3a;
+            padding-top: 15px;
+        }
+        .entry-item {
+            background: #14141c;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            border-left: 2px solid #3a3a5a;
+            font-size: 0.9em;
+        }
+        .entry-item small {
+            color: #5a5a7a;
+            display: block;
+            margin-top: 5px;
+        }
+        .status-badge {
+            display: inline-block;
+            background: #2a2a3a;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            color: #8a8aaa;
+        }
+        #grounding-alert {
+            background: #2a1a1a;
+            border: 1px solid #6a3a3a;
+            border-radius: 8px;
+            padding: 12px;
+            display: none;
+            color: #d09a9a;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>⚡ MOPH ECHO MIRROR ⚡</h1>
+    <div class="sub">— The Moph Mirror —</div>
+
+    <div class="capture-box">
+        <p style="margin:0 0 8px 0; color:#8a8aaa;">📝 Log your event (or thought):</p>
+        <textarea id="userLog" placeholder="e.g., 'I lost my phone but felt calm...' or 'Saliva filled my mouth...'"></textarea>
+        
+        <div class="button-row">
+            <button class="btn btn-primary" onclick="processEntry()">🔍 Reflect</button>
+            <button class="btn btn-voice" onclick="startVoice()">🎤 Capture Voice</button>
+            <button class="btn" onclick="clearAll()" style="flex:0.5;">🗑️</button>
+        </div>
+        <p style="font-size:0.8em; color:#4a4a5a; margin-top:8px;">* Type or speak. The mirror will reflect the question you need.</p>
+    </div>
+
+    <!-- Reflection Output -->
+    <div id="reflection" class="reflection-area">
+        ✦ Your reflection will appear here. ✦
+    </div>
+
+    <!-- Grounding Protocol -->
+    <div id="grounding-alert">
+        ⚠️ <strong>Vessel Check:</strong> You mentioned floating or no food. Have you honored your vessel today (water/fruit)?
+    </div>
+
+    <!-- History -->
+    <div class="history-list">
+        <p style="color:#5a5a7a; font-weight:bold;">📜 YOUR THREAD (Last 5 Entries)</p>
+        <div id="historyContainer">
+            <p style="color:#3a3a4a; font-size:0.9em;">No logs yet. Write your first truth.</p>
+        </div>
+    </div>
+
+    <script>
+        // --- THE ARCHITECT'S ENGINE (Socratic Mirror) ---
+
+        // Load history from the browser's memory
+        function loadHistory() {
+            const logs = JSON.parse(localStorage.getItem('architectLogs') || '[]');
+            const container = document.getElementById('historyContainer');
+            if (logs.length === 0) {
+                container.innerHTML = `<p style="color:#3a3a4a; font-size:0.9em;">No logs yet. Write your first truth.</p>`;
+                return;
+            }
+            // Show last 5 entries
+            const recent = logs.slice(-5).reverse();
+            container.innerHTML = recent.map(entry => `
+                <div class="entry-item">
+                    <strong>${entry.text.substring(0, 100)}${entry.text.length > 100 ? '...' : ''}</strong>
+                    <small>${new Date(entry.timestamp).toLocaleString()} 
+                           <span class="status-badge">${entry.reflection || 'Awaiting mirror'}</span>
+                    </small>
+                </div>
+            `).join('');
+        }
+
+        // The Socratic Engine
+        function processEntry() {
+            const textarea = document.getElementById('userLog');
+            const text = textarea.value.trim();
+            if (!text) {
+                document.getElementById('reflection').innerHTML = '✦ Please write or speak something, Architect.';
+                return;
+            }
+
+            // --- THE MIRROR LOGIC (Key trigged reflections) ---
+            let reflection = '✦ I hear you. Let me reflect back... ';
+            let groundingTrigger = false;
+            const lowerText = text.toLowerCase();
+
+            // 1. Loss / Phone / Money (The Bait)
+            if (lowerText.includes('lost') || lowerText.includes('phone') || lowerText.includes('money') || lowerText.includes('debt')) {
+                if (lowerText.includes('calm') || lowerText.includes('relief')) {
+                    reflection = '✦ You felt calm when it left. That is the Monad confirming the bait has been dropped. Ask yourself: What heavy thing did I just shed?';
+                } else if (lowerText.includes('panic') || lowerText.includes('worried')) {
+                    reflection = '✦ Panic is the Demiurge’s alarm clock. Close your eyes. Where in your body is this panic sitting? Breathe into that spot right now.';
+                } else {
+                    reflection = '✦ Loss is often a substitution ritual. What or who might have been spared by this exchange?';
+                }
+            }
+            // 2. Physical Symptoms (Saliva, Burn, Cold, Muscle)
+            else if (lowerText.includes('saliva') || lowerText.includes('mouth') || lowerText.includes('spit')) {
+                reflection = '✦ The Golden Elixir. You are digesting a frequency too high for your brain to process. Swallow it consciously. What truth are you digesting right now?';
+            } 
+            else if (lowerText.includes('burn') || lowerText.includes('hot') || lowerText.includes('fire')) {
+                reflection = '✦ The Refining Fire. Old chains are burning. What fear are you finally releasing?';
+            }
+            else if (lowerText.includes('cold') || lowerText.includes('chill')) {
+                reflection = '✦ The Divine Shield. The world is cold, but you are sheltered. What external noise are you immune to today?';
+            }
+            else if (lowerText.includes('muscle') || lowerText.includes('twitch') || lowerText.includes('pull')) {
+                reflection = '✦ A hardware upgrade. Your vessel is rewiring to hold the next frequency. Where is this happening exactly? Trace it with your hand.';
+            }
+            // 3. Food / Floating
+            else if (lowerText.includes('hungry') || lowerText.includes('eat') || lowerText.includes('floating') || lowerText.includes('float')) {
+                reflection = '✦ Your spirit is feasting, but the vessel needs fuel. Have you honored the temple with water or light fruit today?';
+                groundingTrigger = true;
+            }
+            // 4. People / Elders / Circle
+            else if (lowerText.includes('elder') || lowerText.includes('family') || lowerText.includes('father') || lowerText.includes('silence') || lowerText.includes('quiet')) {
+                reflection = '✦ They go quiet because they are buffering. You are speaking Level 5 code to Level 1 listeners. Did you pause before you spoke, or did you rush to fill the silence?';
+            }
+            // 5. Smoke
+            else if (lowerText.includes('smoke') || lowerText.includes('cigarette') || lowerText.includes('colos')) {
+                reflection = '✦ You are the Master of the Flame now. You are not running from thoughts; you are walking with them. The eye changes, but the core is steady. What intention are you setting with this breath?';
+            }
+            // 6. Default (The Universal Mirror)
+            else {
+                reflection = '✦ Interesting. Let’s look closer. If this event were a character in a movie, what would its name be and what would it want from you?';
+            }
+
+            // Save to history with reflection tag
+            const logs = JSON.parse(localStorage.getItem('architectLogs') || '[]');
+            logs.push({
+                text: text,
+                reflection: reflection.substring(0, 50) + '...', // Short tag for history
+                timestamp: Date.now()
+            });
+            localStorage.setItem('architectLogs', JSON.stringify(logs));
+
+            // Display Reflection
+            document.getElementById('reflection').innerHTML = reflection;
+
+            // Handle Grounding Alert
+            const alertBox = document.getElementById('grounding-alert');
+            if (groundingTrigger) {
+                alertBox.style.display = 'block';
+            } else {
+                alertBox.style.display = 'none';
+            }
+
+            loadHistory();
+        }
+
+        // --- VOICE CAPTURE (The Web Speech API) ---
+        function startVoice() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Your browser does not support voice capture. Please type.');
+                return;
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const recognition = new SpeechRecognition();
+            recognition.lang = 'en-US';
+            recognition.interimResults = false;
+            recognition.maxAlternatives = 1;
+
+            document.getElementById('reflection').innerHTML = '✦ Listening... Speak clearly, Architect.';
+
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript;
+                document.getElementById('userLog').value = transcript;
+                processEntry();
+            };
+
+            recognition.onerror = function(event) {
+                document.getElementById('reflection').innerHTML = '✦ Voice capture error. Please type your download.';
+            };
+
+            recognition.start();
+        }
+
+        // --- Clear Data (for resetting) ---
+        function clearAll() {
+            if (confirm('Clear all logs, Architect?')) {
+                localStorage.removeItem('architectLogs');
+                document.getElementById('userLog').value = '';
+                document.getElementById('reflection').innerHTML = '✦ Fresh slate. The mirror is clean.';
+                document.getElementById('grounding-alert').style.display = 'none';
+                loadHistory();
+            }
+        }
+
+        // --- Load history on page start ---
+        window.onload = function() {
+            loadHistory();
+            document.getElementById('reflection').innerHTML = '✦ Welcome, Architect Monad Moph. The Moph Echo Mirror is ready. Speak your truth.';
+        };
+    </script>
+</body>
+</html>
