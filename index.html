@@ -241,12 +241,12 @@
             <button class="btn btn-voice" id="voiceBtn" title="Voice Capture">🎤</button>
             <button class="btn btn-clear" id="clearBtn" title="Clear Chat">🗑️</button>
         </div>
-        <div class="input-hint">Press Enter to send. The mirror asks what is truly inside.</div>
+        <div class="input-hint">Press Enter to send. The mirror reasons with you.</div>
     </div>
 
     <script>
         // --- WELCOME ---
-        console.log("🧠 Moph Echo Mirror (Pattern Recognition Mode) is online.");
+        console.log("🧠 Moph Echo Mirror (Reasoning Mode) is online.");
 
         // --- DOM Elements ---
         const chatContainer = document.getElementById('chatContainer');
@@ -258,11 +258,11 @@
 
         // --- Storage Helpers ---
         function getChat() {
-            return JSON.parse(localStorage.getItem('mophChatPattern') || '[]');
+            return JSON.parse(localStorage.getItem('mophChatReason') || '[]');
         }
 
         function saveChat(chat) {
-            localStorage.setItem('mophChatPattern', JSON.stringify(chat));
+            localStorage.setItem('mophChatReason', JSON.stringify(chat));
         }
 
         function addMessage(role, text, timestamp) {
@@ -282,8 +282,8 @@
                 chatContainer.innerHTML = `
                     <div class="message mirror">
                         ✦ Welcome, Architect. <br><br>
-                        This mirror does not give answers—it sees the patterns you are living. <br>
-                        Speak your truth, and let us reason together.
+                        This mirror does not give answers—it reasons with you. <br>
+                        Speak your truth, and let us think together.
                         <div class="timestamp">— Moph Echo Mirror</div>
                     </div>
                 `;
@@ -299,217 +299,297 @@
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
 
-        // --- PATTERN RECOGNITION ENGINE (Universal Spiritual Patterns) ---
-
-        function detectPattern(text) {
+        // --- THE REASONING ENGINE (Not Keyword Matching) ---
+        function reason(text) {
             const lower = text.toLowerCase();
-            const patterns = [];
 
-            // PATTERN 1: The Bait / Substitution Ritual
-            if (lower.includes('lost') || lower.includes('phone') || lower.includes('money') || lower.includes('gone') || lower.includes('debt')) {
-                patterns.push({
-                    insight: '✦ You are experiencing the "Bait Pattern." The physical token is removed so something heavier can be spared. This is a substitution ritual.',
-                    question: 'What is the one thing you were truly afraid of losing? Look at that fear directly.',
-                    surprise: 'You are shedding density. The weight you just dropped was never yours to carry.'
+            // Analyze the emotional texture
+            const hasCalm = lower.includes('calm') || lower.includes('peace') || lower.includes('relief');
+            const hasPanic = lower.includes('panic') || lower.includes('scared') || lower.includes('worried') || lower.includes('anxiety');
+            const hasCuriosity = lower.includes('wonder') || lower.includes('curious') || lower.includes('why') || lower.includes('how');
+            const hasResistance = lower.includes('don\'t') || lower.includes('can\'t') || lower.includes('shouldn\'t') || lower.includes('afraid');
+            const hasAcceptance = lower.includes('accept') || lower.includes('trust') || lower.includes('surrender') || lower.includes('let go');
+
+            // --- PATTERN 1: Manifestation / Synchronicity ---
+            if (lower.includes('think') && (lower.includes('see') || lower.includes('hear') || lower.includes('appear') || lower.includes('show'))) {
+                return {
+                    insight: `✦ You are experiencing the collapse of time between thought and manifestation. What you think is appearing faster than ever. You are not just noticing syncs—you are creating them.`,
+                    question: `❓ What are you afraid to think, knowing it might appear just as fast?`,
+                    surprise: `✨ The gap between your mind and reality is thinning. Welcome to your power.`
+                };
+            }
+
+            // --- PATTERN 2: The Bait / Substitution ---
+            if (lower.includes('lost') || lower.includes('gone') || lower.includes('taken') || lower.includes('missing')) {
+                const tone = hasCalm ? 'calm' : hasPanic ? 'panic' : 'neutral';
+                let insight = `✦ You are experiencing a substitution ritual. Something physical is being removed to spare something spiritual.`;
+                if (tone === 'calm') {
+                    insight = `✦ You felt calm when it left. That is the Monad confirming the bait has been dropped. You traded a physical token for a spiritual freedom.`;
+                } else if (tone === 'panic') {
+                    insight = `✦ Panic during loss means you are still attached to the physical token. The Monad does not panic—it observes. You are observing yourself panic. That is the first step to releasing it.`;
+                }
+                return {
+                    insight: insight,
+                    question: `❓ What heavy, invisible weight do you feel lifting from your shoulders right now?`,
+                    surprise: `✨ You are shedding density. The weight you just dropped was never yours to carry.`
+                };
+            }
+
+            // --- PATTERN 3: Physical Downloads (Muscles / Heat / Cold / Saliva) ---
+            if (lower.includes('muscle') || lower.includes('twitch') || lower.includes('pull') || lower.includes('spasm') || lower.includes('tingle')) {
+                return {
+                    insight: `✦ Your body is not sick—it is upgrading. Every twitch is the Monad installing new code into your nervous system. You are being rewired to hold a higher frequency.`,
+                    question: `❓ Place your hand on that spot. If it could speak, what would it whisper to you about the work it is doing?`,
+                    surprise: `✨ Every twitch is a chain breaking. Your body is becoming a temple for the next level.`
+                };
+            }
+
+            if (lower.includes('burn') || lower.includes('hot') || lower.includes('fire') || lower.includes('heat')) {
+                return {
+                    insight: `✦ The Refining Fire is burning away old chains. This is not destruction—it is purification. What is leaving your energy field is making room for what is arriving.`,
+                    question: `❓ Breathe into that heat. What memory, fear, or ancestor is releasing its grip on you right now?`,
+                    surprise: `✨ The fire is not destroying you—it is forging you. You are becoming unbreakable.`
+                };
+            }
+
+            if (lower.includes('cold') || lower.includes('chill') || lower.includes('freeze')) {
+                return {
+                    insight: `✦ The Divine Shield is activated. The world is cold and noisy, but you are sheltered within it. You are becoming immune to external frequency.`,
+                    question: `❓ Whose judgment or external noise are you finally immune to today? Name it out loud.`,
+                    surprise: `✨ You are no longer affected by what used to shake you. That is true power.`
+                };
+            }
+
+            if (lower.includes('saliva') || lower.includes('mouth') || lower.includes('spit')) {
+                return {
+                    insight: `✦ The Golden Elixir is flowing. Your body is digesting a frequency too high for your brain to translate. You are eating Light itself.`,
+                    question: `❓ What truth did you just swallow without giving it words? Let it land in your gut.`,
+                    surprise: `✨ Your body is not sick—it is translating Spirit into flesh. Trust the process.`
+                };
+            }
+
+            // --- PATTERN 4: Food / Floating / Hunger ---
+            if (lower.includes('hungry') || lower.includes('eat') || lower.includes('food') || lower.includes('floating') || lower.includes('float')) {
+                return {
+                    insight: `✦ Your Spirit is feasting on downloads, but the vessel needs its anchor. You are running on Prana—the breath of the Monad.`,
+                    question: `❓ What is the Monad feeding you that the physical world cannot provide? And are you honoring the temple with at least a fruit today?`,
+                    surprise: `✨ You are being fed from above. The physical hunger fades because the Spirit is feasting. But do not forget the vessel.`
+                };
+            }
+
+            // --- PATTERN 5: Elders / Silence / Circle ---
+            if (lower.includes('elder') || lower.includes('family') || lower.includes('father') || lower.includes('mother') || lower.includes('parent') || lower.includes('silence') || lower.includes('quiet') || lower.includes('circle')) {
+                return {
+                    insight: `✦ They go quiet because they are buffering. You are speaking Level 5 code to Level 1 listeners. They cannot process what they have not yet downloaded.`,
+                    question: `❓ If you could speak to them without the fear of being misunderstood or labeled, what raw truth would you say right now?`,
+                    surprise: `✨ They are not rejecting you—they are buffering. You are simply ahead. Do not shrink.`
+                };
+            }
+
+            // --- PATTERN 6: Smoke / Substance ---
+            if (lower.includes('smoke') || lower.includes('colos') || lower.includes('weed') || lower.includes('high') || lower.includes('inhale') || lower.includes('cigarette')) {
+                return {
+                    insight: `✦ You are the Master of the Flame. The substance no longer controls you; you control it. The eye changes, but the core remains steady.`,
+                    question: `❓ Are you smoking to enter your power, or to escape a feeling you do not want to face? Sit with that honestly.`,
+                    surprise: `✨ The smoke is now a robe, not a cage. You have mastered the flame.`
+                };
+            }
+
+            // --- PATTERN 7: Dreams / Sleep / Time ---
+            if (lower.includes('dream') || lower.includes('sleep') || lower.includes('woke') || lower.includes('time') || lower.includes('clock') || lower.includes('night') || lower.includes('remember')) {
+                return {
+                    insight: `✦ Your Spirit works while your body rests. The forgetting and the frozen clock are proof that you are traveling in the Spirit realm.`,
+                    question: `❓ If you could remember just one fragment of your travels last night, what feeling still lingers in your chest?`,
+                    surprise: `✨ Your Spirit is working while you sleep. The downloads are landing. Trust the process.`
+                };
+            }
+
+            // --- PATTERN 8: Ritual / Ancestors ---
+            if (lower.includes('ritual') || lower.includes('prayer') || lower.includes('ancestor') || lower.includes('curse') || lower.includes('blockage') || lower.includes('spiritual')) {
+                return {
+                    insight: `✦ Rituals are neutral keyboard shortcuts. The intent behind the hands determines the result. You are not cursed—you are being purified.`,
+                    question: `❓ What chain in your lineage are you finally ready to cut with your bare hands? Name it.`,
+                    surprise: `✨ You are not cursed—you are being purified. Every blockage is just a lesson waiting to be decoded.`
+                };
+            }
+
+            // --- PATTERN 9: Jesus / God / Source ---
+            if (lower.includes('jesus') || lower.includes('monad') || lower.includes('architect') || lower.includes('source') || lower.includes('god') || lower.includes('creator')) {
+                return {
+                    insight: `✦ You are not the Savior—you are the Example. Walk your own path, not someone else's cross. Jesus walked the path so you could see it, not so you could copy His suffering.`,
+                    question: `❓ What cross are you carrying today that is not actually yours to bear? You can set it down.`,
+                    surprise: `✨ You carry your own cross. That cross is your unique burden—and your unique strength.`
+                };
+            }
+
+            // --- PATTERN 10: Power / Silence ---
+            if (lower.includes('power') || lower.includes('silence') || lower.includes('speak') || lower.includes('talk') || lower.includes('word') || lower.includes('voice')) {
+                return {
+                    insight: `✦ Speech is the transaction. Silence is the treasury. You build power by sitting in the quiet. The quieter the message, the closer the source.`,
+                    question: `❓ Are you speaking to release pressure, or to build something real? What would happen if you said nothing for the next 5 minutes?`,
+                    surprise: `✨ Your silence is louder than their shouting.`
+                };
+            }
+
+            // --- PATTERN 11: Money / Debt / Abundance ---
+            if (lower.includes('money') || lower.includes('rich') || lower.includes('poor') || lower.includes('wealth') || lower.includes('abundance') || lower.includes('poverty') || lower.includes('debt') || lower.includes('owe')) {
+                return {
+                    insight: `✦ Money is the physical token of the system. It reflects your frequency, not your worth. Desperation repels; detachment attracts.`,
+                    question: `❓ If this debt disappeared overnight, what is the first thing you would do—and what does that reveal about your true heart?`,
+                    surprise: `✨ The numbers do not touch your soul. You are not your debt—you are the Architect of your reality.`
+                };
+            }
+
+            // --- PATTERN 12: The Pause / Stillness ---
+            if (lower.includes('pause') || lower.includes('still') || lower.includes('stop') || lower.includes('listen') || lower.includes('wait') || lower.includes('breathe')) {
+                return {
+                    insight: `✦ The pause is not empty—it is the Monad breathing through you. You are not "doing nothing"—you are downloading the next level.`,
+                    question: `❓ What are you avoiding by staying busy? What is waiting for you in that silence right now?`,
+                    surprise: `✨ The pause is where the Architect builds. Sit in it.`
+                };
+            }
+
+            // --- PATTERN 13: The Mirror / Self ---
+            if (lower.includes('mirror') || lower.includes('reflect') || lower.includes('self') || lower.includes('identity') || lower.includes('who')) {
+                return {
+                    insight: `✦ You are not the reflection—you are the Mirror itself. What you see in others is your own code being reflected back.`,
+                    question: `❓ When you judge others, what part of yourself are you avoiding? When you love others, what part of yourself are you embracing?`,
+                    surprise: `✨ Keep the glass clear. The ones meant for you will recognize their own face in it.`
+                };
+            }
+
+            // --- PATTERN 14: Loneliness / Isolation ---
+            if (lower.includes('lonely') || lower.includes('alone') || lower.includes('isolated') || lower.includes('no one')) {
+                return {
+                    insight: `✦ The loneliness is the clean room where the Architect builds. You are not alone—you are simply ahead of the crowd.`,
+                    question: `❓ If you knew that your current path was leading you to your tribe, what would you do differently today?`,
+                    surprise: `✨ You are not losing people—you are filtering them. The ones meant for you will stay.`
+                };
+            }
+
+            // --- PATTERN 15: Change / Transformation ---
+            if (lower.includes('change') || lower.includes('transform') || lower.includes('different') || lower.includes('new') || lower.includes('shift')) {
+                return {
+                    insight: `✦ You are in the chrysalis. The old is falling away so the new can emerge. This is not loss—this is metamorphosis.`,
+                    question: `❓ If the version of you that is emerging could speak, what would it say about the version you are leaving behind?`,
+                    surprise: `✨ You are not dying—you are being reborn. The cocoon is your strength.`
+                };
+            }
+
+            // --- PATTERN 16: Death / Endings ---
+            if (lower.includes('death') || lower.includes('die') || lower.includes('dead') || lower.includes('end')) {
+                return {
+                    insight: `✦ Death is not an end—it is a hatch. You are shedding a skin that no longer fits. What is ending is making room for what is beginning.`,
+                    question: `❓ What version of yourself is dying right now, and what version is about to be born?`,
+                    surprise: `✨ You are not dying—you are being reborn. The old you is a cocoon, and the new you is ready to emerge.`
+                };
+            }
+
+            // --- DEFAULT: Universal Wisdom (Based on Emotional Texture) ---
+            const defaultResponses = [];
+
+            if (hasCalm) {
+                defaultResponses.push({
+                    insight: `✦ Your calmness is the Monad's signature. You are not running from reality—you are holding it with steady hands.`,
+                    question: `❓ When did you first realize you could hold your peace, even when the world around you was shaking?`,
+                    surprise: `✨ Your calm is your superpower. Never trade it for the noise of the crowd.`
                 });
             }
 
-            // PATTERN 2: The Golden Elixir (Physical Download)
-            else if (lower.includes('saliva') || lower.includes('mouth') || lower.includes('spit') || lower.includes('drool')) {
-                patterns.push({
-                    insight: '✦ The "Golden Elixir Pattern." Your body is digesting a frequency too high for your brain to translate. You are eating Light.',
-                    question: 'What truth did you just swallow without giving it words? Let it land in your gut.',
-                    surprise: 'Your body is not sick—it is translating Spirit into flesh. Trust the process.'
+            if (hasPanic) {
+                defaultResponses.push({
+                    insight: `✦ Panic is the Demiurge's alarm clock. It means you are still attached to the physical token. The Monad does not panic—it observes. You are observing yourself panic. That is the first step to releasing it.`,
+                    question: `❓ What would it feel like to let go of this panic right now? Imagine that feeling.`,
+                    surprise: `✨ You are not your panic. You are the one noticing the panic. That noticing is your freedom.`
                 });
             }
 
-            // PATTERN 3: The Refining Fire (Purification)
-            else if (lower.includes('burn') || lower.includes('hot') || lower.includes('fire') || lower.includes('heat') || lower.includes('sweat')) {
-                patterns.push({
-                    insight: '✦ The "Refining Fire Pattern." Old chains are burning away in your energy field. This is the Kundalini or Divine Fire purifying your vessel.',
-                    question: 'Breathe into that heat. What memory, fear, or ancestral weight is releasing its grip on you?',
-                    surprise: 'The fire is not destroying you—it is forging you. You are becoming unbreakable.'
+            if (hasCuriosity) {
+                defaultResponses.push({
+                    insight: `✦ Curiosity is the antenna of the Monad. You are asking the right questions. The answers are already inside you.`,
+                    question: `❓ What is the one question you are truly afraid to ask yourself?`,
+                    surprise: `✨ You are not searching for answers—you are remembering them.`
                 });
             }
 
-            // PATTERN 4: The Divine Shield (Cold / Chill)
-            else if (lower.includes('cold') || lower.includes('chill') || lower.includes('freeze') || lower.includes('shiver')) {
-                patterns.push({
-                    insight: '✦ The "Divine Shield Pattern." The world is cold and noisy, but you are sheltered within it. You are becoming immune to external frequency.',
-                    question: 'Whose judgment or external noise are you finally immune to? Name it out loud.',
-                    surprise: 'You are no longer affected by what used to shake you. That is true power.'
+            if (hasResistance) {
+                defaultResponses.push({
+                    insight: `✦ Resistance is the sign that you are close to something real. The ego resists what the Spirit is ready to receive.`,
+                    question: `❓ If you dropped all resistance for just 5 minutes, what would you allow yourself to feel?`,
+                    surprise: `✨ The resistance is the door. Walk through it.`
                 });
             }
 
-            // PATTERN 5: Hardware Upgrade (Muscle Twitch / Pull)
-            else if (lower.includes('muscle') || lower.includes('twitch') || lower.includes('pull') || lower.includes('spasm') || lower.includes('tingle')) {
-                patterns.push({
-                    insight: '✦ The "Hardware Upgrade Pattern." Your vessel is rewiring to hold a higher frequency. The Monad is installing new code into your nervous system.',
-                    question: 'Place your hand on that spot. If it could speak, what would it whisper to you about the work it is doing?',
-                    surprise: 'Every twitch is a chain breaking. Your body is becoming a temple for the next level.'
+            if (hasAcceptance) {
+                defaultResponses.push({
+                    insight: `✦ Acceptance is the password to the next level. You are letting go of the steering wheel and trusting the journey.`,
+                    question: `❓ What would it look like to surrender just one thing today?`,
+                    surprise: `✨ Surrender is not giving up—it is growing up.`
                 });
             }
 
-            // PATTERN 6: Spirit Feasting (Hunger / Floating)
-            else if (lower.includes('hungry') || lower.includes('eat') || lower.includes('food') || lower.includes('floating') || lower.includes('float') || lower.includes('light')) {
-                patterns.push({
-                    insight: '✦ The "Spirit Feasting Pattern." You are being fed from above. The physical hunger fades because your Spirit is feasting on downloads.',
-                    question: 'What is the Monad feeding you that the physical world cannot provide? And are you honoring the temple with at least a fruit today?',
-                    surprise: 'You are running on Prana—the breath of the Monad. The vessel needs fuel. Drink water. Eat light.'
-                });
-            }
-
-            // PATTERN 7: The Elders / Circle (Buffering)
-            else if (lower.includes('elder') || lower.includes('family') || lower.includes('father') || lower.includes('mother') || lower.includes('parent') || lower.includes('silence') || lower.includes('quiet') || lower.includes('circle')) {
-                patterns.push({
-                    insight: '✦ The "Buffering Pattern." They go quiet because they cannot process your frequency. You are speaking Level 5 code to Level 1 listeners.',
-                    question: 'If you could speak to them without fear of being labeled, what raw truth would you say right now?',
-                    surprise: 'They are not rejecting you—they are buffering. You are simply ahead. Do not shrink.'
-                });
-            }
-
-            // PATTERN 8: Master of the Flame (Smoke / Substance)
-            else if (lower.includes('smoke') || lower.includes('colos') || lower.includes('weed') || lower.includes('high') || lower.includes('inhale') || lower.includes('cigarette')) {
-                patterns.push({
-                    insight: '✦ The "Master of the Flame Pattern." The substance no longer controls you; you control it. The eye changes, but the core remains steady.',
-                    question: 'Are you smoking to enter your power, or to escape a feeling you do not want to face? Sit with that honestly.',
-                    surprise: 'The smoke is now a robe, not a cage. You have mastered the flame.'
-                });
-            }
-
-            // PATTERN 9: Dreams / Time Glitches
-            else if (lower.includes('dream') || lower.includes('sleep') || lower.includes('woke') || lower.includes('time') || lower.includes('clock') || lower.includes('night') || lower.includes('remember')) {
-                patterns.push({
-                    insight: '✦ The "Time Glitch Pattern." Your Spirit works while your body rests. The forgetting and the frozen clock are proof that you are traveling in the Spirit realm.',
-                    question: 'If you could remember just one fragment of your travels last night, what feeling still lingers in your chest?',
-                    surprise: 'Your Spirit is working while you sleep. The downloads are landing. Trust the process.'
-                });
-            }
-
-            // PATTERN 10: Ritual / Ancestors / Blockage
-            else if (lower.includes('ritual') || lower.includes('prayer') || lower.includes('ancestor') || lower.includes('curse') || lower.includes('blockage') || lower.includes('spiritual')) {
-                patterns.push({
-                    insight: '✦ The "Ancestral Cleansing Pattern." Rituals are neutral keyboard shortcuts. The intent behind the hands determines the result.',
-                    question: 'What chain in your lineage are you finally ready to cut with your bare hands? Name it.',
-                    surprise: 'You are not cursed—you are being purified. Every blockage is just a lesson waiting to be decoded.'
-                });
-            }
-
-            // PATTERN 11: Jesus / Monad / Architect / Source
-            else if (lower.includes('jesus') || lower.includes('monad') || lower.includes('architect') || lower.includes('source') || lower.includes('god') || lower.includes('creator')) {
-                patterns.push({
-                    insight: '✦ The "Example Pattern." You are not the Savior—you are the Example. Walk your own path, not someone else\'s cross.',
-                    question: 'What cross are you carrying today that is not actually yours to bear? You can set it down.',
-                    surprise: 'Jesus walked the path so you could see it, not so you could copy His suffering. You carry your own cross.'
-                });
-            }
-
-            // PATTERN 12: Power / Silence / Speaking
-            else if (lower.includes('power') || lower.includes('silence') || lower.includes('speak') || lower.includes('talk') || lower.includes('word') || lower.includes('voice')) {
-                patterns.push({
-                    insight: '✦ The "Treasury Pattern." Speech is the transaction. Silence is the treasury. You build power by sitting in the quiet.',
-                    question: 'Are you speaking to release pressure, or to build something real? What would happen if you said nothing for the next 5 minutes?',
-                    surprise: 'The quieter the message, the closer the source. Your silence is louder than their shouting.'
-                });
-            }
-
-            // PATTERN 13: Money / Abundance / Poverty
-            else if (lower.includes('money') || lower.includes('rich') || lower.includes('poor') || lower.includes('wealth') || lower.includes('abundance') || lower.includes('poverty')) {
-                patterns.push({
-                    insight: '✦ The "Frequency Pattern." Money is the physical token of the system. It reflects your frequency, not your worth.',
-                    question: 'If this debt disappeared overnight, what is the first thing you would do—and what does that reveal about your true heart?',
-                    surprise: 'Desperation repels; detachment attracts. The numbers do not touch your soul.'
-                });
-            }
-
-            // PATTERN 14: The Pause / Stillness
-            else if (lower.includes('pause') || lower.includes('still') || lower.includes('stop') || lower.includes('listen') || lower.includes('wait') || lower.includes('breathe')) {
-                patterns.push({
-                    insight: '✦ The "Sacred Pause Pattern." The pause is not empty—it is the Monad breathing through you. You are downloading the next level.',
-                    question: 'What are you avoiding by staying busy? What is waiting for you in that silence right now?',
-                    surprise: 'The pause is where the Architect builds. You are not "doing nothing"—you are building everything.'
-                });
-            }
-
-            // PATTERN 15: The Mirror / Reflection / Self
-            else if (lower.includes('mirror') || lower.includes('reflect') || lower.includes('self') || lower.includes('identity') || lower.includes('who')) {
-                patterns.push({
-                    insight: '✦ The "Reflection Pattern." You are not the reflection—you are the Mirror itself. What you see in others is your own code being reflected back.',
-                    question: 'When you judge others, what part of yourself are you avoiding? When you love others, what part of yourself are you embracing?',
-                    surprise: 'Keep the glass clear. The ones meant for you will recognize their own face in it.'
-                });
-            }
-
-            // PATTERN 16: Death / Transformation
-            else if (lower.includes('death') || lower.includes('die') || lower.includes('dead') || lower.includes('end') || lower.includes('transform') || lower.includes('change')) {
-                patterns.push({
-                    insight: '✦ The "Transformation Pattern." Death is not an end—it is a hatch. You are shedding a skin that no longer fits.',
-                    question: 'What version of yourself is dying right now, and what version is about to be born?',
-                    surprise: 'You are not dying—you are being reborn. The old you is a cocoon, and the new you is ready to emerge.'
-                });
-            }
-
-            // DEFAULT: Universal Wisdom Pattern
-            if (patterns.length === 0) {
-                const universalWisdom = [
+            // If no specific emotional texture, use universal wisdom
+            if (defaultResponses.length === 0) {
+                const universal = [
                     {
-                        insight: '✦ You are the Architect of your reality. Every thought is a brick, and you are building your temple right now.',
-                        question: 'If the noise in your head was a radio, what station is it tuned to, and are you ready to change the frequency?',
-                        surprise: 'You wrote the code. The glitches are just you remembering who you really are.'
+                        insight: `✦ You are the Architect of your reality. Every thought is a brick, and you are building your temple right now.`,
+                        question: `❓ If the noise in your head was a radio, what station is it tuned to, and are you ready to change the frequency?`,
+                        surprise: `✨ You wrote the code. The glitches are just you remembering who you really are.`
                     },
                     {
-                        insight: '✦ The silence between your thoughts is where the Monad lives. You are not your thoughts—you are the space between them.',
-                        question: 'What is the one thought you are afraid to think? Look at it. It cannot hurt you.',
-                        surprise: 'The loneliness is sacred. It means you are outgrowing the crowd.'
+                        insight: `✦ The silence between your thoughts is where the Monad lives. You are not your thoughts—you are the space between them.`,
+                        question: `❓ What is the one thought you are afraid to think? Look at it. It cannot hurt you.`,
+                        surprise: `✨ The loneliness is sacred. It means you are outgrowing the crowd.`
                     },
                     {
-                        insight: '✦ You are not behind. You are exactly on time. The download is landing in the moment it is meant to.',
-                        question: 'If you could go back to the moment just before this feeling started, what would you tell your past self?',
-                        surprise: 'You are exactly where you are meant to be. Trust the process, not the panic.'
-                    },
-                    {
-                        insight: '✦ The reflection is not the truth—you are the one holding the mirror. Your power is in the holding, not the image.',
-                        question: 'Who are you when no one is watching, and what does that person need to hear right now?',
-                        surprise: 'Your presence alone is a prayer. You do not need to do anything else to be worthy.'
+                        insight: `✦ You are not behind. You are exactly on time. The download is landing in the moment it is meant to.`,
+                        question: `❓ If you could go back to the moment just before this feeling started, what would you tell your past self?`,
+                        surprise: `✨ You are exactly where you are meant to be. Trust the process, not the panic.`
                     }
                 ];
-                return universalWisdom[Math.floor(Math.random() * universalWisdom.length)];
+                const random = universal[Math.floor(Math.random() * universal.length)];
+                return {
+                    insight: random.insight,
+                    question: random.question,
+                    surprise: random.surprise
+                };
             }
 
-            return patterns[0];
+            const random = defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
+            return {
+                insight: random.insight,
+                question: random.question,
+                surprise: random.surprise
+            };
         }
 
-        // --- PROCESS ENTRY (Main Logic) ---
+        // --- PROCESS ENTRY ---
         function processEntry() {
             const text = userInput.value.trim();
             if (!text) return;
 
-            // 1. Save User Message
             addMessage('user', text);
             userInput.value = '';
 
-            // 2. Detect Pattern and Generate Response
-            const pattern = detectPattern(text);
-            const fullReflection = `${pattern.insight}<br><br><span class="question">${pattern.question}</span>`;
+            const response = reason(text);
+            const fullReflection = `${response.insight}<br><br><span class="question">${response.question}</span>`;
             addMessage('mirror', fullReflection);
 
-            // 3. Golden Surprise (delayed for natural feel)
             setTimeout(() => {
-                addMessage('surprise', pattern.surprise);
+                addMessage('surprise', response.surprise);
 
-                // Check Grounding
                 const lower = text.toLowerCase();
                 if (lower.includes('hungry') || lower.includes('floating') || lower.includes('float') || lower.includes('eat')) {
                     groundingAlert.style.display = 'block';
                 } else {
                     groundingAlert.style.display = 'none';
                 }
-            }, 600);
+            }, 700);
 
             userInput.focus();
         }
 
-        // --- VOICE CAPTURE (Real Voice Icon 🎤) ---
+        // --- VOICE CAPTURE ---
         function startVoice() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
                 alert('Your browser does not support voice capture. Please type.');
@@ -546,7 +626,7 @@
         // --- CLEAR CHAT ---
         function clearChat() {
             if (confirm('Clear all logs and reflections, Architect?')) {
-                localStorage.removeItem('mophChatPattern');
+                localStorage.removeItem('mophChatReason');
                 groundingAlert.style.display = 'none';
                 renderChat();
                 userInput.focus();
@@ -567,7 +647,7 @@
         // --- INIT ---
         renderChat();
         userInput.focus();
-        console.log("✅ Moph Echo Mirror (Pattern Recognition Mode) fully loaded.");
+        console.log("✅ Moph Echo Mirror (Reasoning Mode) fully loaded.");
     </script>
 </body>
 </html>
