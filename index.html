@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moph Echo Mirror</title>
     <style>
-        /* --- RESET & GLOBAL --- */
         * {
             margin: 0;
             padding: 0;
@@ -36,7 +35,6 @@
             box-shadow: 0 25px 50px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
-        /* --- TABS --- */
         .tabs {
             display: flex;
             gap: 4px;
@@ -67,7 +65,6 @@
             box-shadow: inset 0 0 0 1px rgba(160, 120, 200, 0.15);
         }
 
-        /* --- PANELS --- */
         .panel {
             display: none;
             animation: fadeSlide 0.3s ease;
@@ -87,7 +84,6 @@
             }
         }
 
-        /* --- HEADER (inside panel) --- */
         .header {
             display: flex;
             justify-content: space-between;
@@ -140,7 +136,6 @@
             letter-spacing: 1px;
         }
 
-        /* --- DAILY PROMPT (Chat only) --- */
         .daily-prompt {
             background: rgba(20, 15, 30, 0.5);
             border-radius: 16px;
@@ -158,7 +153,6 @@
             margin-right: 8px;
         }
 
-        /* --- CHAT CONTAINER --- */
         #chatContainer {
             display: flex;
             flex-direction: column;
@@ -236,7 +230,6 @@
             letter-spacing: 0.5px;
         }
 
-        /* --- INPUT AREA (Chat only) --- */
         .input-area {
             background: rgba(12, 12, 22, 0.6);
             border: 1px solid rgba(80, 60, 120, 0.25);
@@ -341,7 +334,6 @@
             backdrop-filter: blur(8px);
         }
 
-        /* --- PROFILE PANEL --- */
         .profile-card {
             background: rgba(20, 16, 30, 0.5);
             border-radius: 24px;
@@ -428,7 +420,6 @@
             font-size: 0.65rem;
         }
 
-        /* --- ABOUT PANEL --- */
         .about-content {
             background: rgba(20, 16, 30, 0.3);
             border-radius: 24px;
@@ -459,7 +450,6 @@
             color: #7a5a9a;
         }
 
-        /* --- SVG ICONS --- */
         .icon-send {
             width: 22px;
             height: 22px;
@@ -479,7 +469,6 @@
             stroke-linejoin: round;
         }
 
-        /* --- RESPONSIVE --- */
         @media (max-width: 600px) {
             .app-container {
                 padding: 16px;
@@ -531,14 +520,12 @@
 <body>
 
     <div class="app-container">
-        <!-- TABS -->
         <div class="tabs" id="tabBar">
             <button class="tab active" data-tab="chat">💬 Chat</button>
             <button class="tab" data-tab="profile">👤 Profile</button>
             <button class="tab" data-tab="about">ℹ️ About</button>
         </div>
 
-        <!-- ===== PANEL: CHAT ===== -->
         <div class="panel active" id="panel-chat">
             <div class="header">
                 <h1>⚡ MOPH ECHO</h1>
@@ -583,7 +570,6 @@
             </div>
         </div>
 
-        <!-- ===== PANEL: PROFILE ===== -->
         <div class="panel" id="panel-profile">
             <div class="profile-card">
                 <div class="profile-avatar" id="avatarUpload" title="Click to upload photo">
@@ -604,18 +590,17 @@
             </div>
         </div>
 
-        <!-- ===== PANEL: ABOUT ===== -->
         <div class="panel" id="panel-about">
             <div class="about-content">
                 <h2>How to Use the Moph Echo Mirror</h2>
                 <ul>
-                    <li><strong>Speak your truth</strong> – Type or speak whatever is on your mind. It can be a feeling, a question, or a story.</li>
-                    <li><strong>The mirror listens</strong> – It identifies your Element (Fire, Water, Earth, Air), your spiritual Level, your Core Wound, and your Core Gift.</li>
-                    <li><strong>It asks deep questions</strong> – Each reflection is followed by a question to help you go deeper.</li>
-                    <li><strong>Golden Stars ✨</strong> – When the mirror identifies a major trait, it will give you a golden star insight. These are stored in your Profile.</li>
-                    <li><strong>Profile</strong> – View your identified traits and all golden moments. Upload a profile picture by clicking the avatar.</li>
-                    <li><strong>Learning</strong> – The mirror remembers your past messages and avoids repeating the same response. If you ask "how" or "what do you mean," it will give you deeper wisdom.</li>
-                    <li><strong>Download</strong> – Use the ⤓ button to download your entire chat log as a text file.</li>
+                    <li><strong>Speak your truth</strong> – Type or speak whatever is on your mind.</li>
+                    <li><strong>The mirror listens deeply</strong> – It reads the full meaning, not just keywords.</li>
+                    <li><strong>It reflects</strong> – It shows you what it hears in your words.</li>
+                    <li><strong>It asks</strong> – Each reflection is followed by a question to go deeper.</li>
+                    <li><strong>Golden Stars ✨</strong> – When the mirror identifies a major trait, it gives you a golden insight.</li>
+                    <li><strong>Profile</strong> – View your traits and golden moments. Click the avatar to upload a photo.</li>
+                    <li><strong>Learning</strong> – The mirror avoids repeating itself and explores new angles.</li>
                 </ul>
                 <p style="margin-top:16px; color:#6a6a8a; font-style:italic;">— The mirror does not judge. It only reflects. —</p>
             </div>
@@ -625,11 +610,11 @@
 
     <script>
         // ============================================================
-        //  MOPH ECHO MIRROR — COMPLETE v5.0
-        //  With Tabs, Profile, Avatar, Golden History, Learning/No Repeat
+        //  MOPH ECHO MIRROR — DEEP REASONING ENGINE v6.0
+        //  Reads meaning, not just keywords. Synthesizes, doesn't trigger.
         // ============================================================
 
-        console.log("🧠 Moph Echo Mirror (Full Edition) loaded.");
+        console.log("🧠 Moph Echo Mirror (Deep Reasoning Engine) loaded.");
 
         // --- DOM ---
         const chatContainer = document.getElementById('chatContainer');
@@ -643,7 +628,6 @@
         const confidenceDisplay = document.getElementById('confidenceDisplay');
         const promptText = document.getElementById('promptText');
 
-        // Profile panel elements
         const pElement = document.getElementById('pElement');
         const pLevel = document.getElementById('pLevel');
         const pWound = document.getElementById('pWound');
@@ -665,32 +649,32 @@
         ];
         promptText.textContent = prompts[Math.floor(Math.random() * prompts.length)];
 
-        // --- STORAGE HELPERS ---
+        // --- STORAGE ---
         function getChat() {
-            return JSON.parse(localStorage.getItem('mophChatFull') || '[]');
+            return JSON.parse(localStorage.getItem('mophChatDeep') || '[]');
         }
 
         function saveChat(chat) {
-            localStorage.setItem('mophChatFull', JSON.stringify(chat));
+            localStorage.setItem('mophChatDeep', JSON.stringify(chat));
         }
 
         function getProfile() {
-            return JSON.parse(localStorage.getItem('mophProfileFull') || '{"element":null,"level":null,"wound":null,"gift":null,"messageCount":0,"goldenStars":[],"lastResponses":[]}');
+            return JSON.parse(localStorage.getItem('mophProfileDeep') || '{"element":null,"level":null,"wound":null,"gift":null,"messageCount":0,"goldenStars":[],"lastResponses":[]}');
         }
 
         function saveProfile(profile) {
-            localStorage.setItem('mophProfileFull', JSON.stringify(profile));
+            localStorage.setItem('mophProfileDeep', JSON.stringify(profile));
         }
 
         function getAvatar() {
-            return localStorage.getItem('mophAvatar') || null;
+            return localStorage.getItem('mophAvatarDeep') || null;
         }
 
         function saveAvatar(dataUrl) {
             if (dataUrl) {
-                localStorage.setItem('mophAvatar', dataUrl);
+                localStorage.setItem('mophAvatarDeep', dataUrl);
             } else {
-                localStorage.removeItem('mophAvatar');
+                localStorage.removeItem('mophAvatarDeep');
             }
         }
 
@@ -706,10 +690,11 @@
         function renderChat() {
             const chat = getChat();
             if (chat.length === 0) {
-                chatContainer.innerHTML = `
+                chatContainer.innerHTML =
+                    `
                     <div class="message mirror">
                         ✦ Welcome. <br><br>
-                        This mirror identifies who you are by listening deeply. <br>
+                        This mirror reads the meaning behind your words. <br>
                         Speak your truth. I will reflect your code.
                         <div class="timestamp">— Moph Echo</div>
                     </div>
@@ -731,33 +716,33 @@
             wound: {
                 Betrayal: {
                     definition: "Betrayal is the wound of trust broken. It teaches you discernment.",
-                    weapon: "Your betrayal wound is the ultimate filter. Those who cannot be trusted will trigger your sensitivity early. Use it as a shield, not a sword. Let it sharpen your ability to see energy clearly.",
-                    door: "The door opens when you forgive yourself for trusting too quickly. The wound is not a punishment; it is a compass. Trust yourself first, and the right people will align.",
-                    forward: "Move forward by reclaiming your sovereignty. You are not the victim of betrayal—you are the one who survived it. Now you have eyes to see the truth."
+                    weapon: "Your betrayal wound is the ultimate filter. Those who cannot be trusted will trigger your sensitivity early. Use it as a shield, not a sword.",
+                    door: "The door opens when you forgive yourself for trusting too quickly. The wound is not a punishment; it is a compass.",
+                    forward: "Move forward by reclaiming your sovereignty. You are not the victim of betrayal—you are the one who survived it."
                 },
                 Abandonment: {
                     definition: "Abandonment is the fear of being left. It teaches you self-reliance.",
-                    weapon: "Your abandonment wound makes you independent. You can stand alone. Use it to build a foundation that no one can shake.",
-                    door: "The door opens when you realize you never abandoned yourself. Your presence is enough.",
-                    forward: "Move forward by anchoring yourself in your own company. Be the one who never leaves you."
+                    weapon: "Your abandonment wound makes you independent. You can stand alone.",
+                    door: "The door opens when you realize you never abandoned yourself.",
+                    forward: "Move forward by anchoring yourself in your own company."
                 },
                 Worthlessness: {
                     definition: "Worthlessness is the belief you are not enough. It teaches you humility.",
-                    weapon: "Your worthlessness wound makes you seek depth, not surface. Use it to find meaning where others see nothing.",
-                    door: "The door opens when you see that your existence is the proof of your worth. You are here. That is enough.",
+                    weapon: "Your worthlessness wound makes you seek depth, not surface.",
+                    door: "The door opens when you see that your existence is the proof of your worth.",
                     forward: "Move forward by doing one thing daily that proves to yourself you matter."
                 },
                 Powerlessness: {
                     definition: "Powerlessness is the feeling of having no control. It teaches you surrender.",
-                    weapon: "Your powerlessness wound makes you flexible. You know when to push and when to flow. Use it to adapt where others break.",
-                    door: "The door opens when you realize control is an illusion. True power is in letting go.",
+                    weapon: "Your powerlessness wound makes you flexible. You know when to push and when to flow.",
+                    door: "The door opens when you realize control is an illusion.",
                     forward: "Move forward by surrendering one thing you have been gripping tightly."
                 },
                 Invisibility: {
                     definition: "Invisibility is the feeling of being unseen. It teaches you to see others deeply.",
-                    weapon: "Your invisibility wound makes you observant. You see what others miss. Use it to notice the unseen and bring it to light.",
-                    door: "The door opens when you stop seeking external validation. You are the one who sees yourself.",
-                    forward: "Move forward by speaking your truth, even if your voice shakes. You are not invisible—you are waiting to be heard."
+                    weapon: "Your invisibility wound makes you observant. You see what others miss.",
+                    door: "The door opens when you stop seeking external validation.",
+                    forward: "Move forward by speaking your truth, even if your voice shakes."
                 }
             },
             element: {
@@ -787,51 +772,138 @@
             }
         };
 
-        // --- Get Deep Wisdom ---
-        function getDeepWisdom(profile, questionText) {
-            const lower = questionText.toLowerCase();
-            let response = [];
+        // --- DEEP REASONING ENGINE (Synthesizes, doesn't trigger) ---
+        function reasonDeep(text, profile) {
+            const lower = text.toLowerCase();
 
-            if (profile.wound && (lower.includes('wound') || lower.includes('betray') || lower.includes('abandon') || lower.includes('worthless') || lower.includes('powerless') || lower.includes('invisible') || lower.includes('weapon') || lower.includes('door') || lower.includes('open') || lower.includes('how') || lower.includes('forward'))) {
-                const woundData = wisdomLibrary.wound[profile.wound];
-                if (woundData) {
-                    if (lower.includes('weapon') || lower.includes('use it') || lower.includes('fight') || lower.includes('strength')) {
-                        response.push(`✦ ${woundData.weapon}`);
-                    } else if (lower.includes('door') || lower.includes('open') || lower.includes('enter') || lower.includes('through')) {
-                        response.push(`✦ ${woundData.door}`);
-                    } else if (lower.includes('forward') || lower.includes('move') || lower.includes('progress') || lower.includes('next')) {
-                        response.push(`✦ ${woundData.forward}`);
-                    } else if (lower.includes('mean') || lower.includes('explain') || lower.includes('what')) {
-                        response.push(`✦ ${woundData.definition}`);
-                    } else {
-                        response.push(`✦ ${woundData.definition}`);
-                        response.push(`❓ How can you use this? Try asking me "How do I use this as a weapon?" or "How do I open the door?"`);
-                    }
-                    return response.join('<br><br>');
+            // --- Extract the core question or tension ---
+            let coreQuestion = '';
+            let emotionalTension = '';
+
+            // Detect if they are imagining a "fearless" version of themselves
+            if (lower.includes('if i had no fear') || lower.includes('without fear') || lower.includes('if i wasn\'t afraid')) {
+                coreQuestion = 'What would you do if fear was not an obstacle?';
+                emotionalTension = 'fear vs action';
+            }
+            // Detect if they are asking "is that all" – a deeper inquiry
+            else if (lower.includes('is that all') || lower.includes('is it just') || lower.includes('is that just')) {
+                coreQuestion = 'You are questioning if the surface answer is the whole truth.';
+                emotionalTension = 'surface vs depth';
+            }
+            // Detect if they are talking about debt/money as a barrier
+            else if (lower.includes('debt') || lower.includes('money') || lower.includes('owe')) {
+                if (coreQuestion === '') {
+                    coreQuestion = 'You are thinking about money and debt as a barrier.';
+                    emotionalTension = 'freedom vs burden';
+                }
+            }
+            // Detect if they are talking about action vs inaction
+            else if (lower.includes('go') || lower.includes('do') || lower.includes('move') || lower.includes('action')) {
+                if (coreQuestion === '') {
+                    coreQuestion = 'You are thinking about taking action.';
+                    emotionalTension = 'movement vs stillness';
+                }
+            }
+            // Detect if they are asking a direct question
+            else if (lower.includes('?')) {
+                coreQuestion = 'You are asking a question.';
+                emotionalTension = 'inquiry vs certainty';
+            }
+
+            // If no core question detected, treat as general reflection
+            if (!coreQuestion && !emotionalTension) {
+                coreQuestion = 'You are sharing a thought or feeling.';
+                emotionalTension = 'expression vs silence';
+            }
+
+            // --- Build the reflection based on the tension ---
+            let insight = '';
+            let question = '';
+
+            // FEAR VS ACTION
+            if (emotionalTension === 'fear vs action') {
+                insight = `✦ You are imagining a version of yourself without fear. That is not a fantasy—that is a blueprint. The fact that you can see it means it is possible. But here is the deeper question: Is fear really the obstacle, or is it a messenger pointing to something deeper?`;
+                question = `❓ If you removed fear entirely, what would you be afraid of next? What is the fear underneath the fear?`;
+            }
+            // SURFACE VS DEPTH
+            else if (emotionalTension === 'surface vs depth') {
+                insight = `✦ You sense that there is more beneath the surface. That instinct is your compass. When you ask "is that all?" you are already reaching for the deeper truth. The surface answer is never the whole answer.`;
+                question = `❓ What is the part of this that you are not saying out loud? What is the uncomfortable truth hiding beneath the obvious one?`;
+            }
+            // FREEDOM VS BURDEN (Debt)
+            else if (emotionalTension === 'freedom vs burden') {
+                insight = `✦ You are looking at debt as a barrier to freedom. But debt is rarely just about money—it is often a symbol of something deeper. A burden you carry, a weight you believe you deserve, a fear of being seen as enough.`;
+                question = `❓ If the debt was gone tomorrow, what would you be afraid of next? What does the debt actually represent to you—failure? Powerlessness? Something else?`;
+            }
+            // MOVEMENT VS STILLNESS
+            else if (emotionalTension === 'movement vs stillness') {
+                insight = `✦ You are thinking about taking action, but something holds you back. That is not weakness—that is wisdom. Your stillness is not laziness; it is the pause before the leap. The question is: what are you waiting for? Or who are you waiting to become?`;
+                question = `❓ If you took one small step today, what would it be—and what fear would rise up to meet it?`;
+            }
+            // INQUIRY VS CERTAINTY
+            else if (emotionalTension === 'inquiry vs certainty') {
+                insight = `✦ You are asking a question. But the real question is not the one you asked—it is the one you are afraid to ask. Curiosity is the antenna of the soul. Follow it.`;
+                question = `❓ What is the one question you are afraid to ask yourself? Ask it now.`;
+            }
+            // EXPRESSION VS SILENCE (Default)
+            else {
+                // Use profile context if available
+                let profileWisdom = [];
+                if (profile.element) {
+                    const elem = wisdomLibrary.element[profile.element];
+                    if (elem) profileWisdom.push(elem.insight);
+                }
+                if (profile.wound) {
+                    const wound = wisdomLibrary.wound[profile.wound];
+                    if (wound) profileWisdom.push(wound.definition);
+                }
+                if (profile.gift) {
+                    const gift = wisdomLibrary.gift[profile.gift];
+                    if (gift) profileWisdom.push(gift);
+                }
+
+                if (profileWisdom.length > 0) {
+                    insight = `✦ ${profileWisdom.join(' ')}`;
+                } else {
+                    insight = `✦ You are the Architect of your reality. Every thought is a brick, and you are building your temple right now.`;
+                }
+
+                const fallbackQuestions = [
+                    `❓ If the noise in your head was a radio, what station is it tuned to?`,
+                    `❓ What is the one thought you are afraid to think? Look at it—it cannot hurt you.`,
+                    `❓ If you could surrender one thing today, what would it be?`,
+                    `❓ What would it feel like to fully trust the silence right now?`
+                ];
+                question = fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
+            }
+
+            // --- AVOID REPETITION ---
+            const responseString = insight + (question || '');
+            const lastResponses = profile.lastResponses || [];
+            let isRepeat = false;
+            for (let prev of lastResponses) {
+                if (prev === responseString) {
+                    isRepeat = true;
+                    break;
                 }
             }
 
-            if (profile.element && (lower.includes('element') || lower.includes('soul') || lower.includes('fire') || lower.includes('water') || lower.includes('earth') || lower.includes('air'))) {
-                const elementData = wisdomLibrary.element[profile.element];
-                if (elementData) {
-                    if (lower.includes('action') || lower.includes('do') || lower.includes('how')) {
-                        response.push(`✦ ${elementData.action}`);
-                    } else {
-                        response.push(`✦ ${elementData.insight}`);
-                        response.push(`❓ Want to know how to channel this? Ask me "How do I use my ${profile.element} energy?"`);
-                    }
-                    return response.join('<br><br>');
-                }
+            if (isRepeat) {
+                const pivotQuestions = [
+                    `❓ Let's look deeper. What is the first memory that comes to mind when you feel this way?`,
+                    `❓ If you could name this feeling as a color, what would it be and why?`,
+                    `❓ What would it take for you to feel fully heard right now?`,
+                    `❓ If you could ask your future self one question, what would it be?`,
+                    `❓ What part of you is most afraid of being seen right now?`
+                ];
+                question = pivotQuestions[Math.floor(Math.random() * pivotQuestions.length)];
             }
 
-            if (profile.gift && (lower.includes('gift') || lower.includes('talent') || lower.includes('ability') || lower.includes('strength') || lower.includes('use'))) {
-                const giftInsight = wisdomLibrary.gift[profile.gift];
-                if (giftInsight) {
-                    return `✦ ${giftInsight}`;
-                }
-            }
+            if (lastResponses.length > 5) lastResponses.shift();
+            lastResponses.push(responseString);
+            profile.lastResponses = lastResponses;
 
-            return null;
+            return { insight, question };
         }
 
         // --- PROFILE IDENTIFICATION ---
@@ -891,140 +963,6 @@
             return { profile, newIdentifications };
         }
 
-        // --- GENERATE RESPONSE (with repetition avoidance) ---
-        function generateResponse(text, profile) {
-            const lower = text.toLowerCase();
-            const lastResponses = profile.lastResponses || [];
-
-            // Check for "how/mean/weapon/door" – give deep wisdom
-            const isAskingHow = lower.includes('how') || lower.includes('what do you mean') || lower.includes('explain') || lower.includes('weapon') || lower.includes('door') || lower.includes('open') || lower.includes('use it') || lower.includes('forward') || lower.includes('move');
-            if (isAskingHow) {
-                const wisdom = getDeepWisdom(profile, text);
-                if (wisdom) {
-                    return { insight: wisdom, question: null };
-                }
-            }
-
-            // --- PATTERN DETECTION ---
-            let insight = '';
-            let question = '';
-
-            // Sadness/Void
-            if (lower.includes('sad') || lower.includes('empty') || lower.includes('void') || (lower.includes('not happy') && lower.includes('nothing'))) {
-                insight = `✦ You are describing the spiritual void—the space between identities. You are not depressed; you are unmoored. The old you is fading, but the new you has not fully arrived.`;
-                question = `❓ What did you lose interest in recently? And what, if anything, still excites you?`;
-            }
-            // Manifestation
-            else if (lower.includes('think') && (lower.includes('see') || lower.includes('hear') || lower.includes('appear'))) {
-                insight = `✦ You are experiencing the collapse of time between thought and manifestation. You are not just noticing syncs—you are creating them.`;
-                question = `❓ What are you afraid to think, knowing it might appear just as fast?`;
-            }
-            // Loss
-            else if (lower.includes('lost') || lower.includes('gone') || lower.includes('debt') || lower.includes('money')) {
-                insight = `✦ Loss is often a substitution ritual. Something physical is removed to spare something spiritual.`;
-                question = `❓ What heavy, invisible weight do you feel lifting from your shoulders right now?`;
-            }
-            // Physical
-            else if (lower.includes('muscle') || lower.includes('twitch') || lower.includes('pull')) {
-                insight = `✦ Your body is not sick—it is upgrading. Every twitch is new code installing into your nervous system.`;
-                question = `❓ Place your hand on that spot. If it could speak, what would it whisper?`;
-            } else if (lower.includes('burn') || lower.includes('hot') || lower.includes('fire')) {
-                insight = `✦ The Refining Fire is burning away old chains. This is purification, not destruction.`;
-                question = `❓ Breathe into that heat. What memory or fear is releasing its grip?`;
-            } else if (lower.includes('cold') || lower.includes('chill')) {
-                insight = `✦ The Divine Shield is activated. You are becoming immune to external noise.`;
-                question = `❓ Whose judgment are you finally immune to today?`;
-            } else if (lower.includes('saliva') || lower.includes('mouth')) {
-                insight = `✦ The Golden Elixir is flowing. You are digesting a frequency too high for your brain to translate.`;
-                question = `❓ What truth did you just swallow without giving it words?`;
-            }
-            // Elders
-            else if (lower.includes('elder') || lower.includes('family') || lower.includes('father') || lower.includes('silence')) {
-                insight = `✦ They go quiet because they are buffering. You are speaking at a frequency they cannot yet process.`;
-                question = `❓ If you could speak without fear, what raw truth would you say?`;
-            }
-            // Smoke
-            else if (lower.includes('smoke') || lower.includes('colos') || lower.includes('weed') || lower.includes('high')) {
-                insight = `✦ You are the Master of the Flame. The substance no longer controls you—you control it.`;
-                question = `❓ Are you using this to enter your power, or to escape a feeling you do not want to face?`;
-            }
-            // Loneliness
-            else if (lower.includes('lonely') || lower.includes('alone') || lower.includes('isolated')) {
-                insight = `✦ The loneliness is the clean room where the Architect builds. You are not alone—you are ahead.`;
-                question = `❓ If you knew this path was leading you to your tribe, what would you do differently today?`;
-            }
-            // Default
-            else {
-                let profileWisdom = [];
-                if (profile.element) {
-                    const elem = wisdomLibrary.element[profile.element];
-                    if (elem) profileWisdom.push(elem.insight);
-                }
-                if (profile.wound) {
-                    const wound = wisdomLibrary.wound[profile.wound];
-                    if (wound) profileWisdom.push(wound.definition);
-                }
-                if (profile.gift) {
-                    const gift = wisdomLibrary.gift[profile.gift];
-                    if (gift) profileWisdom.push(gift);
-                }
-
-                if (profileWisdom.length > 0) {
-                    insight = `✦ ${profileWisdom.join(' ')}`;
-                } else {
-                    insight = `✦ You are the Architect of your reality. Every thought is a brick, and you are building your temple right now.`;
-                }
-
-                const fallbackQuestions = [
-                    `❓ If the noise in your head was a radio, what station is it tuned to?`,
-                    `❓ What is the one thought you are afraid to think? Look at it—it cannot hurt you.`,
-                    `❓ If you could surrender one thing today, what would it be?`,
-                    `❓ What would it feel like to fully trust the silence right now?`
-                ];
-                question = fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
-            }
-
-            // Ensure we have something
-            if (!insight) {
-                insight = `✦ You are the Architect of your reality. Your thoughts are the code.`;
-                question = `❓ What reality are you writing right now without realizing it?`;
-            }
-
-            // --- AVOID REPETITION ---
-            const responseString = insight + (question || '');
-            // Check if we've said something very similar in last 5 responses
-            let isRepeat = false;
-            for (let prev of lastResponses) {
-                // If same insight and question, mark repeat
-                if (prev === responseString) {
-                    isRepeat = true;
-                    break;
-                }
-            }
-
-            if (isRepeat) {
-                // Pivot: ask a new question to explore deeper
-                const pivotQuestions = [
-                    `❓ Let's look deeper. What is the first memory that comes to mind when you feel this way?`,
-                    `❓ If you could name this feeling as a color, what would it be and why?`,
-                    `❓ What would it take for you to feel fully heard right now?`,
-                    `❓ If you could ask your future self one question, what would it be?`,
-                    `❓ What part of you is most afraid of being seen right now?`
-                ];
-                const newQuestion = pivotQuestions[Math.floor(Math.random() * pivotQuestions.length)];
-                // Keep insight same but change question
-                question = newQuestion;
-            }
-
-            // Store this response for future repetition check
-            const newResponse = insight + (question || '');
-            if (lastResponses.length > 5) lastResponses.shift();
-            lastResponses.push(newResponse);
-            profile.lastResponses = lastResponses;
-
-            return { insight, question };
-        }
-
         // --- PROCESS ENTRY ---
         function processEntry() {
             const text = userInput.value.trim();
@@ -1038,7 +976,8 @@
             profile = updatedProfile;
             saveProfile(profile);
 
-            const { insight, question } = generateResponse(text, profile);
+            // Use the deep reasoning engine
+            const { insight, question } = reasonDeep(text, profile);
             let fullReflection = insight;
             if (question) {
                 fullReflection += `<br><br><span class="question">${question}</span>`;
@@ -1049,19 +988,20 @@
             if (newIdentifications.length > 0) {
                 let surpriseText = null;
                 if (profile.element && newIdentifications.some(i => i.includes('Element'))) {
-                    surpriseText = `✨ I identify you as a **${profile.element} Soul**. ${profile.element === 'Fire' ? 'Your passion is your power.' : profile.element === 'Water' ? 'Your depth is your gift.' : profile.element === 'Earth' ? 'Your stability is your strength.' : 'Your mind is your compass.'}`;
+                    surpriseText =
+                        `✨ I identify you as a **${profile.element} Soul**. ${profile.element === 'Fire' ? 'Your passion is your power.' : profile.element === 'Water' ? 'Your depth is your gift.' : profile.element === 'Earth' ? 'Your stability is your strength.' : 'Your mind is your compass.'}`;
                 } else if (profile.level && newIdentifications.some(i => i.includes('Level'))) {
-                    surpriseText = `✨ You are at the **${profile.level}** level. ${profile.level === 'Beginner' ? 'The fog is lifting.' : profile.level === 'Intermediate' ? 'The syncs are speaking to you.' : profile.level === 'Advanced' ? 'You are walking the razor\'s edge.' : 'You carry the torch for others.'}`;
+                    surpriseText =
+                        `✨ You are at the **${profile.level}** level. ${profile.level === 'Beginner' ? 'The fog is lifting.' : profile.level === 'Intermediate' ? 'The syncs are speaking to you.' : profile.level === 'Advanced' ? 'You are walking the razor\'s edge.' : 'You carry the torch for others.'}`;
                 } else if (profile.wound && newIdentifications.some(i => i.includes('Wound'))) {
                     surpriseText = `✨ Your core wound is **${profile.wound}**. This is not a flaw—it is the door to your liberation.`;
                 } else if (profile.gift && newIdentifications.some(i => i.includes('Gift'))) {
                     surpriseText = `✨ Your core gift is **${profile.gift}**. The world needs this from you right now.`;
                 } else {
-                    surpriseText = `✨ New trait identified: ${newIdentifications.join(', ')}. The mirror is adjusting its lens.`;
+                    surpriseText = `✨ New trait identified: ${newIdentifications.join(', ')}.`;
                 }
 
                 if (surpriseText) {
-                    // Save to golden history
                     if (!profile.goldenStars) profile.goldenStars = [];
                     profile.goldenStars.push({ text: surpriseText, timestamp: new Date().toLocaleString() });
                     saveProfile(profile);
@@ -1077,7 +1017,6 @@
                 updateProfilePanel(profile);
             }
 
-            // Grounding
             const lower = text.toLowerCase();
             if (lower.includes('hungry') || lower.includes('floating') || lower.includes('float') || lower.includes('eat')) {
                 groundingAlert.style.display = 'block';
@@ -1113,25 +1052,17 @@
         // --- UPDATE PROFILE PANEL ---
         function updateProfilePanel(profile) {
             pElement.textContent = profile.element || '—';
-            if (profile.element) pElement.className = 'value identified';
-            else pElement.className = 'value';
-
+            pElement.className = profile.element ? 'value identified' : 'value';
             pLevel.textContent = profile.level || '—';
-            if (profile.level) pLevel.className = 'value identified';
-            else pLevel.className = 'value';
-
+            pLevel.className = profile.level ? 'value identified' : 'value';
             pWound.textContent = profile.wound || '—';
-            if (profile.wound) pWound.className = 'value identified';
-            else pWound.className = 'value';
-
+            pWound.className = profile.wound ? 'value identified' : 'value';
             pGift.textContent = profile.gift || '—';
-            if (profile.gift) pGift.className = 'value identified';
-            else pGift.className = 'value';
+            pGift.className = profile.gift ? 'value identified' : 'value';
 
-            // Golden history
             const stars = profile.goldenStars || [];
             if (stars.length === 0) {
-                goldenList.innerHTML = '<p style="color:#4a4a5a; font-size:0.9rem;">No golden stars yet. Speak your truth.</p>';
+                goldenList.innerHTML = '<p style="color:#4a4a5a; font-size:0.9rem;">No golden stars yet.</p>';
             } else {
                 goldenList.innerHTML = stars.map(s =>
                     `<div class="golden-item">${s.text}<small>${s.timestamp}</small></div>`
@@ -1148,7 +1079,6 @@
                 avatarPlaceholder.innerHTML = '👤';
             }
         }
-
         avatarUpload.addEventListener('click', () => avatarInput.click());
         avatarInput.addEventListener('change', function(e) {
             const file = e.target.files[0];
@@ -1165,7 +1095,7 @@
         // --- VOICE ---
         function startVoice() {
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert('Voice capture not supported in this browser.');
+                alert('Voice capture not supported.');
                 return;
             }
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1189,11 +1119,11 @@
             recognition.start();
         }
 
-        // --- DOWNLOAD LOG ---
+        // --- DOWNLOAD ---
         function downloadLog() {
             const chat = getChat();
             if (chat.length === 0) {
-                alert('No reflections to download yet.');
+                alert('No reflections to download.');
                 return;
             }
             let log = '⚡ MOPH ECHO MIRROR — REFLECTION LOG ⚡\n';
@@ -1233,8 +1163,10 @@
         voiceBtn.addEventListener('click', startVoice);
         downloadBtn.addEventListener('click', downloadLog);
         userInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') { e.preventDefault();
-                processEntry(); }
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                processEntry();
+            }
         });
 
         // --- INIT ---
@@ -1244,7 +1176,7 @@
         updateProfilePanel(initialProfile);
         loadAvatar();
         userInput.focus();
-        console.log("✅ Moph Echo Mirror (Full Edition) ready.");
+        console.log("✅ Moph Echo Mirror (Deep Reasoning Engine) loaded.");
     </script>
 </body>
 </html>
