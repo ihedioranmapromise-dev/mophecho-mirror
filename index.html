@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moph Echo Mirror</title>
+
+    <!-- FAVICON (Amethyst Sun/Star) -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2m0 16v2M4 12H2m20 0h-2M5.64 5.64L4.22 4.22m15.56 15.56l-1.42-1.42M5.64 18.36l-1.42 1.42M19.78 4.22l-1.42 1.42'/%3E%3C/svg%3E">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%237c3aed'%3E%3Crect width='24' height='24' rx='4'/%3E%3Ccircle cx='12' cy='12' r='4' fill='none' stroke='white' stroke-width='1.5'/%3E%3Cpath d='M12 2v2m0 16v2M4 12H2m20 0h-2M5.64 5.64L4.22 4.22m15.56 15.56l-1.42-1.42M5.64 18.36l-1.42 1.42M19.78 4.22l-1.42 1.42' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -36,7 +41,7 @@
 </head>
 <body class="font-sans text-gray-200 min-h-screen">
 
-    <!-- ===== LOADING SCREEN ===== -->
+    <!-- LOADING -->
     <div id="loadingScreen" class="min-h-screen flex items-center justify-center">
         <div class="flex flex-col items-center gap-4">
             <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center pulse-glow">
@@ -46,7 +51,7 @@
         </div>
     </div>
 
-    <!-- ===== AUTH SCREEN ===== -->
+    <!-- AUTH -->
     <div id="authScreen" class="hidden min-h-screen flex items-center justify-center p-4">
         <div class="glass rounded-3xl p-8 md:p-12 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
             <div class="text-center mb-8">
@@ -79,7 +84,7 @@
         </div>
     </div>
 
-    <!-- ===== MAIN APP ===== -->
+    <!-- MAIN APP -->
     <div id="mainApp" class="hidden min-h-screen flex flex-col max-w-2xl mx-auto">
         <header class="glass border-b border-void-600 sticky top-0 z-40">
             <div class="px-4 py-3 flex items-center justify-between">
@@ -100,7 +105,6 @@
                     </button>
                 </div>
             </div>
-
             <nav class="px-4 pb-2 flex gap-1">
                 <button onclick="switchTab('chat')" id="tabChat" class="flex-1 py-2 text-xs font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
@@ -117,7 +121,6 @@
             </nav>
         </header>
 
-        <!-- PANEL: CHAT -->
         <main id="panelChat" class="flex-1 flex flex-col overflow-hidden">
             <div id="chatContainer" class="flex-1 overflow-y-auto px-4 py-4 space-y-4"></div>
             <div id="groundingAlert" class="hidden mx-4 mb-2 px-4 py-3 rounded-xl bg-red-900/20 border border-red-500/30 text-red-300 text-xs text-center">
@@ -140,7 +143,6 @@
             </div>
         </main>
 
-        <!-- PANEL: PROFILE -->
         <main id="panelProfile" class="hidden flex-1 overflow-y-auto px-4 py-6 space-y-6">
             <div class="glass rounded-2xl p-6 border border-void-600">
                 <div class="flex items-center gap-4 mb-6">
@@ -183,7 +185,6 @@
             </div>
         </main>
 
-        <!-- PANEL: GUIDE -->
         <main id="panelGuide" class="hidden flex-1 overflow-y-auto px-4 py-6">
             <div class="glass rounded-2xl p-6 border border-void-600 space-y-6">
                 <div>
@@ -191,31 +192,17 @@
                     <p class="text-sm text-gray-400 leading-relaxed">This is not a guru. This is not a pastor. This is a mirror. It reflects what you already know but have not yet seen.</p>
                 </div>
                 <div class="space-y-4">
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">1</span></div>
-                        <div><h3 class="text-sm font-medium">Speak your truth</h3><p class="text-xs text-gray-500 mt-1">Type or speak whatever is on your mind. A feeling, a question, a dream.</p></div>
-                    </div>
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">2</span></div>
-                        <div><h3 class="text-sm font-medium">The mirror listens</h3><p class="text-xs text-gray-500 mt-1">It reads the meaning behind your words. It asks the question you need.</p></div>
-                    </div>
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">3</span></div>
-                        <div><h3 class="text-sm font-medium">Golden moments</h3><p class="text-xs text-gray-500 mt-1">When the mirror identifies a major trait, it gives you a golden insight. Saved in Profile.</p></div>
-                    </div>
-                    <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">4</span></div>
-                        <div><h3 class="text-sm font-medium">The stages</h3><p class="text-xs text-gray-500 mt-1">Forging, Flatness, Alignment, Provision. The mirror helps you see where you are.</p></div>
-                    </div>
+                    <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">1</span></div><div><h3 class="text-sm font-medium">Speak your truth</h3><p class="text-xs text-gray-500 mt-1">Type or speak whatever is on your mind. A feeling, a question, a dream.</p></div></div>
+                    <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">2</span></div><div><h3 class="text-sm font-medium">The mirror listens</h3><p class="text-xs text-gray-500 mt-1">It reads the meaning behind your words. It asks the question you need.</p></div></div>
+                    <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">3</span></div><div><h3 class="text-sm font-medium">Golden moments</h3><p class="text-xs text-gray-500 mt-1">When the mirror identifies a major trait, it gives you a golden insight. Saved in Profile.</p></div></div>
+                    <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">4</span></div><div><h3 class="text-sm font-medium">The stages</h3><p class="text-xs text-gray-500 mt-1">Forging, Flatness, Alignment, Provision. The mirror helps you see where you are.</p></div></div>
                 </div>
-                <div class="border-t border-void-600 pt-4">
-                    <p class="text-xs text-gray-600 italic text-center">— The mirror does not judge. It only reflects. —</p>
-                </div>
+                <div class="border-t border-void-600 pt-4"><p class="text-xs text-gray-600 italic text-center">— The mirror does not judge. It only reflects. —</p></div>
             </div>
         </main>
     </div>
 
-    <!-- ===== PAYWALL MODAL ===== -->
+    <!-- PAYWALL -->
     <div id="paywallModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
         <div class="glass rounded-3xl p-6 md:p-8 max-w-md w-full border border-gold-400/30 shadow-2xl fade-in">
             <div class="text-center mb-6">
@@ -245,13 +232,9 @@
     </div>
 
     <script>
-        // ============================================================
-        //  CONFIG LOADED FROM /api/config (Vercel Environment Variables)
-        // ============================================================
         let sb = null;
         let state = {
-            user: null,
-            messages: [],
+            user: null, messages: [],
             profile: { element: null, stage: null, wound: null, gift: null, free_messages: 5 },
             goldenStars: []
         };
@@ -265,80 +248,47 @@
                 await checkSession();
             } catch (e) {
                 console.error('Init error:', e);
-                document.getElementById('loadingScreen').innerHTML = `
-                    <div class="text-center p-6">
-                        <p class="text-red-400 text-sm">Configuration error. Please try again later.</p>
-                        <p class="text-gray-600 text-xs mt-2">${e.message}</p>
-                    </div>`;
+                document.getElementById('loadingScreen').innerHTML = `<div class="text-center p-6"><p class="text-red-400 text-sm">Configuration error. Please try again later.</p><p class="text-gray-600 text-xs mt-2">${e.message}</p></div>`;
             }
         }
 
         async function checkSession() {
             const { data: { session } } = await sb.auth.getSession();
             document.getElementById('loadingScreen').classList.add('hidden');
-            if (session?.user) {
-                await enterApp(session.user);
-            } else {
-                document.getElementById('authScreen').classList.remove('hidden');
-            }
+            if (session?.user) await enterApp(session.user);
+            else document.getElementById('authScreen').classList.remove('hidden');
         }
 
-        // ===== AUTH =====
-        function showError(msg) {
-            const err = document.getElementById('authError');
-            const ok = document.getElementById('authSuccess');
-            err.textContent = msg; err.classList.remove('hidden'); ok.classList.add('hidden');
-        }
-        function showSuccess(msg) {
-            const err = document.getElementById('authError');
-            const ok = document.getElementById('authSuccess');
-            ok.textContent = msg; ok.classList.remove('hidden'); err.classList.add('hidden');
-        }
-        function setLoading(btn, loading, text) {
-            const btnEl = document.getElementById(btn + 'Btn');
-            const textEl = document.getElementById(btn + 'Text');
-            if (loading) {
-                btnEl.disabled = true; btnEl.style.opacity = '0.6';
-                if (textEl) textEl.textContent = 'Please wait...';
-            } else {
-                btnEl.disabled = false; btnEl.style.opacity = '1';
-                if (textEl) textEl.textContent = text;
-            }
-        }
+        function showError(msg) { const e = document.getElementById('authError'); const s = document.getElementById('authSuccess'); e.textContent = msg; e.classList.remove('hidden'); s.classList.add('hidden'); }
+        function showSuccess(msg) { const e = document.getElementById('authError'); const s = document.getElementById('authSuccess'); s.textContent = msg; s.classList.remove('hidden'); e.classList.add('hidden'); }
+        function setLoading(loading) { const b = document.getElementById('signInBtn'); const t = document.getElementById('signInText'); if (loading) { b.disabled = true; b.style.opacity='0.6'; t.textContent='Please wait...'; } else { b.disabled=false; b.style.opacity='1'; t.textContent='Enter the Mirror'; } }
 
         async function signUp() {
             const email = document.getElementById('authEmail').value.trim();
             const pass = document.getElementById('authPassword').value.trim();
             if (!email || !pass) { showError('Enter email and password.'); return; }
             if (pass.length < 6) { showError('Password must be at least 6 characters.'); return; }
-            setLoading('signIn', true);
+            setLoading(true);
             const { data, error } = await sb.auth.signUp({ email, password: pass });
-            setLoading('signIn', false, 'Enter the Mirror');
+            setLoading(false);
             if (error) { showError(error.message); return; }
-            if (data.user && !data.session) {
-                showSuccess('Account created. Check your email for the confirmation link.');
-                document.getElementById('authPassword').value = '';
-                return;
-            }
-            if (data.session) { await enterApp(data.user); }
+            if (data.user && !data.session) { showSuccess('Account created. Check your email for the confirmation link.'); document.getElementById('authPassword').value = ''; return; }
+            if (data.session) await enterApp(data.user);
         }
 
         async function signIn() {
             const email = document.getElementById('authEmail').value.trim();
             const pass = document.getElementById('authPassword').value.trim();
             if (!email || !pass) { showError('Enter email and password.'); return; }
-            setLoading('signIn', true);
+            setLoading(true);
             const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-            setLoading('signIn', false, 'Enter the Mirror');
+            setLoading(false);
             if (error) {
-                if (error.message.toLowerCase().includes('email not confirmed')) {
-                    showError('Please confirm your email first. Check your inbox.');
-                } else {
-                    showError(error.message);
-                }
+                if (error.message.toLowerCase().includes('email not confirmed')) showError('Please confirm your email first. Check your inbox.');
+                else showError(error.message);
                 return;
             }
-            if (data.user) { await enterApp(data.user); }
+            if (data.user) await enterApp(data.user);
         }
 
         async function signOut() {
@@ -354,58 +304,34 @@
             document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
             document.getElementById('userEmail').textContent = user.email;
-            await loadProfile();
-            await loadMessages();
-            await loadGoldenStars();
-            renderChat();
-            renderProfile();
-            updateCounter();
+            await loadProfile(); await loadMessages(); await loadGoldenStars();
+            renderChat(); renderProfile(); updateCounter();
             const savedAvatar = localStorage.getItem('mophAvatar_' + user.id);
             if (savedAvatar) document.getElementById('avatarUpload').innerHTML = `<img src="${savedAvatar}" class="w-full h-full object-cover">`;
             document.getElementById('userInput').focus();
         }
 
-        // ===== DATA LAYER =====
         async function loadProfile() {
             const { data, error } = await sb.from('profiles').select('*').eq('id', state.user.id).single();
-            if (error || !data) {
-                await sb.from('profiles').insert({ id: state.user.id });
-                return;
-            }
+            if (error || !data) { await sb.from('profiles').insert({ id: state.user.id }); return; }
             state.profile = { ...state.profile, ...data };
         }
 
         async function saveProfile() {
-            await sb.from('profiles').update({
-                element: state.profile.element,
-                stage: state.profile.stage,
-                wound: state.profile.wound,
-                gift: state.profile.gift,
-                free_messages: state.profile.free_messages,
-                updated_at: new Date().toISOString()
-            }).eq('id', state.user.id);
+            await sb.from('profiles').update({ element: state.profile.element, stage: state.profile.stage, wound: state.profile.wound, gift: state.profile.gift, free_messages: state.profile.free_messages, updated_at: new Date().toISOString() }).eq('id', state.user.id);
         }
 
         async function loadMessages() {
             const { data } = await sb.from('journal_entries').select('*').eq('user_id', state.user.id).order('created_at', { ascending: true }).limit(200);
             if (data) state.messages = data.map(m => ({ role: m.role, text: m.content }));
         }
-
-        async function saveMessage(role, text) {
-            await sb.from('journal_entries').insert({ user_id: state.user.id, role, content: text });
-        }
-
+        async function saveMessage(role, text) { await sb.from('journal_entries').insert({ user_id: state.user.id, role, content: text }); }
         async function loadGoldenStars() {
             const { data } = await sb.from('golden_moments').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false });
             if (data) state.goldenStars = data.map(g => ({ text: g.content, date: new Date(g.created_at).toLocaleString() }));
         }
+        async function saveGoldenStar(text) { await sb.from('golden_moments').insert({ user_id: state.user.id, content: text }); state.goldenStars.unshift({ text, date: new Date().toLocaleString() }); }
 
-        async function saveGoldenStar(text) {
-            await sb.from('golden_moments').insert({ user_id: state.user.id, content: text });
-            state.goldenStars.unshift({ text, date: new Date().toLocaleString() });
-        }
-
-        // ===== TABS =====
         function switchTab(tab) {
             ['chat','profile','guide'].forEach(t => {
                 document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('hidden');
@@ -418,19 +344,12 @@
             if (tab === 'profile') renderProfile();
         }
 
-        // ===== RENDER =====
         function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
         function renderChat() {
             const c = document.getElementById('chatContainer');
             if (state.messages.length === 0) {
-                c.innerHTML = `<div class="glass rounded-2xl p-5 border border-void-600 fade-in">
-                    <div class="flex items-start gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
-                            <svg class="w-4 h-4 text-amethyst-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                        </div>
-                        <div><p class="text-sm text-gray-300">Welcome. I am the mirror.</p><p class="text-xs text-gray-500 mt-1">Speak your truth. I will reflect what is already inside you.</p></div>
-                    </div></div>`;
+                c.innerHTML = `<div class="glass rounded-2xl p-5 border border-void-600 fade-in"><div class="flex items-start gap-3"><div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-amethyst-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div><div><p class="text-sm text-gray-300">Welcome. I am the mirror.</p><p class="text-xs text-gray-500 mt-1">Speak your truth. I will reflect what is already inside you.</p></div></div></div>`;
                 return;
             }
             c.innerHTML = state.messages.map(m => {
@@ -443,76 +362,45 @@
 
         function updateCounter() {
             const el = document.getElementById('freeCounter');
-            if (state.profile.free_messages > 0) {
-                el.textContent = `${state.profile.free_messages} free left`;
-                el.className = 'text-[10px] px-3 py-1 rounded-full bg-void-700 border border-void-600 text-gray-400';
-            } else {
-                el.textContent = 'Free trial ended';
-                el.className = 'text-[10px] px-3 py-1 rounded-full bg-red-900/30 border border-red-500/30 text-red-300';
-            }
+            if (state.profile.free_messages > 0) { el.textContent = `${state.profile.free_messages} free left`; el.className = 'text-[10px] px-3 py-1 rounded-full bg-void-700 border border-void-600 text-gray-400'; }
+            else { el.textContent = 'Free trial ended'; el.className = 'text-[10px] px-3 py-1 rounded-full bg-red-900/30 border border-red-500/30 text-red-300'; }
         }
 
-        // ===== PROCESS =====
         async function processEntry() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
             if (!text || !state.user) return;
             if (state.profile.free_messages <= 0) { showPaywall(); return; }
-
-            state.messages.push({ role: 'user', text });
-            await saveMessage('user', text);
-            input.value = '';
-            renderChat();
-
+            state.messages.push({ role: 'user', text }); await saveMessage('user', text);
+            input.value = ''; renderChat();
             const reflection = generateReflection(text);
-            state.messages.push({ role: 'mirror', text: reflection });
-            await saveMessage('mirror', reflection);
-
+            state.messages.push({ role: 'mirror', text: reflection }); await saveMessage('mirror', reflection);
             identifyProfile(text);
-
             const newStar = generateGoldenStar(text);
             if (newStar) {
                 setTimeout(async () => {
                     state.messages.push({ role: 'surprise', text: newStar });
-                    await saveMessage('surprise', newStar);
-                    await saveGoldenStar(newStar);
-                    renderChat();
-                    renderProfile();
+                    await saveMessage('surprise', newStar); await saveGoldenStar(newStar);
+                    renderChat(); renderProfile();
                 }, 600);
             }
-
-            state.profile.free_messages--;
-            await saveProfile();
-            updateCounter();
-            renderChat();
-            renderProfile();
-            checkGrounding(text);
-            input.focus();
+            state.profile.free_messages--; await saveProfile();
+            updateCounter(); renderChat(); renderProfile();
+            checkGrounding(text); input.focus();
         }
 
-        // ===== REFLECTION ENGINE =====
         function generateReflection(text) {
             const l = text.toLowerCase();
-            if (l.includes('sad') || l.includes('empty') || l.includes('void') || (l.includes('not happy') && l.includes('nothing')))
-                return `✦ You are describing the spiritual void—the space between identities. You are not depressed; you are unmoored.<br><br><span class="text-blue-300 italic">❓ What did you lose interest in recently? And what, if anything, still excites you?</span>`;
-            if (l.includes('think') && (l.includes('see') || l.includes('hear') || l.includes('appear')))
-                return `✦ You are experiencing the collapse of time between thought and manifestation.<br><br><span class="text-blue-300 italic">❓ What are you afraid to think, knowing it might appear just as fast?</span>`;
-            if (l.includes('lost') || l.includes('gone') || l.includes('debt') || l.includes('money'))
-                return `✦ Loss is often a substitution ritual. Something physical is removed to spare something spiritual.<br><br><span class="text-blue-300 italic">❓ What heavy, invisible weight do you feel lifting?</span>`;
-            if (l.includes('muscle') || l.includes('twitch') || l.includes('pull'))
-                return `✦ Your body is not sick—it is upgrading. Every twitch is new code installing into your nervous system.<br><br><span class="text-blue-300 italic">❓ Place your hand on that spot. If it could speak, what would it whisper?</span>`;
-            if (l.includes('burn') || l.includes('hot') || l.includes('fire'))
-                return `✦ The Refining Fire is burning away old chains. This is purification, not destruction.<br><br><span class="text-blue-300 italic">❓ Breathe into that heat. What memory or fear is releasing its grip?</span>`;
-            if (l.includes('cold') || l.includes('chill'))
-                return `✦ The Divine Shield is activated. You are becoming immune to external noise.<br><br><span class="text-blue-300 italic">❓ Whose judgment are you finally immune to today?</span>`;
-            if (l.includes('saliva') || l.includes('mouth'))
-                return `✦ The Golden Elixir is flowing. You are digesting a frequency too high for your brain to translate.<br><br><span class="text-blue-300 italic">❓ What truth did you just swallow without giving it words?</span>`;
-            if (l.includes('elder') || l.includes('family') || l.includes('father') || l.includes('silence'))
-                return `✦ They go quiet because they are buffering. You are speaking at a frequency they cannot yet process.<br><br><span class="text-blue-300 italic">❓ If you could speak without fear, what raw truth would you say?</span>`;
-            if (l.includes('smoke') || l.includes('colos') || l.includes('weed') || l.includes('high'))
-                return `✦ You are the Master of the Flame. The substance no longer controls you—you control it.<br><br><span class="text-blue-300 italic">❓ Are you using this to enter your power, or to escape a feeling you do not want to face?</span>`;
-            if (l.includes('lonely') || l.includes('alone') || l.includes('isolated'))
-                return `✦ The loneliness is the clean room where the Architect builds. You are not alone—you are ahead.<br><br><span class="text-blue-300 italic">❓ If you knew this path was leading you to your tribe, what would you do differently today?</span>`;
+            if (l.includes('sad')||l.includes('empty')||l.includes('void')||(l.includes('not happy')&&l.includes('nothing'))) return `✦ You are describing the spiritual void—the space between identities. You are not depressed; you are unmoored.<br><br><span class="text-blue-300 italic">❓ What did you lose interest in recently? And what, if anything, still excites you?</span>`;
+            if (l.includes('think')&&(l.includes('see')||l.includes('hear')||l.includes('appear'))) return `✦ You are experiencing the collapse of time between thought and manifestation.<br><br><span class="text-blue-300 italic">❓ What are you afraid to think, knowing it might appear just as fast?</span>`;
+            if (l.includes('lost')||l.includes('gone')||l.includes('debt')||l.includes('money')) return `✦ Loss is often a substitution ritual. Something physical is removed to spare something spiritual.<br><br><span class="text-blue-300 italic">❓ What heavy, invisible weight do you feel lifting?</span>`;
+            if (l.includes('muscle')||l.includes('twitch')||l.includes('pull')) return `✦ Your body is not sick—it is upgrading. Every twitch is new code installing into your nervous system.<br><br><span class="text-blue-300 italic">❓ Place your hand on that spot. If it could speak, what would it whisper?</span>`;
+            if (l.includes('burn')||l.includes('hot')||l.includes('fire')) return `✦ The Refining Fire is burning away old chains. This is purification, not destruction.<br><br><span class="text-blue-300 italic">❓ Breathe into that heat. What memory or fear is releasing its grip?</span>`;
+            if (l.includes('cold')||l.includes('chill')) return `✦ The Divine Shield is activated. You are becoming immune to external noise.<br><br><span class="text-blue-300 italic">❓ Whose judgment are you finally immune to today?</span>`;
+            if (l.includes('saliva')||l.includes('mouth')) return `✦ The Golden Elixir is flowing. You are digesting a frequency too high for your brain to translate.<br><br><span class="text-blue-300 italic">❓ What truth did you just swallow without giving it words?</span>`;
+            if (l.includes('elder')||l.includes('family')||l.includes('father')||l.includes('silence')) return `✦ They go quiet because they are buffering. You are speaking at a frequency they cannot yet process.<br><br><span class="text-blue-300 italic">❓ If you could speak without fear, what raw truth would you say?</span>`;
+            if (l.includes('smoke')||l.includes('colos')||l.includes('weed')||l.includes('high')) return `✦ You are the Master of the Flame. The substance no longer controls you—you control it.<br><br><span class="text-blue-300 italic">❓ Are you using this to enter your power, or to escape a feeling you do not want to face?</span>`;
+            if (l.includes('lonely')||l.includes('alone')||l.includes('isolated')) return `✦ The loneliness is the clean room where the Architect builds. You are not alone—you are ahead.<br><br><span class="text-blue-300 italic">❓ If you knew this path was leading you to your tribe, what would you do differently today?</span>`;
             const d = [
                 `✦ You are the Architect of your reality. Every thought is a brick, and you are building your temple right now.<br><br><span class="text-blue-300 italic">❓ If the noise in your head was a radio, what station is it tuned to?</span>`,
                 `✦ The silence between your thoughts is where the truth lives.<br><br><span class="text-blue-300 italic">❓ What is the one thought you are afraid to think? Look at it—it cannot hurt you.</span>`,
@@ -521,7 +409,6 @@
             return d[Math.floor(Math.random() * d.length)];
         }
 
-        // ===== PROFILE ID =====
         function identifyProfile(text) {
             const l = text.toLowerCase();
             if (!state.profile.element) {
@@ -577,7 +464,6 @@
             else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 rounded-xl p-3"><p class="text-xs text-gold-200">${escapeHtml(s.text)}</p><p class="text-[10px] text-gray-600 mt-1">${s.date}</p></div>`).join('');
         }
 
-        // ===== PAYWALL, VOICE, DOWNLOAD, GROUNDING, AVATAR =====
         function showPaywall() { document.getElementById('paywallModal').classList.remove('hidden'); }
         function closePaywall() { document.getElementById('paywallModal').classList.add('hidden'); }
 
@@ -585,10 +471,8 @@
             if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('Voice not supported.'); return; }
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
             const rec = new SR(); rec.lang='en-US'; rec.interimResults=false;
-            const input = document.getElementById('userInput');
-            const btn = document.getElementById('voiceBtn');
-            input.placeholder='Listening...';
-            btn.classList.add('text-amethyst-400','animate-pulse');
+            const input = document.getElementById('userInput'); const btn = document.getElementById('voiceBtn');
+            input.placeholder='Listening...'; btn.classList.add('text-amethyst-400','animate-pulse');
             rec.onresult = (e) => { input.value = e.results[0][0].transcript; input.placeholder='Speak your truth...'; btn.classList.remove('text-amethyst-400','animate-pulse'); processEntry(); };
             rec.onerror = () => { input.placeholder='Speak your truth...'; btn.classList.remove('text-amethyst-400','animate-pulse'); };
             rec.start();
@@ -624,12 +508,6 @@
             if (e.key === 'Enter') { e.preventDefault(); processEntry(); }
         });
 
-        // Listen for auth state changes (handles email confirmation redirect)
-        window.addEventListener('load', () => {
-            initConfig();
-        });
-
-        // ===== INIT =====
         initConfig();
     </script>
 </body>
