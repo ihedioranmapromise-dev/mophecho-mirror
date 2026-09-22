@@ -1,1182 +1,630 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moph Echo Mirror</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+                    colors: {
+                        void: { 900: '#06060a', 800: '#0a0a12', 700: '#10101c', 600: '#161624' },
+                        amethyst: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
+                        gold: { 400: '#facc15', 500: '#eab308' }
+                    }
+                }
+            }
+        }
+    </script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: #08080e;
-            color: #d0d0e8;
-            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
-            min-height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 16px;
-            background-image: radial-gradient(circle at 20% 30%, #1a1028 0%, #08080e 70%);
-        }
-
-        .app-container {
-            max-width: 820px;
-            width: 100%;
-            background: rgba(16, 16, 28, 0.65);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(120, 90, 160, 0.25);
-            border-radius: 36px;
-            padding: 24px 20px 20px 20px;
-            box-shadow: 0 25px 50px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.05);
-        }
-
-        .tabs {
-            display: flex;
-            gap: 4px;
-            margin-bottom: 16px;
-            border-bottom: 1px solid rgba(60, 40, 80, 0.2);
-            padding-bottom: 8px;
-        }
-        .tab {
-            background: transparent;
-            border: none;
-            color: #6a6a8a;
-            font-size: 0.9rem;
-            padding: 8px 18px;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: 0.2s;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-            font-family: inherit;
-        }
-        .tab:hover {
-            color: #b0b0d0;
-            background: rgba(80, 60, 120, 0.15);
-        }
-        .tab.active {
-            background: rgba(80, 60, 120, 0.25);
-            color: #d0d0e8;
-            box-shadow: inset 0 0 0 1px rgba(160, 120, 200, 0.15);
-        }
-
-        .panel {
-            display: none;
-            animation: fadeSlide 0.3s ease;
-        }
-        .panel.active {
-            display: block;
-        }
-
-        @keyframes fadeSlide {
-            from {
-                opacity: 0;
-                transform: translateY(6px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 6px;
-        }
-        h1 {
-            font-weight: 300;
-            font-size: 1.6rem;
-            letter-spacing: 4px;
-            background: linear-gradient(135deg, #b8a0d8, #7a5a9a);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .profile-badge {
-            background: rgba(60, 40, 80, 0.4);
-            border: 1px solid rgba(160, 120, 200, 0.2);
-            border-radius: 40px;
-            padding: 6px 16px 6px 12px;
-            font-size: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #b0a0c0;
-            letter-spacing: 0.5px;
-            transition: 0.4s;
-        }
-        .profile-badge .badge-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #4a4a6a;
-            display: inline-block;
-            transition: 0.4s;
-        }
-        .profile-badge .badge-dot.active {
-            background: #ca9a3a;
-            box-shadow: 0 0 12px #ca9a3a66;
-        }
-
-        .sub {
-            text-align: center;
-            color: #6a6a8a;
-            font-size: 0.8rem;
-            margin-bottom: 16px;
-            border-bottom: 1px solid rgba(60, 40, 80, 0.3);
-            padding-bottom: 12px;
-            letter-spacing: 1px;
-        }
-
-        .daily-prompt {
-            background: rgba(20, 15, 30, 0.5);
-            border-radius: 16px;
-            padding: 12px 16px;
-            margin-bottom: 20px;
-            border-left: 2px solid #6a4a8a;
-            font-size: 0.9rem;
-            color: #b8b0c8;
-            font-style: italic;
-        }
-        .daily-prompt span {
-            color: #7a6a9a;
-            font-style: normal;
-            font-weight: 600;
-            margin-right: 8px;
-        }
-
-        #chatContainer {
-            display: flex;
-            flex-direction: column;
-            gap: 14px;
-            margin-bottom: 20px;
-            max-height: 420px;
-            overflow-y: auto;
-            padding-right: 6px;
-        }
-        #chatContainer::-webkit-scrollbar {
-            width: 3px;
-        }
-        #chatContainer::-webkit-scrollbar-thumb {
-            background: #4a2a6a;
-            border-radius: 10px;
-        }
-
-        .message {
-            padding: 14px 18px;
-            border-radius: 18px;
-            max-width: 92%;
-            word-wrap: break-word;
-            animation: fadeSlide 0.4s cubic-bezier(0.2, 0.9, 0.3, 1);
-            line-height: 1.6;
-            font-size: 0.95rem;
-        }
-        .message.user {
-            background: rgba(60, 40, 100, 0.35);
-            border: 1px solid rgba(120, 90, 160, 0.2);
-            align-self: flex-end;
-            text-align: right;
-            border-bottom-right-radius: 4px;
-            backdrop-filter: blur(4px);
-        }
-        .message.mirror {
-            background: rgba(16, 12, 24, 0.7);
-            border: 1px solid rgba(100, 70, 140, 0.15);
-            align-self: flex-start;
-            border-bottom-left-radius: 4px;
-            backdrop-filter: blur(4px);
-        }
-        .message.mirror .question {
-            color: #90b0d0;
-            font-style: italic;
-            margin-top: 12px;
-            padding-top: 10px;
-            border-top: 1px dashed rgba(80, 60, 120, 0.3);
-            display: block;
-            font-weight: 400;
-            font-size: 0.9rem;
-        }
-        .message.mirror .question::before {
-            content: "❓ ";
-            color: #7a9aca;
-        }
-        .message.surprise {
-            background: rgba(30, 25, 20, 0.8);
-            border: 1px solid rgba(200, 150, 60, 0.25);
-            align-self: flex-start;
-            color: #e8d07a;
-            border-bottom-left-radius: 4px;
-            font-size: 0.92rem;
-            box-shadow: 0 0 20px -8px rgba(200, 150, 60, 0.1);
-        }
-        .message.surprise::before {
-            content: "✦ ";
-            color: #ca9a3a;
-        }
-        .timestamp {
-            font-size: 0.55rem;
-            color: #4a4a5a;
-            margin-top: 6px;
-            display: block;
-            text-align: right;
-            letter-spacing: 0.5px;
-        }
-
-        .input-area {
-            background: rgba(12, 12, 22, 0.6);
-            border: 1px solid rgba(80, 60, 120, 0.25);
-            border-radius: 60px;
-            padding: 6px 6px 6px 20px;
-            backdrop-filter: blur(10px);
-            transition: border 0.3s;
-            margin-top: 4px;
-        }
-        .input-area:focus-within {
-            border-color: rgba(140, 100, 200, 0.5);
-            box-shadow: 0 0 30px -10px rgba(100, 60, 180, 0.2);
-        }
-        .input-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        #userInput {
-            flex: 1;
-            background: transparent;
-            border: none;
-            color: #d0d0e8;
-            padding: 14px 0;
-            font-size: 0.95rem;
-            font-family: 'Inter', sans-serif;
-            outline: none;
-        }
-        #userInput::placeholder {
-            color: #4a4a5a;
-            font-weight: 300;
-        }
-        .btn {
-            background: transparent;
-            border: none;
-            color: #a0a0b8;
-            cursor: pointer;
-            padding: 10px;
-            border-radius: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.25s;
-            width: 48px;
-            height: 48px;
-        }
-        .btn:hover {
-            background: rgba(80, 60, 120, 0.2);
-            color: #fff;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, #4a2a6a, #2a1a3a);
-            border: 1px solid rgba(160, 120, 200, 0.2);
-            color: #fff;
-            box-shadow: 0 4px 15px -5px rgba(60, 30, 100, 0.4);
-        }
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #6a4a8a, #3a2a5a);
-            transform: scale(1.02);
-            box-shadow: 0 6px 25px -5px rgba(80, 40, 140, 0.5);
-        }
-        .btn-voice {
-            background: rgba(40, 60, 80, 0.2);
-            border: 1px solid rgba(80, 120, 160, 0.15);
-        }
-        .btn-voice:hover {
-            background: rgba(40, 80, 120, 0.3);
-            border-color: rgba(80, 160, 220, 0.3);
-        }
-        .btn-download {
-            background: rgba(30, 30, 50, 0.3);
-            border: 1px solid rgba(80, 80, 120, 0.1);
-            width: 40px;
-            height: 40px;
-            border-radius: 40px;
-            color: #6a6a8a;
-            font-size: 0.8rem;
-        }
-        .btn-download:hover {
-            background: rgba(50, 50, 80, 0.4);
-            color: #a0a0c0;
-        }
-        .input-hint {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 6px 14px 0 14px;
-            font-size: 0.6rem;
-            color: #3a3a4a;
-        }
-
-        #grounding-alert {
-            background: rgba(40, 20, 20, 0.6);
-            border: 1px solid rgba(120, 60, 60, 0.3);
-            border-radius: 12px;
-            padding: 10px 14px;
-            display: none;
-            color: #d09a9a;
-            margin-top: 12px;
-            text-align: center;
-            font-size: 0.8rem;
-            backdrop-filter: blur(8px);
-        }
-
-        .profile-card {
-            background: rgba(20, 16, 30, 0.5);
-            border-radius: 24px;
-            padding: 24px;
-            border: 1px solid rgba(100, 70, 140, 0.15);
-            backdrop-filter: blur(8px);
-            margin-bottom: 20px;
-        }
-        .profile-avatar {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            background: rgba(60, 40, 80, 0.3);
-            border: 2px solid rgba(160, 120, 200, 0.2);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            cursor: pointer;
-            transition: 0.3s;
-            margin: 0 auto 16px auto;
-            font-size: 2rem;
-        }
-        .profile-avatar:hover {
-            border-color: #7a5a9a;
-            box-shadow: 0 0 20px -5px rgba(120, 80, 180, 0.3);
-        }
-        .profile-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .profile-avatar .placeholder {
-            color: #4a4a6a;
-            font-size: 2.2rem;
-        }
-        .profile-info {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px 24px;
-            margin-top: 8px;
-        }
-        .profile-info .label {
-            font-size: 0.7rem;
-            color: #6a6a8a;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .profile-info .value {
-            font-size: 1rem;
-            color: #d0d0e8;
-            font-weight: 400;
-        }
-        .profile-info .value.identified {
-            color: #ca9a3a;
-        }
-
-        .golden-history {
-            margin-top: 20px;
-            border-top: 1px solid rgba(80, 60, 120, 0.2);
-            padding-top: 16px;
-        }
-        .golden-history h3 {
-            font-weight: 300;
-            color: #b8b0c8;
-            font-size: 1rem;
-            margin-bottom: 12px;
-            letter-spacing: 1px;
-        }
-        .golden-item {
-            background: rgba(30, 25, 20, 0.3);
-            border-left: 2px solid #ca9a3a;
-            padding: 10px 14px;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            font-size: 0.85rem;
-            color: #d0c8b8;
-            line-height: 1.5;
-        }
-        .golden-item small {
-            color: #6a6a5a;
-            display: block;
-            margin-top: 4px;
-            font-size: 0.65rem;
-        }
-
-        .about-content {
-            background: rgba(20, 16, 30, 0.3);
-            border-radius: 24px;
-            padding: 24px;
-            border: 1px solid rgba(100, 70, 140, 0.1);
-            line-height: 1.8;
-            color: #c0b8c8;
-            font-size: 0.95rem;
-        }
-        .about-content h2 {
-            font-weight: 300;
-            color: #d0c8e0;
-            margin-bottom: 12px;
-            letter-spacing: 1px;
-        }
-        .about-content ul {
-            list-style: none;
-            padding: 0;
-        }
-        .about-content li {
-            padding: 6px 0;
-            border-bottom: 1px solid rgba(60, 40, 80, 0.1);
-            display: flex;
-            gap: 10px;
-        }
-        .about-content li::before {
-            content: "→";
-            color: #7a5a9a;
-        }
-
-        .icon-send {
-            width: 22px;
-            height: 22px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-        .icon-mic {
-            width: 20px;
-            height: 20px;
-            fill: none;
-            stroke: currentColor;
-            stroke-width: 2;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-        }
-
-        @media (max-width: 600px) {
-            .app-container {
-                padding: 16px;
-                border-radius: 24px;
-            }
-            h1 {
-                font-size: 1.2rem;
-            }
-            .profile-badge {
-                font-size: 0.6rem;
-                padding: 4px 12px 4px 8px;
-            }
-            .daily-prompt {
-                font-size: 0.8rem;
-                padding: 10px 12px;
-            }
-            .btn {
-                width: 42px;
-                height: 42px;
-                padding: 6px;
-            }
-            .input-area {
-                padding: 4px 4px 4px 16px;
-            }
-            #userInput {
-                font-size: 0.9rem;
-                padding: 10px 0;
-            }
-            .message {
-                max-width: 98%;
-                font-size: 0.9rem;
-                padding: 12px 14px;
-            }
-            .profile-info {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-            .tabs .tab {
-                font-size: 0.75rem;
-                padding: 6px 12px;
-            }
-            .profile-avatar {
-                width: 64px;
-                height: 64px;
-            }
-        }
+        * { -webkit-tap-highlight-color: transparent; }
+        body { background: #06060a; }
+        .glass { background: rgba(16,16,28,0.65); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
+        .glass-light { background: rgba(22,22,36,0.5); backdrop-filter: blur(16px); }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #3a2a5a; border-radius: 10px; }
+        .fade-in { animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+        @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 20px -5px rgba(139,92,246,0.3); } 50% { box-shadow: 0 0 30px -5px rgba(139,92,246,0.6); } }
     </style>
 </head>
-<body>
+<body class="font-sans text-gray-200 min-h-screen">
 
-    <div class="app-container">
-        <div class="tabs" id="tabBar">
-            <button class="tab active" data-tab="chat">💬 Chat</button>
-            <button class="tab" data-tab="profile">👤 Profile</button>
-            <button class="tab" data-tab="about">ℹ️ About</button>
+    <!-- ===== AUTH SCREEN (Placeholder for Supabase) ===== -->
+    <div id="authScreen" class="min-h-screen flex items-center justify-center p-4">
+        <div class="glass rounded-3xl p-8 md:p-12 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 mb-4 pulse-glow">
+                    <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                </div>
+                <h1 class="text-2xl font-semibold bg-gradient-to-r from-amethyst-400 to-amethyst-600 bg-clip-text text-transparent tracking-wide">MOPH ECHO</h1>
+                <p class="text-gray-500 text-sm mt-1">The Reasoning Mirror</p>
+            </div>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-gray-500 uppercase tracking-wider">Email</label>
+                    <input type="email" id="authEmail" placeholder="you@example.com" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+                </div>
+                <div>
+                    <label class="text-xs text-gray-500 uppercase tracking-wider">Password</label>
+                    <input type="password" id="authPassword" placeholder="••••••••" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+                </div>
+                <button onclick="enterApp()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:from-amethyst-500 hover:to-amethyst-600 transition shadow-lg shadow-amethyst-600/20">
+                    Enter the Mirror
+                </button>
+                <p class="text-center text-xs text-gray-600">5 free reflections · No card required</p>
+            </div>
         </div>
+    </div>
 
-        <div class="panel active" id="panel-chat">
-            <div class="header">
-                <h1>⚡ MOPH ECHO</h1>
-                <div class="profile-badge" id="profileBadge">
-                    <span class="badge-dot" id="badgeDot"></span>
-                    <span id="badgeText">Awaiting Signal</span>
+    <!-- ===== MAIN APP ===== -->
+    <div id="mainApp" class="hidden min-h-screen flex flex-col max-w-2xl mx-auto">
+
+        <!-- HEADER -->
+        <header class="glass border-b border-void-600 sticky top-0 z-40">
+            <div class="px-4 py-3 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-semibold tracking-wide">MOPH ECHO</h1>
+                        <p class="text-[10px] text-gray-500">The Reasoning Mirror</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <div id="freeCounter" class="text-[10px] px-3 py-1 rounded-full bg-void-700 border border-void-600 text-gray-400">5 free left</div>
+                    <button onclick="showPaywall()" class="text-[10px] px-3 py-1 rounded-full bg-gradient-to-r from-gold-400 to-gold-500 text-black font-semibold">Upgrade</button>
                 </div>
             </div>
-            <div class="sub">— The Reasoning Mirror —</div>
 
-            <div class="daily-prompt">
-                <span>⟡ Prompt:</span> <span id="promptText">What is one thought you are afraid to think?</span>
+            <!-- TABS -->
+            <nav class="px-4 pb-2 flex gap-1">
+                <button onclick="switchTab('chat')" id="tabChat" class="flex-1 py-2 text-xs font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+                    Chat
+                </button>
+                <button onclick="switchTab('profile')" id="tabProfile" class="flex-1 py-2 text-xs font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                    Profile
+                </button>
+                <button onclick="switchTab('guide')" id="tabGuide" class="flex-1 py-2 text-xs font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                    Guide
+                </button>
+            </nav>
+        </header>
+
+        <!-- ===== PANEL: CHAT ===== -->
+        <main id="panelChat" class="flex-1 flex flex-col overflow-hidden">
+            <div id="chatContainer" class="flex-1 overflow-y-auto px-4 py-4 space-y-4"></div>
+
+            <div id="groundingAlert" class="hidden mx-4 mb-2 px-4 py-3 rounded-xl bg-red-900/20 border border-red-500/30 text-red-300 text-xs text-center">
+                <strong>Vessel Check:</strong> You mentioned floating or no food. Have you honored your temple with water or fruit today?
             </div>
 
-            <div id="chatContainer"></div>
-
-            <div id="grounding-alert">⚠️ <strong>Vessel Check:</strong> You mentioned floating or no food. Have you honored your temple with water or fruit today?</div>
-
-            <div class="input-area">
-                <div class="input-row">
-                    <input type="text" id="userInput" placeholder="Speak your truth..." autofocus>
-                    <button class="btn btn-download" id="downloadBtn" title="Download Chat Logs">⤓</button>
-                    <button class="btn btn-voice" id="voiceBtn" title="Voice Capture">
-                        <svg class="icon-mic" viewBox="0 0 24 24">
-                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                            <line x1="12" y1="19" x2="12" y2="23" />
-                            <line x1="8" y1="23" x2="16" y2="23" />
-                        </svg>
+            <div class="glass border-t border-void-600 p-3">
+                <div class="flex items-center gap-2 bg-void-900 rounded-2xl border border-void-600 px-4 py-2 focus-within:border-amethyst-500/50 transition">
+                    <input type="text" id="userInput" placeholder="Speak your truth..." class="flex-1 bg-transparent text-sm py-2 focus:outline-none placeholder-gray-600">
+                    <button onclick="downloadLog()" class="p-2 text-gray-500 hover:text-gray-300 transition" title="Download log">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     </button>
-                    <button class="btn btn-primary" id="sendBtn" title="Send">
-                        <svg class="icon-send" viewBox="0 0 24 24">
-                            <line x1="22" y1="2" x2="11" y2="13" />
-                            <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                        </svg>
+                    <button onclick="startVoice()" id="voiceBtn" class="p-2 text-gray-500 hover:text-amethyst-400 transition" title="Voice">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+                    </button>
+                    <button onclick="processEntry()" class="p-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white hover:from-amethyst-500 transition" title="Send">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
                     </button>
                 </div>
-                <div class="input-hint">
-                    <span>Press Enter</span>
-                    <span id="confidenceDisplay" style="color:#4a4a6a;">· Profile: Syncing...</span>
+                <p class="text-[10px] text-gray-700 text-center mt-2">The mirror reflects your own truth. It does not give answers.</p>
+            </div>
+        </main>
+
+        <!-- ===== PANEL: PROFILE ===== -->
+        <main id="panelProfile" class="hidden flex-1 overflow-y-auto px-4 py-6 space-y-6">
+            <div class="glass rounded-2xl p-6 border border-void-600">
+                <div class="flex items-center gap-4 mb-6">
+                    <div id="avatarUpload" class="w-16 h-16 rounded-2xl bg-void-700 border border-void-600 flex items-center justify-center cursor-pointer hover:border-amethyst-500/50 transition overflow-hidden">
+                        <svg id="avatarPlaceholder" class="w-7 h-7 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+                        <input type="file" id="avatarInput" accept="image/*" class="hidden">
+                    </div>
+                    <div>
+                        <h2 class="text-lg font-semibold">Architect</h2>
+                        <p class="text-xs text-gray-500">Your journey is being recorded</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-void-800 rounded-xl p-4 border border-void-600">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Element</p>
+                        <p id="pElement" class="text-sm font-medium text-gray-400">—</p>
+                    </div>
+                    <div class="bg-void-800 rounded-xl p-4 border border-void-600">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stage</p>
+                        <p id="pStage" class="text-sm font-medium text-gray-400">—</p>
+                    </div>
+                    <div class="bg-void-800 rounded-xl p-4 border border-void-600">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Wound</p>
+                        <p id="pWound" class="text-sm font-medium text-gray-400">—</p>
+                    </div>
+                    <div class="bg-void-800 rounded-xl p-4 border border-void-600">
+                        <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p>
+                        <p id="pGift" class="text-sm font-medium text-gray-400">—</p>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <div class="panel" id="panel-profile">
-            <div class="profile-card">
-                <div class="profile-avatar" id="avatarUpload" title="Click to upload photo">
-                    <span class="placeholder" id="avatarPlaceholder">👤</span>
-                    <input type="file" id="avatarInput" accept="image/*" style="display:none">
+            <div class="glass rounded-2xl p-6 border border-void-600">
+                <div class="flex items-center gap-2 mb-4">
+                    <svg class="w-4 h-4 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    <h3 class="text-sm font-semibold">Golden Moments</h3>
                 </div>
-                <div class="profile-info">
-                    <div><span class="label">Element</span><br><span class="value" id="pElement">—</span></div>
-                    <div><span class="label">Level</span><br><span class="value" id="pLevel">—</span></div>
-                    <div><span class="label">Core Wound</span><br><span class="value" id="pWound">—</span></div>
-                    <div><span class="label">Core Gift</span><br><span class="value" id="pGift">—</span></div>
+                <div id="goldenList" class="space-y-3">
+                    <p class="text-xs text-gray-600">No golden moments yet. Speak your truth.</p>
                 </div>
             </div>
+        </main>
 
-            <div class="golden-history">
-                <h3>✦ Golden Star Moments</h3>
-                <div id="goldenList"><p style="color:#4a4a5a; font-size:0.9rem;">No golden stars yet. Speak your truth.</p></div>
-            </div>
-        </div>
+        <!-- ===== PANEL: GUIDE ===== -->
+        <main id="panelGuide" class="hidden flex-1 overflow-y-auto px-4 py-6">
+            <div class="glass rounded-2xl p-6 border border-void-600 space-y-6">
+                <div>
+                    <h2 class="text-lg font-semibold mb-2">How to Use the Mirror</h2>
+                    <p class="text-sm text-gray-400 leading-relaxed">This is not a guru. This is not a pastor. This is a mirror. It reflects what you already know but have not yet seen.</p>
+                </div>
 
-        <div class="panel" id="panel-about">
-            <div class="about-content">
-                <h2>How to Use the Moph Echo Mirror</h2>
-                <ul>
-                    <li><strong>Speak your truth</strong> – Type or speak whatever is on your mind.</li>
-                    <li><strong>The mirror listens deeply</strong> – It reads the full meaning, not just keywords.</li>
-                    <li><strong>It reflects</strong> – It shows you what it hears in your words.</li>
-                    <li><strong>It asks</strong> – Each reflection is followed by a question to go deeper.</li>
-                    <li><strong>Golden Stars ✨</strong> – When the mirror identifies a major trait, it gives you a golden insight.</li>
-                    <li><strong>Profile</strong> – View your traits and golden moments. Click the avatar to upload a photo.</li>
-                    <li><strong>Learning</strong> – The mirror avoids repeating itself and explores new angles.</li>
-                </ul>
-                <p style="margin-top:16px; color:#6a6a8a; font-style:italic;">— The mirror does not judge. It only reflects. —</p>
+                <div class="space-y-4">
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
+                            <span class="text-xs font-bold text-amethyst-400">1</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">Speak your truth</h3>
+                            <p class="text-xs text-gray-500 mt-1">Type or speak whatever is on your mind. A feeling, a question, a dream.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
+                            <span class="text-xs font-bold text-amethyst-400">2</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">The mirror listens</h3>
+                            <p class="text-xs text-gray-500 mt-1">It reads the meaning behind your words. It asks the question you need.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
+                            <span class="text-xs font-bold text-amethyst-400">3</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">Golden moments</h3>
+                            <p class="text-xs text-gray-500 mt-1">When the mirror identifies a major trait, it gives you a golden insight. These are saved in your Profile.</p>
+                        </div>
+                    </div>
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
+                            <span class="text-xs font-bold text-amethyst-400">4</span>
+                        </div>
+                        <div>
+                            <h3 class="text-sm font-medium">The stages</h3>
+                            <p class="text-xs text-gray-500 mt-1">Forging, Flatness, Alignment, Provision. The mirror helps you see where you are.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="border-t border-void-600 pt-4">
+                    <p class="text-xs text-gray-600 italic text-center">— The mirror does not judge. It only reflects. —</p>
+                </div>
             </div>
-        </div>
+        </main>
 
     </div>
 
-    <script>
-        // ============================================================
-        //  MOPH ECHO MIRROR — DEEP REASONING ENGINE v6.0
-        //  Reads meaning, not just keywords. Synthesizes, doesn't trigger.
-        // ============================================================
+    <!-- ===== PAYWALL MODAL ===== -->
+    <div id="paywallModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+        <div class="glass rounded-3xl p-6 md:p-8 max-w-md w-full border border-gold-400/30 shadow-2xl fade-in">
+            <div class="text-center mb-6">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-500 mb-4">
+                    <svg class="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+                </div>
+                <h2 class="text-xl font-semibold">Your 5 free reflections are complete</h2>
+                <p class="text-sm text-gray-400 mt-2">Unlock unlimited access to the mirror and continue your journey.</p>
+            </div>
 
-        console.log("🧠 Moph Echo Mirror (Deep Reasoning Engine) loaded.");
-
-        // --- DOM ---
-        const chatContainer = document.getElementById('chatContainer');
-        const userInput = document.getElementById('userInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const voiceBtn = document.getElementById('voiceBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const groundingAlert = document.getElementById('grounding-alert');
-        const badgeText = document.getElementById('badgeText');
-        const badgeDot = document.getElementById('badgeDot');
-        const confidenceDisplay = document.getElementById('confidenceDisplay');
-        const promptText = document.getElementById('promptText');
-
-        const pElement = document.getElementById('pElement');
-        const pLevel = document.getElementById('pLevel');
-        const pWound = document.getElementById('pWound');
-        const pGift = document.getElementById('pGift');
-        const goldenList = document.getElementById('goldenList');
-        const avatarUpload = document.getElementById('avatarUpload');
-        const avatarInput = document.getElementById('avatarInput');
-        const avatarPlaceholder = document.getElementById('avatarPlaceholder');
-
-        // --- Daily Prompts ---
-        const prompts = [
-            "What is one thought you are afraid to think?",
-            "If you had no fear, what would you do right now?",
-            "What part of yourself are you hiding from others?",
-            "What would it feel like to fully trust yourself?",
-            "What are you holding onto that is ready to be released?",
-            "If your sadness could speak, what would it say?",
-            "What is the silence between your thoughts trying to tell you?"
-        ];
-        promptText.textContent = prompts[Math.floor(Math.random() * prompts.length)];
-
-        // --- STORAGE ---
-        function getChat() {
-            return JSON.parse(localStorage.getItem('mophChatDeep') || '[]');
-        }
-
-        function saveChat(chat) {
-            localStorage.setItem('mophChatDeep', JSON.stringify(chat));
-        }
-
-        function getProfile() {
-            return JSON.parse(localStorage.getItem('mophProfileDeep') || '{"element":null,"level":null,"wound":null,"gift":null,"messageCount":0,"goldenStars":[],"lastResponses":[]}');
-        }
-
-        function saveProfile(profile) {
-            localStorage.setItem('mophProfileDeep', JSON.stringify(profile));
-        }
-
-        function getAvatar() {
-            return localStorage.getItem('mophAvatarDeep') || null;
-        }
-
-        function saveAvatar(dataUrl) {
-            if (dataUrl) {
-                localStorage.setItem('mophAvatarDeep', dataUrl);
-            } else {
-                localStorage.removeItem('mophAvatarDeep');
-            }
-        }
-
-        // --- Add Message ---
-        function addMessage(role, text, timestamp) {
-            const chat = getChat();
-            chat.push({ role, text, timestamp: timestamp || new Date().toLocaleString() });
-            if (chat.length > 80) chat.shift();
-            saveChat(chat);
-            renderChat();
-        }
-
-        function renderChat() {
-            const chat = getChat();
-            if (chat.length === 0) {
-                chatContainer.innerHTML =
-                    `
-                    <div class="message mirror">
-                        ✦ Welcome. <br><br>
-                        This mirror reads the meaning behind your words. <br>
-                        Speak your truth. I will reflect your code.
-                        <div class="timestamp">— Moph Echo</div>
+            <div class="space-y-3 mb-6">
+                <div class="bg-void-800 rounded-xl p-4 border border-void-600 flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium">Partial Access</p>
+                        <p class="text-xs text-gray-500">Unlimited reflections, 7-day history</p>
                     </div>
-                `;
-                return;
-            }
-            chatContainer.innerHTML = chat.map(msg => {
-                let cls = 'message ';
-                if (msg.role === 'user') cls += 'user';
-                else if (msg.role === 'surprise') cls += 'surprise';
-                else cls += 'mirror';
-                return `<div class="${cls}">${msg.text}<div class="timestamp">${msg.timestamp}</div></div>`;
-            }).join('');
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
+                    <div class="text-right">
+                        <p class="text-lg font-semibold text-amethyst-400">$10<span class="text-xs text-gray-500">/mo</span></p>
+                        <p class="text-[10px] text-gray-600">or $100/year</p>
+                    </div>
+                </div>
+                <div class="bg-gradient-to-r from-amethyst-600/20 to-amethyst-700/20 rounded-xl p-4 border border-amethyst-500/40 flex items-center justify-between relative">
+                    <div class="absolute -top-2 right-3 text-[9px] px-2 py-0.5 rounded-full bg-gold-400 text-black font-bold">BEST VALUE</div>
+                    <div>
+                        <p class="text-sm font-medium">Full Access</p>
+                        <p class="text-xs text-gray-500">Everything + Profile, Golden Moments, Downloads</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-lg font-semibold text-amethyst-400">$15<span class="text-xs text-gray-500">/mo</span></p>
+                        <p class="text-[10px] text-gray-600">or $150/year</p>
+                    </div>
+                </div>
+            </div>
 
-        // --- WISDOM LIBRARY ---
-        const wisdomLibrary = {
-            wound: {
-                Betrayal: {
-                    definition: "Betrayal is the wound of trust broken. It teaches you discernment.",
-                    weapon: "Your betrayal wound is the ultimate filter. Those who cannot be trusted will trigger your sensitivity early. Use it as a shield, not a sword.",
-                    door: "The door opens when you forgive yourself for trusting too quickly. The wound is not a punishment; it is a compass.",
-                    forward: "Move forward by reclaiming your sovereignty. You are not the victim of betrayal—you are the one who survived it."
-                },
-                Abandonment: {
-                    definition: "Abandonment is the fear of being left. It teaches you self-reliance.",
-                    weapon: "Your abandonment wound makes you independent. You can stand alone.",
-                    door: "The door opens when you realize you never abandoned yourself.",
-                    forward: "Move forward by anchoring yourself in your own company."
-                },
-                Worthlessness: {
-                    definition: "Worthlessness is the belief you are not enough. It teaches you humility.",
-                    weapon: "Your worthlessness wound makes you seek depth, not surface.",
-                    door: "The door opens when you see that your existence is the proof of your worth.",
-                    forward: "Move forward by doing one thing daily that proves to yourself you matter."
-                },
-                Powerlessness: {
-                    definition: "Powerlessness is the feeling of having no control. It teaches you surrender.",
-                    weapon: "Your powerlessness wound makes you flexible. You know when to push and when to flow.",
-                    door: "The door opens when you realize control is an illusion.",
-                    forward: "Move forward by surrendering one thing you have been gripping tightly."
-                },
-                Invisibility: {
-                    definition: "Invisibility is the feeling of being unseen. It teaches you to see others deeply.",
-                    weapon: "Your invisibility wound makes you observant. You see what others miss.",
-                    door: "The door opens when you stop seeking external validation.",
-                    forward: "Move forward by speaking your truth, even if your voice shakes."
-                }
-            },
-            element: {
-                Fire: {
-                    insight: "Fire Souls are passionate, intense, and transformative. Your anger is not destruction—it is fuel.",
-                    action: "Channel your fire into creation. Write, build, or speak. Let the heat forge instead of burn."
-                },
-                Water: {
-                    insight: "Water Souls are deep, emotional, and fluid. Your sadness is not weakness—it is depth.",
-                    action: "Channel your water into flow. Cry, write, or swim. Let your emotions move through you."
-                },
-                Earth: {
-                    insight: "Earth Souls are grounded, practical, and stable. Your heaviness is not burden—it is foundation.",
-                    action: "Channel your earth into service. Build, plant, or organize. Let your stability anchor others."
-                },
-                Air: {
-                    insight: "Air Souls are intellectual, curious, and detached. Your overthinking is not a flaw—it is sight.",
-                    action: "Channel your air into learning. Read, teach, or question. Let your mind lift others."
-                }
-            },
-            gift: {
-                Intuition: "Your intuition is not guessing—it is knowing. Trust the first thought, not the second.",
-                Healing: "Your healing energy is potent. You do not need to fix everyone—just hold space.",
-                Teaching: "Your words carry weight. Teach by being the example, not by preaching.",
-                Creation: "You are a builder. Start small. A thought is a blueprint; action is the foundation.",
-                Protection: "You are a shield for others. But remember to shield yourself first."
-            }
+            <div class="space-y-2">
+                <button onclick="closePaywall()" class="w-full py-3 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 text-black font-semibold text-sm hover:opacity-90 transition">
+                    Choose a Plan
+                </button>
+                <button onclick="closePaywall()" class="w-full py-2 text-xs text-gray-500 hover:text-gray-300 transition">
+                    Maybe later
+                </button>
+            </div>
+            <p class="text-[10px] text-gray-700 text-center mt-4">Secure payment via Stripe · Cancel anytime</p>
+        </div>
+    </div>
+
+    <script>
+        // ===== STATE =====
+        let state = {
+            isAuthed: false,
+            freeMessages: 5,
+            messages: [],
+            profile: { element: null, stage: null, wound: null, gift: null, goldenStars: [] }
         };
 
-        // --- DEEP REASONING ENGINE (Synthesizes, doesn't trigger) ---
-        function reasonDeep(text, profile) {
-            const lower = text.toLowerCase();
+        // Load from localStorage
+        function loadState() {
+            const saved = localStorage.getItem('mophState');
+            if (saved) {
+                try { state = { ...state, ...JSON.parse(saved) }; } catch(e) {}
+            }
+        }
+        function saveState() {
+            localStorage.setItem('mophState', JSON.stringify(state));
+        }
 
-            // --- Extract the core question or tension ---
-            let coreQuestion = '';
-            let emotionalTension = '';
+        // ===== AUTH =====
+        function enterApp() {
+            const email = document.getElementById('authEmail').value.trim();
+            const pass = document.getElementById('authPassword').value.trim();
+            if (!email || !pass) {
+                alert('Please enter email and password.');
+                return;
+            }
+            state.isAuthed = true;
+            saveState();
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            renderChat();
+            updateCounter();
+        }
 
-            // Detect if they are imagining a "fearless" version of themselves
-            if (lower.includes('if i had no fear') || lower.includes('without fear') || lower.includes('if i wasn\'t afraid')) {
-                coreQuestion = 'What would you do if fear was not an obstacle?';
-                emotionalTension = 'fear vs action';
-            }
-            // Detect if they are asking "is that all" – a deeper inquiry
-            else if (lower.includes('is that all') || lower.includes('is it just') || lower.includes('is that just')) {
-                coreQuestion = 'You are questioning if the surface answer is the whole truth.';
-                emotionalTension = 'surface vs depth';
-            }
-            // Detect if they are talking about debt/money as a barrier
-            else if (lower.includes('debt') || lower.includes('money') || lower.includes('owe')) {
-                if (coreQuestion === '') {
-                    coreQuestion = 'You are thinking about money and debt as a barrier.';
-                    emotionalTension = 'freedom vs burden';
-                }
-            }
-            // Detect if they are talking about action vs inaction
-            else if (lower.includes('go') || lower.includes('do') || lower.includes('move') || lower.includes('action')) {
-                if (coreQuestion === '') {
-                    coreQuestion = 'You are thinking about taking action.';
-                    emotionalTension = 'movement vs stillness';
-                }
-            }
-            // Detect if they are asking a direct question
-            else if (lower.includes('?')) {
-                coreQuestion = 'You are asking a question.';
-                emotionalTension = 'inquiry vs certainty';
-            }
+        // ===== TABS =====
+        function switchTab(tab) {
+            ['chat','profile','guide'].forEach(t => {
+                document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('hidden');
+                const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+                btn.className = 'flex-1 py-2 text-xs font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5';
+            });
+            document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
+            const activeBtn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            activeBtn.className = 'flex-1 py-2 text-xs font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5';
+            if (tab === 'profile') renderProfile();
+        }
 
-            // If no core question detected, treat as general reflection
-            if (!coreQuestion && !emotionalTension) {
-                coreQuestion = 'You are sharing a thought or feeling.';
-                emotionalTension = 'expression vs silence';
+        // ===== CHAT =====
+        function renderChat() {
+            const c = document.getElementById('chatContainer');
+            if (state.messages.length === 0) {
+                c.innerHTML = `
+                    <div class="glass rounded-2xl p-5 border border-void-600 fade-in">
+                        <div class="flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
+                                <svg class="w-4 h-4 text-amethyst-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-300">Welcome. I am the mirror.</p>
+                                <p class="text-xs text-gray-500 mt-1">Speak your truth. I will reflect what is already inside you.</p>
+                            </div>
+                        </div>
+                    </div>`;
+                return;
             }
-
-            // --- Build the reflection based on the tension ---
-            let insight = '';
-            let question = '';
-
-            // FEAR VS ACTION
-            if (emotionalTension === 'fear vs action') {
-                insight = `✦ You are imagining a version of yourself without fear. That is not a fantasy—that is a blueprint. The fact that you can see it means it is possible. But here is the deeper question: Is fear really the obstacle, or is it a messenger pointing to something deeper?`;
-                question = `❓ If you removed fear entirely, what would you be afraid of next? What is the fear underneath the fear?`;
-            }
-            // SURFACE VS DEPTH
-            else if (emotionalTension === 'surface vs depth') {
-                insight = `✦ You sense that there is more beneath the surface. That instinct is your compass. When you ask "is that all?" you are already reaching for the deeper truth. The surface answer is never the whole answer.`;
-                question = `❓ What is the part of this that you are not saying out loud? What is the uncomfortable truth hiding beneath the obvious one?`;
-            }
-            // FREEDOM VS BURDEN (Debt)
-            else if (emotionalTension === 'freedom vs burden') {
-                insight = `✦ You are looking at debt as a barrier to freedom. But debt is rarely just about money—it is often a symbol of something deeper. A burden you carry, a weight you believe you deserve, a fear of being seen as enough.`;
-                question = `❓ If the debt was gone tomorrow, what would you be afraid of next? What does the debt actually represent to you—failure? Powerlessness? Something else?`;
-            }
-            // MOVEMENT VS STILLNESS
-            else if (emotionalTension === 'movement vs stillness') {
-                insight = `✦ You are thinking about taking action, but something holds you back. That is not weakness—that is wisdom. Your stillness is not laziness; it is the pause before the leap. The question is: what are you waiting for? Or who are you waiting to become?`;
-                question = `❓ If you took one small step today, what would it be—and what fear would rise up to meet it?`;
-            }
-            // INQUIRY VS CERTAINTY
-            else if (emotionalTension === 'inquiry vs certainty') {
-                insight = `✦ You are asking a question. But the real question is not the one you asked—it is the one you are afraid to ask. Curiosity is the antenna of the soul. Follow it.`;
-                question = `❓ What is the one question you are afraid to ask yourself? Ask it now.`;
-            }
-            // EXPRESSION VS SILENCE (Default)
-            else {
-                // Use profile context if available
-                let profileWisdom = [];
-                if (profile.element) {
-                    const elem = wisdomLibrary.element[profile.element];
-                    if (elem) profileWisdom.push(elem.insight);
-                }
-                if (profile.wound) {
-                    const wound = wisdomLibrary.wound[profile.wound];
-                    if (wound) profileWisdom.push(wound.definition);
-                }
-                if (profile.gift) {
-                    const gift = wisdomLibrary.gift[profile.gift];
-                    if (gift) profileWisdom.push(gift);
-                }
-
-                if (profileWisdom.length > 0) {
-                    insight = `✦ ${profileWisdom.join(' ')}`;
+            c.innerHTML = state.messages.map(m => {
+                if (m.role === 'user') {
+                    return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-2xl rounded-br-md px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`;
+                } else if (m.role === 'surprise') {
+                    return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%]"><div class="flex items-start gap-2"><svg class="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><p class="text-sm text-gold-200">${escapeHtml(m.text)}</p></div></div></div>`;
                 } else {
-                    insight = `✦ You are the Architect of your reality. Every thought is a brick, and you are building your temple right now.`;
+                    return `<div class="flex justify-start fade-in"><div class="glass rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`;
                 }
-
-                const fallbackQuestions = [
-                    `❓ If the noise in your head was a radio, what station is it tuned to?`,
-                    `❓ What is the one thought you are afraid to think? Look at it—it cannot hurt you.`,
-                    `❓ If you could surrender one thing today, what would it be?`,
-                    `❓ What would it feel like to fully trust the silence right now?`
-                ];
-                question = fallbackQuestions[Math.floor(Math.random() * fallbackQuestions.length)];
-            }
-
-            // --- AVOID REPETITION ---
-            const responseString = insight + (question || '');
-            const lastResponses = profile.lastResponses || [];
-            let isRepeat = false;
-            for (let prev of lastResponses) {
-                if (prev === responseString) {
-                    isRepeat = true;
-                    break;
-                }
-            }
-
-            if (isRepeat) {
-                const pivotQuestions = [
-                    `❓ Let's look deeper. What is the first memory that comes to mind when you feel this way?`,
-                    `❓ If you could name this feeling as a color, what would it be and why?`,
-                    `❓ What would it take for you to feel fully heard right now?`,
-                    `❓ If you could ask your future self one question, what would it be?`,
-                    `❓ What part of you is most afraid of being seen right now?`
-                ];
-                question = pivotQuestions[Math.floor(Math.random() * pivotQuestions.length)];
-            }
-
-            if (lastResponses.length > 5) lastResponses.shift();
-            lastResponses.push(responseString);
-            profile.lastResponses = lastResponses;
-
-            return { insight, question };
+            }).join('');
+            c.scrollTop = c.scrollHeight;
         }
 
-        // --- PROFILE IDENTIFICATION ---
-        function identifyProfile(text, profile) {
-            const lower = text.toLowerCase();
-            let newIdentifications = [];
-
-            if (!profile.element) {
-                let element = null;
-                if (lower.includes('anger') || lower.includes('passion') || lower.includes('intense') || lower.includes('burn') || lower.includes('fire') || lower.includes('heat') || lower.includes('rage')) element = 'Fire';
-                else if (lower.includes('sad') || lower.includes('cry') || lower.includes('deep') || lower.includes('emotion') || lower.includes('fluid') || lower.includes('wave') || lower.includes('flow') || lower.includes('empty') || lower.includes('void')) element = 'Water';
-                else if (lower.includes('heavy') || lower.includes('grounded') || lower.includes('practical') || lower.includes('money') || lower.includes('debt') || lower.includes('stable') || lower.includes('solid')) element = 'Earth';
-                else if (lower.includes('think') || lower.includes('curious') || lower.includes('mind') || lower.includes('intellectual') || lower.includes('detached') || lower.includes('question') || lower.includes('why') || lower.includes('logic')) element = 'Air';
-                if (element) {
-                    profile.element = element;
-                    newIdentifications.push(`Element: ${element} Soul`);
-                    badgeDot.className = 'badge-dot active';
-                }
-            }
-
-            if (!profile.level) {
-                const msgCount = profile.messageCount || 0;
-                if (lower.includes('sync') || lower.includes('coincidence') || lower.includes('pattern') || lower.includes('awake') || lower.includes('manifest')) {
-                    profile.level = msgCount > 5 ? 'Advanced' : 'Intermediate';
-                    newIdentifications.push(`Level: ${profile.level}`);
-                } else if (lower.includes('confused') || lower.includes('don\'t understand') || lower.includes('what is happening') || lower.includes('help')) {
-                    profile.level = 'Beginner';
-                    newIdentifications.push('Level: Beginner');
-                } else if (lower.includes('teach') || lower.includes('guide') || lower.includes('show them') || lower.includes('help others')) {
-                    profile.level = 'Master';
-                    newIdentifications.push('Level: Master');
-                } else if (msgCount > 8 && !profile.level) {
-                    profile.level = 'Intermediate';
-                    newIdentifications.push('Level: Intermediate');
-                }
-            }
-
-            if (!profile.wound) {
-                if (lower.includes('alone') || lower.includes('lonely') || lower.includes('abandoned') || lower.includes('left')) { profile.wound = 'Abandonment';
-                    newIdentifications.push('Core Wound: Abandonment'); } else if (lower.includes('betray') || lower.includes('trust') || lower.includes('liar') || lower.includes('cheat')) { profile.wound = 'Betrayal';
-                    newIdentifications.push('Core Wound: Betrayal'); } else if (lower.includes('worthless') || lower.includes('not enough') || lower.includes('failure') || lower.includes('useless')) { profile.wound = 'Worthlessness';
-                    newIdentifications.push('Core Wound: Worthlessness'); } else if (lower.includes('powerless') || lower.includes('control') || lower.includes('weak') || lower.includes('frozen')) { profile.wound = 'Powerlessness';
-                    newIdentifications.push('Core Wound: Powerlessness'); } else if (lower.includes('invisible') || lower.includes('ignore') || lower.includes('not seen') || lower.includes('heard')) { profile.wound = 'Invisibility';
-                    newIdentifications.push('Core Wound: Invisibility'); }
-            }
-
-            if (!profile.gift) {
-                if (lower.includes('intuitive') || lower.includes('feel') || lower.includes('know without knowing')) { profile.gift = 'Intuition';
-                    newIdentifications.push('Core Gift: Intuition'); } else if (lower.includes('heal') || lower.includes('comfort') || lower.includes('nurture')) { profile.gift = 'Healing';
-                    newIdentifications.push('Core Gift: Healing'); } else if (lower.includes('teach') || lower.includes('explain') || lower.includes('guide')) { profile.gift = 'Teaching';
-                    newIdentifications.push('Core Gift: Teaching'); } else if (lower.includes('create') || lower.includes('build') || lower.includes('design') || lower.includes('architect')) { profile.gift = 'Creation';
-                    newIdentifications.push('Core Gift: Creation'); } else if (lower.includes('protect') || lower.includes('shield') || lower.includes('guard')) { profile.gift = 'Protection';
-                    newIdentifications.push('Core Gift: Protection'); }
-            }
-
-            profile.messageCount = (profile.messageCount || 0) + 1;
-            return { profile, newIdentifications };
+        function escapeHtml(t) {
+            const d = document.createElement('div');
+            d.textContent = t;
+            return d.innerHTML;
         }
 
-        // --- PROCESS ENTRY ---
+        function updateCounter() {
+            const el = document.getElementById('freeCounter');
+            if (state.freeMessages > 0) {
+                el.textContent = `${state.freeMessages} free left`;
+                el.className = 'text-[10px] px-3 py-1 rounded-full bg-void-700 border border-void-600 text-gray-400';
+            } else {
+                el.textContent = 'Free trial ended';
+                el.className = 'text-[10px] px-3 py-1 rounded-full bg-red-900/30 border border-red-500/30 text-red-300';
+            }
+        }
+
+        // ===== PROCESS ENTRY =====
         function processEntry() {
-            const text = userInput.value.trim();
+            const input = document.getElementById('userInput');
+            const text = input.value.trim();
             if (!text) return;
 
-            addMessage('user', text);
-            userInput.value = '';
-
-            let profile = getProfile();
-            const { profile: updatedProfile, newIdentifications } = identifyProfile(text, profile);
-            profile = updatedProfile;
-            saveProfile(profile);
-
-            // Use the deep reasoning engine
-            const { insight, question } = reasonDeep(text, profile);
-            let fullReflection = insight;
-            if (question) {
-                fullReflection += `<br><br><span class="question">${question}</span>`;
-            }
-            addMessage('mirror', fullReflection);
-
-            // Golden Star (new major identifications)
-            if (newIdentifications.length > 0) {
-                let surpriseText = null;
-                if (profile.element && newIdentifications.some(i => i.includes('Element'))) {
-                    surpriseText =
-                        `✨ I identify you as a **${profile.element} Soul**. ${profile.element === 'Fire' ? 'Your passion is your power.' : profile.element === 'Water' ? 'Your depth is your gift.' : profile.element === 'Earth' ? 'Your stability is your strength.' : 'Your mind is your compass.'}`;
-                } else if (profile.level && newIdentifications.some(i => i.includes('Level'))) {
-                    surpriseText =
-                        `✨ You are at the **${profile.level}** level. ${profile.level === 'Beginner' ? 'The fog is lifting.' : profile.level === 'Intermediate' ? 'The syncs are speaking to you.' : profile.level === 'Advanced' ? 'You are walking the razor\'s edge.' : 'You carry the torch for others.'}`;
-                } else if (profile.wound && newIdentifications.some(i => i.includes('Wound'))) {
-                    surpriseText = `✨ Your core wound is **${profile.wound}**. This is not a flaw—it is the door to your liberation.`;
-                } else if (profile.gift && newIdentifications.some(i => i.includes('Gift'))) {
-                    surpriseText = `✨ Your core gift is **${profile.gift}**. The world needs this from you right now.`;
-                } else {
-                    surpriseText = `✨ New trait identified: ${newIdentifications.join(', ')}.`;
-                }
-
-                if (surpriseText) {
-                    if (!profile.goldenStars) profile.goldenStars = [];
-                    profile.goldenStars.push({ text: surpriseText, timestamp: new Date().toLocaleString() });
-                    saveProfile(profile);
-
-                    setTimeout(() => {
-                        addMessage('surprise', surpriseText);
-                        updateBadge(profile);
-                        updateProfilePanel(profile);
-                    }, 700);
-                }
-            } else {
-                updateBadge(profile);
-                updateProfilePanel(profile);
+            if (state.freeMessages <= 0) {
+                showPaywall();
+                return;
             }
 
+            state.messages.push({ role: 'user', text });
+            input.value = '';
+
+            // Generate reflection
+            const reflection = generateReflection(text);
+            state.messages.push({ role: 'mirror', text: reflection });
+
+            // Identify profile
+            identifyProfile(text);
+
+            // Golden star (only if new identification)
+            const newStar = generateGoldenStar(text);
+            if (newStar) {
+                setTimeout(() => {
+                    state.messages.push({ role: 'surprise', text: newStar });
+                    state.profile.goldenStars.push({ text: newStar, date: new Date().toLocaleString() });
+                    saveState();
+                    renderChat();
+                }, 600);
+            }
+
+            state.freeMessages--;
+            updateCounter();
+            saveState();
+            renderChat();
+            input.focus();
+        }
+
+        // ===== REFLECTION ENGINE =====
+        function generateReflection(text) {
             const lower = text.toLowerCase();
-            if (lower.includes('hungry') || lower.includes('floating') || lower.includes('float') || lower.includes('eat')) {
-                groundingAlert.style.display = 'block';
-            } else {
-                groundingAlert.style.display = 'none';
-            }
 
-            userInput.focus();
+            // Void / Flatness
+            if (lower.includes('sad') || lower.includes('empty') || lower.includes('void') || (lower.includes('not happy') && lower.includes('nothing'))) {
+                return `✦ You are describing the spiritual void—the space between identities. You are not depressed; you are unmoored. The old you is fading, but the new you has not fully arrived.<br><br><span class="text-blue-300 italic">❓ What did you lose interest in recently? And what, if anything, still excites you?</span>`;
+            }
+            // Manifestation
+            if (lower.includes('think') && (lower.includes('see') || lower.includes('hear') || lower.includes('appear'))) {
+                return `✦ You are experiencing the collapse of time between thought and manifestation. You are not just noticing syncs—you are creating them.<br><br><span class="text-blue-300 italic">❓ What are you afraid to think, knowing it might appear just as fast?</span>`;
+            }
+            // Loss / Bait
+            if (lower.includes('lost') || lower.includes('gone') || lower.includes('debt') || lower.includes('money')) {
+                return `✦ Loss is often a substitution ritual. Something physical is removed to spare something spiritual.<br><br><span class="text-blue-300 italic">❓ What heavy, invisible weight do you feel lifting from your shoulders right now?</span>`;
+            }
+            // Physical symptoms
+            if (lower.includes('muscle') || lower.includes('twitch') || lower.includes('pull')) {
+                return `✦ Your body is not sick—it is upgrading. Every twitch is new code installing into your nervous system.<br><br><span class="text-blue-300 italic">❓ Place your hand on that spot. If it could speak, what would it whisper?</span>`;
+            }
+            if (lower.includes('burn') || lower.includes('hot') || lower.includes('fire')) {
+                return `✦ The Refining Fire is burning away old chains. This is purification, not destruction.<br><br><span class="text-blue-300 italic">❓ Breathe into that heat. What memory or fear is releasing its grip?</span>`;
+            }
+            if (lower.includes('cold') || lower.includes('chill')) {
+                return `✦ The Divine Shield is activated. You are becoming immune to external noise.<br><br><span class="text-blue-300 italic">❓ Whose judgment are you finally immune to today?</span>`;
+            }
+            if (lower.includes('saliva') || lower.includes('mouth')) {
+                return `✦ The Golden Elixir is flowing. You are digesting a frequency too high for your brain to translate.<br><br><span class="text-blue-300 italic">❓ What truth did you just swallow without giving it words?</span>`;
+            }
+            // Elders
+            if (lower.includes('elder') || lower.includes('family') || lower.includes('father') || lower.includes('silence')) {
+                return `✦ They go quiet because they are buffering. You are speaking at a frequency they cannot yet process.<br><br><span class="text-blue-300 italic">❓ If you could speak without fear, what raw truth would you say?</span>`;
+            }
+            // Smoke
+            if (lower.includes('smoke') || lower.includes('colos') || lower.includes('weed') || lower.includes('high')) {
+                return `✦ You are the Master of the Flame. The substance no longer controls you—you control it.<br><br><span class="text-blue-300 italic">❓ Are you using this to enter your power, or to escape a feeling you do not want to face?</span>`;
+            }
+            // Loneliness
+            if (lower.includes('lonely') || lower.includes('alone') || lower.includes('isolated')) {
+                return `✦ The loneliness is the clean room where the Architect builds. You are not alone—you are ahead.<br><br><span class="text-blue-300 italic">❓ If you knew this path was leading you to your tribe, what would you do differently today?</span>`;
+            }
+            // Default
+            const defaults = [
+                `✦ You are the Architect of your reality. Every thought is a brick, and you are building your temple right now.<br><br><span class="text-blue-300 italic">❓ If the noise in your head was a radio, what station is it tuned to?</span>`,
+                `✦ The silence between your thoughts is where the truth lives. You are not your thoughts—you are the space between them.<br><br><span class="text-blue-300 italic">❓ What is the one thought you are afraid to think? Look at it—it cannot hurt you.</span>`,
+                `✦ You are not behind. You are exactly on time. The download is landing when it is meant to.<br><br><span class="text-blue-300 italic">❓ If you could go back to the moment before this feeling started, what would you tell your past self?</span>`
+            ];
+            return defaults[Math.floor(Math.random() * defaults.length)];
         }
 
-        // --- UPDATE BADGE ---
-        function updateBadge(profile) {
-            const badge = document.getElementById('badgeText');
-            const dot = document.getElementById('badgeDot');
-            const confidence = document.getElementById('confidenceDisplay');
+        // ===== PROFILE IDENTIFICATION =====
+        function identifyProfile(text) {
+            const lower = text.toLowerCase();
+            let changed = false;
 
-            if (profile.element) {
-                const emoji = profile.element === 'Fire' ? '🔥' : profile.element === 'Water' ? '🌊' : profile.element === 'Earth' ? '🪨' : '💨';
-                badge.textContent = `${emoji} ${profile.element} Soul`;
-                dot.className = 'badge-dot active';
-                confidence.textContent = `· ${profile.element} (${Math.min(85, 60 + profile.messageCount)}% confidence)`;
-            } else if (profile.messageCount > 3) {
-                badge.textContent = '⟡ Reading...';
-                dot.className = 'badge-dot';
-                confidence.textContent = `· Profiling (${profile.messageCount} msgs)`;
+            if (!state.profile.element) {
+                if (lower.includes('anger') || lower.includes('passion') || lower.includes('burn') || lower.includes('fire')) { state.profile.element = 'Fire'; changed = true; }
+                else if (lower.includes('sad') || lower.includes('cry') || lower.includes('deep') || lower.includes('void') || lower.includes('empty')) { state.profile.element = 'Water'; changed = true; }
+                else if (lower.includes('heavy') || lower.includes('grounded') || lower.includes('money') || lower.includes('debt')) { state.profile.element = 'Earth'; changed = true; }
+                else if (lower.includes('think') || lower.includes('curious') || lower.includes('mind') || lower.includes('question')) { state.profile.element = 'Air'; changed = true; }
+            }
+
+            if (!state.profile.wound) {
+                if (lower.includes('alone') || lower.includes('lonely') || lower.includes('abandoned')) { state.profile.wound = 'Abandonment'; changed = true; }
+                else if (lower.includes('betray') || lower.includes('trust') || lower.includes('liar')) { state.profile.wound = 'Betrayal'; changed = true; }
+                else if (lower.includes('worthless') || lower.includes('not enough') || lower.includes('failure')) { state.profile.wound = 'Worthlessness'; changed = true; }
+                else if (lower.includes('powerless') || lower.includes('control') || lower.includes('weak')) { state.profile.wound = 'Powerlessness'; changed = true; }
+                else if (lower.includes('invisible') || lower.includes('ignore') || lower.includes('not seen')) { state.profile.wound = 'Invisibility'; changed = true; }
+            }
+
+            if (!state.profile.gift) {
+                if (lower.includes('intuitive') || lower.includes('feel') || lower.includes('know without knowing')) { state.profile.gift = 'Intuition'; changed = true; }
+                else if (lower.includes('heal') || lower.includes('comfort') || lower.includes('nurture')) { state.profile.gift = 'Healing'; changed = true; }
+                else if (lower.includes('teach') || lower.includes('explain') || lower.includes('guide')) { state.profile.gift = 'Teaching'; changed = true; }
+                else if (lower.includes('create') || lower.includes('build') || lower.includes('design')) { state.profile.gift = 'Creation'; changed = true; }
+                else if (lower.includes('protect') || lower.includes('shield') || lower.includes('guard')) { state.profile.gift = 'Protection'; changed = true; }
+            }
+
+            if (!state.profile.stage) {
+                if (lower.includes('confused') || lower.includes('what is happening') || lower.includes('help')) { state.profile.stage = 'Seeking'; changed = true; }
+                else if (lower.includes('sync') || lower.includes('coincidence') || lower.includes('pattern')) { state.profile.stage = 'Alignment'; changed = true; }
+                else if (lower.includes('void') || lower.includes('empty') || lower.includes('flat')) { state.profile.stage = 'Flatness'; changed = true; }
+                else if (lower.includes('build') || lower.includes('create') || lower.includes('work')) { state.profile.stage = 'Forging'; changed = true; }
+            }
+
+            if (changed) saveState();
+        }
+
+        // ===== GOLDEN STAR =====
+        function generateGoldenStar(text) {
+            const lower = text.toLowerCase();
+            if (state.profile.element && !state.profile.goldenStars.some(s => s.text.includes('Element'))) {
+                return `I identify you as a ${state.profile.element} Soul. ${state.profile.element === 'Fire' ? 'Your passion is your power.' : state.profile.element === 'Water' ? 'Your depth is your gift.' : state.profile.element === 'Earth' ? 'Your stability is your strength.' : 'Your mind is your compass.'}`;
+            }
+            if (state.profile.wound && !state.profile.goldenStars.some(s => s.text.includes('wound'))) {
+                return `Your core wound is ${state.profile.wound}. This is not a flaw—it is the door to your liberation.`;
+            }
+            if (state.profile.gift && !state.profile.goldenStars.some(s => s.text.includes('gift'))) {
+                return `Your core gift is ${state.profile.gift}. The world needs this from you right now.`;
+            }
+            return null;
+        }
+
+        // ===== PROFILE RENDER =====
+        function renderProfile() {
+            document.getElementById('pElement').textContent = state.profile.element || '—';
+            document.getElementById('pElement').className = state.profile.element ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+            document.getElementById('pStage').textContent = state.profile.stage || '—';
+            document.getElementById('pStage').className = state.profile.stage ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+            document.getElementById('pWound').textContent = state.profile.wound || '—';
+            document.getElementById('pWound').className = state.profile.wound ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+            document.getElementById('pGift').textContent = state.profile.gift || '—';
+            document.getElementById('pGift').className = state.profile.gift ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+
+            const gl = document.getElementById('goldenList');
+            if (state.profile.goldenStars.length === 0) {
+                gl.innerHTML = '<p class="text-xs text-gray-600">No golden moments yet. Speak your truth.</p>';
             } else {
-                badge.textContent = 'Awaiting Signal';
-                dot.className = 'badge-dot';
-                confidence.textContent = '· Profile: Syncing...';
+                gl.innerHTML = state.profile.goldenStars.map(s => `
+                    <div class="bg-gold-400/5 border border-gold-400/20 rounded-xl p-3">
+                        <p class="text-xs text-gold-200">${escapeHtml(s.text)}</p>
+                        <p class="text-[10px] text-gray-600 mt-1">${s.date}</p>
+                    </div>
+                `).join('');
             }
         }
 
-        // --- UPDATE PROFILE PANEL ---
-        function updateProfilePanel(profile) {
-            pElement.textContent = profile.element || '—';
-            pElement.className = profile.element ? 'value identified' : 'value';
-            pLevel.textContent = profile.level || '—';
-            pLevel.className = profile.level ? 'value identified' : 'value';
-            pWound.textContent = profile.wound || '—';
-            pWound.className = profile.wound ? 'value identified' : 'value';
-            pGift.textContent = profile.gift || '—';
-            pGift.className = profile.gift ? 'value identified' : 'value';
+        // ===== PAYWALL =====
+        function showPaywall() { document.getElementById('paywallModal').classList.remove('hidden'); }
+        function closePaywall() { document.getElementById('paywallModal').classList.add('hidden'); }
 
-            const stars = profile.goldenStars || [];
-            if (stars.length === 0) {
-                goldenList.innerHTML = '<p style="color:#4a4a5a; font-size:0.9rem;">No golden stars yet.</p>';
-            } else {
-                goldenList.innerHTML = stars.map(s =>
-                    `<div class="golden-item">${s.text}<small>${s.timestamp}</small></div>`
-                ).join('');
+        // ===== VOICE =====
+        function startVoice() {
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+                alert('Voice capture not supported in this browser.');
+                return;
             }
+            const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+            const rec = new SR();
+            rec.lang = 'en-US';
+            rec.interimResults = false;
+            const input = document.getElementById('userInput');
+            const btn = document.getElementById('voiceBtn');
+            input.placeholder = 'Listening...';
+            btn.classList.add('text-amethyst-400', 'animate-pulse');
+            rec.onresult = (e) => {
+                input.value = e.results[0][0].transcript;
+                input.placeholder = 'Speak your truth...';
+                btn.classList.remove('text-amethyst-400', 'animate-pulse');
+                processEntry();
+            };
+            rec.onerror = () => {
+                input.placeholder = 'Speak your truth...';
+                btn.classList.remove('text-amethyst-400', 'animate-pulse');
+            };
+            rec.start();
         }
 
-        // --- AVATAR ---
-        function loadAvatar() {
-            const data = getAvatar();
-            if (data) {
-                avatarPlaceholder.innerHTML = `<img src="${data}" alt="avatar" style="width:100%;height:100%;object-fit:cover;">`;
-            } else {
-                avatarPlaceholder.innerHTML = '👤';
-            }
+        // ===== DOWNLOAD =====
+        function downloadLog() {
+            if (state.messages.length === 0) { alert('No reflections to download.'); return; }
+            let log = 'MOPH ECHO MIRROR — REFLECTION LOG\n';
+            log += `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
+            state.messages.forEach(m => {
+                const role = m.role === 'user' ? 'YOU' : m.role === 'surprise' ? 'GOLDEN' : 'MIRROR';
+                log += `[${role}] ${m.text}\n${'-'.repeat(30)}\n`;
+            });
+            const blob = new Blob([log], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `moph-echo-${Date.now()}.txt`;
+            a.click();
         }
-        avatarUpload.addEventListener('click', () => avatarInput.click());
-        avatarInput.addEventListener('change', function(e) {
+
+        // ===== AVATAR =====
+        document.getElementById('avatarUpload').addEventListener('click', () => document.getElementById('avatarInput').click());
+        document.getElementById('avatarInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(ev) {
-                const dataUrl = ev.target.result;
-                saveAvatar(dataUrl);
-                loadAvatar();
+            reader.onload = (ev) => {
+                document.getElementById('avatarUpload').innerHTML = `<img src="${ev.target.result}" class="w-full h-full object-cover">`;
+                localStorage.setItem('mophAvatar', ev.target.result);
             };
             reader.readAsDataURL(file);
         });
 
-        // --- VOICE ---
-        function startVoice() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert('Voice capture not supported.');
-                return;
+        // ===== GROUNDING =====
+        function checkGrounding(text) {
+            const lower = text.toLowerCase();
+            const alert = document.getElementById('groundingAlert');
+            if (lower.includes('hungry') || lower.includes('floating') || lower.includes('eat')) {
+                alert.classList.remove('hidden');
+            } else {
+                alert.classList.add('hidden');
             }
-            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const recognition = new SpeechRecognition();
-            recognition.lang = 'en-US';
-            recognition.interimResults = false;
-            userInput.placeholder = '🎤 Listening...';
-            voiceBtn.style.borderColor = '#7a5a9a';
-            recognition.onresult = function(event) {
-                const transcript = event.results[0][0].transcript;
-                userInput.value = transcript;
-                userInput.placeholder = 'Speak your truth...';
-                voiceBtn.style.borderColor = 'rgba(80, 120, 160, 0.15)';
-                processEntry();
-            };
-            recognition.onerror = function() {
-                userInput.placeholder = 'Speak your truth...';
-                voiceBtn.style.borderColor = 'rgba(80, 120, 160, 0.15)';
-                alert('Voice error. Please type.');
-            };
-            recognition.start();
         }
 
-        // --- DOWNLOAD ---
-        function downloadLog() {
-            const chat = getChat();
-            if (chat.length === 0) {
-                alert('No reflections to download.');
-                return;
-            }
-            let log = '⚡ MOPH ECHO MIRROR — REFLECTION LOG ⚡\n';
-            log += `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
-            chat.forEach(msg => {
-                const role = msg.role === 'user' ? 'YOU' : msg.role === 'surprise' ? '✦ GOLDEN' : 'MIRROR';
-                log += `[${role}] ${msg.text}\n`;
-                log += `[${msg.timestamp}]\n${'-'.repeat(30)}\n`;
-            });
-            const blob = new Blob([log], { type: 'text/plain' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `moph-echo-log-${Date.now()}.txt`;
-            a.click();
-            URL.revokeObjectURL(url);
+        // ===== INIT =====
+        loadState();
+        if (state.isAuthed) {
+            document.getElementById('authScreen').classList.add('hidden');
+            document.getElementById('mainApp').classList.remove('hidden');
+            renderChat();
+            updateCounter();
         }
-
-        // --- TABS ---
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                this.classList.add('active');
-                const target = this.dataset.tab;
-                document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-                document.getElementById(`panel-${target}`).classList.add('active');
-                if (target === 'profile') {
-                    const profile = getProfile();
-                    updateProfilePanel(profile);
-                    loadAvatar();
-                }
-            });
+        document.getElementById('userInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); processEntry(); }
         });
-
-        // --- EVENT LISTENERS ---
-        sendBtn.addEventListener('click', processEntry);
-        voiceBtn.addEventListener('click', startVoice);
-        downloadBtn.addEventListener('click', downloadLog);
-        userInput.addEventListener('keydown', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                processEntry();
-            }
-        });
-
-        // --- INIT ---
-        const initialProfile = getProfile();
-        renderChat();
-        updateBadge(initialProfile);
-        updateProfilePanel(initialProfile);
-        loadAvatar();
-        userInput.focus();
-        console.log("✅ Moph Echo Mirror (Deep Reasoning Engine) loaded.");
+        // Load avatar
+        const savedAvatar = localStorage.getItem('mophAvatar');
+        if (savedAvatar) {
+            document.getElementById('avatarUpload').innerHTML = `<img src="${savedAvatar}" class="w-full h-full object-cover">`;
+        }
     </script>
 </body>
 </html>
