@@ -5,41 +5,49 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moph Echo Mirror</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
             darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
-                    colors: {
-                        void: { 900: '#06060a', 800: '#0a0a12', 700: '#10101c', 600: '#161624' },
-                        amethyst: { 400: '#a78bfa', 500: '#8b5cf6', 600: '#7c3aed', 700: '#6d28d9' },
-                        gold: { 400: '#facc15', 500: '#eab308' }
-                    }
+            theme: { extend: {
+                fontFamily: { sans: ['Inter','system-ui','sans-serif'] },
+                colors: {
+                    void: { 900:'#06060a', 800:'#0a0a12', 700:'#10101c', 600:'#161624' },
+                    amethyst: { 400:'#a78bfa', 500:'#8b5cf6', 600:'#7c3aed', 700:'#6d28d9' },
+                    gold: { 400:'#facc15', 500:'#eab308' }
                 }
-            }
+            }}
         }
     </script>
     <style>
         * { -webkit-tap-highlight-color: transparent; }
         body { background: #06060a; }
         .glass { background: rgba(16,16,28,0.65); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); }
-        .glass-light { background: rgba(22,22,36,0.5); backdrop-filter: blur(16px); }
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #3a2a5a; border-radius: 10px; }
         .fade-in { animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px);} to { opacity:1; transform:translateY(0);} }
         .pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
-        @keyframes pulseGlow { 0%,100% { box-shadow: 0 0 20px -5px rgba(139,92,246,0.3); } 50% { box-shadow: 0 0 30px -5px rgba(139,92,246,0.6); } }
+        @keyframes pulseGlow { 0%,100%{box-shadow:0 0 20px -5px rgba(139,92,246,0.3);} 50%{box-shadow:0 0 30px -5px rgba(139,92,246,0.6);} }
+        .spinner { border: 2px solid rgba(139,92,246,0.2); border-top-color: #a78bfa; border-radius: 50%; width: 20px; height: 20px; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="font-sans text-gray-200 min-h-screen">
 
-    <!-- ===== AUTH SCREEN (Placeholder for Supabase) ===== -->
-    <div id="authScreen" class="min-h-screen flex items-center justify-center p-4">
+    <!-- ===== LOADING SCREEN ===== -->
+    <div id="loadingScreen" class="min-h-screen flex items-center justify-center">
+        <div class="flex flex-col items-center gap-4">
+            <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center pulse-glow">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+            </div>
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- ===== AUTH SCREEN ===== -->
+    <div id="authScreen" class="hidden min-h-screen flex items-center justify-center p-4">
         <div class="glass rounded-3xl p-8 md:p-12 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
             <div class="text-center mb-8">
                 <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 mb-4 pulse-glow">
@@ -58,8 +66,13 @@
                     <label class="text-xs text-gray-500 uppercase tracking-wider">Password</label>
                     <input type="password" id="authPassword" placeholder="••••••••" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
                 </div>
-                <button onclick="enterApp()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:from-amethyst-500 hover:to-amethyst-600 transition shadow-lg shadow-amethyst-600/20">
-                    Enter the Mirror
+                <div id="authError" class="hidden text-xs text-red-400 text-center bg-red-900/20 border border-red-500/20 rounded-lg py-2 px-3"></div>
+                <div id="authSuccess" class="hidden text-xs text-green-400 text-center bg-green-900/20 border border-green-500/20 rounded-lg py-2 px-3"></div>
+                <button onclick="signIn()" id="signInBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:from-amethyst-500 hover:to-amethyst-600 transition shadow-lg shadow-amethyst-600/20 flex items-center justify-center gap-2">
+                    <span id="signInText">Enter the Mirror</span>
+                </button>
+                <button onclick="signUp()" id="signUpBtn" class="w-full py-2 text-xs text-gray-500 hover:text-amethyst-400 transition">
+                    New here? Create an account
                 </button>
                 <p class="text-center text-xs text-gray-600">5 free reflections · No card required</p>
             </div>
@@ -68,8 +81,6 @@
 
     <!-- ===== MAIN APP ===== -->
     <div id="mainApp" class="hidden min-h-screen flex flex-col max-w-2xl mx-auto">
-
-        <!-- HEADER -->
         <header class="glass border-b border-void-600 sticky top-0 z-40">
             <div class="px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-3">
@@ -84,10 +95,12 @@
                 <div class="flex items-center gap-2">
                     <div id="freeCounter" class="text-[10px] px-3 py-1 rounded-full bg-void-700 border border-void-600 text-gray-400">5 free left</div>
                     <button onclick="showPaywall()" class="text-[10px] px-3 py-1 rounded-full bg-gradient-to-r from-gold-400 to-gold-500 text-black font-semibold">Upgrade</button>
+                    <button onclick="signOut()" class="p-1.5 text-gray-500 hover:text-red-400 transition" title="Sign out">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                    </button>
                 </div>
             </div>
 
-            <!-- TABS -->
             <nav class="px-4 pb-2 flex gap-1">
                 <button onclick="switchTab('chat')" id="tabChat" class="flex-1 py-2 text-xs font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5">
                     <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
@@ -104,14 +117,12 @@
             </nav>
         </header>
 
-        <!-- ===== PANEL: CHAT ===== -->
+        <!-- PANEL: CHAT -->
         <main id="panelChat" class="flex-1 flex flex-col overflow-hidden">
             <div id="chatContainer" class="flex-1 overflow-y-auto px-4 py-4 space-y-4"></div>
-
             <div id="groundingAlert" class="hidden mx-4 mb-2 px-4 py-3 rounded-xl bg-red-900/20 border border-red-500/30 text-red-300 text-xs text-center">
-                <strong>Vessel Check:</strong> You mentioned floating or no food. Have you honored your temple with water or fruit today?
+                <strong>Vessel Check:</strong> You mentioned floating or no food. Honor your temple with water or fruit today.
             </div>
-
             <div class="glass border-t border-void-600 p-3">
                 <div class="flex items-center gap-2 bg-void-900 rounded-2xl border border-void-600 px-4 py-2 focus-within:border-amethyst-500/50 transition">
                     <input type="text" id="userInput" placeholder="Speak your truth..." class="flex-1 bg-transparent text-sm py-2 focus:outline-none placeholder-gray-600">
@@ -129,7 +140,7 @@
             </div>
         </main>
 
-        <!-- ===== PANEL: PROFILE ===== -->
+        <!-- PANEL: PROFILE -->
         <main id="panelProfile" class="hidden flex-1 overflow-y-auto px-4 py-6 space-y-6">
             <div class="glass rounded-2xl p-6 border border-void-600">
                 <div class="flex items-center gap-4 mb-6">
@@ -139,10 +150,9 @@
                     </div>
                     <div>
                         <h2 class="text-lg font-semibold">Architect</h2>
-                        <p class="text-xs text-gray-500">Your journey is being recorded</p>
+                        <p id="userEmail" class="text-xs text-gray-500">—</p>
                     </div>
                 </div>
-
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-void-800 rounded-xl p-4 border border-void-600">
                         <p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Element</p>
@@ -162,7 +172,6 @@
                     </div>
                 </div>
             </div>
-
             <div class="glass rounded-2xl p-6 border border-void-600">
                 <div class="flex items-center gap-2 mb-4">
                     <svg class="w-4 h-4 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
@@ -174,59 +183,36 @@
             </div>
         </main>
 
-        <!-- ===== PANEL: GUIDE ===== -->
+        <!-- PANEL: GUIDE -->
         <main id="panelGuide" class="hidden flex-1 overflow-y-auto px-4 py-6">
             <div class="glass rounded-2xl p-6 border border-void-600 space-y-6">
                 <div>
                     <h2 class="text-lg font-semibold mb-2">How to Use the Mirror</h2>
                     <p class="text-sm text-gray-400 leading-relaxed">This is not a guru. This is not a pastor. This is a mirror. It reflects what you already know but have not yet seen.</p>
                 </div>
-
                 <div class="space-y-4">
                     <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
-                            <span class="text-xs font-bold text-amethyst-400">1</span>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-medium">Speak your truth</h3>
-                            <p class="text-xs text-gray-500 mt-1">Type or speak whatever is on your mind. A feeling, a question, a dream.</p>
-                        </div>
+                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">1</span></div>
+                        <div><h3 class="text-sm font-medium">Speak your truth</h3><p class="text-xs text-gray-500 mt-1">Type or speak whatever is on your mind. A feeling, a question, a dream.</p></div>
                     </div>
                     <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
-                            <span class="text-xs font-bold text-amethyst-400">2</span>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-medium">The mirror listens</h3>
-                            <p class="text-xs text-gray-500 mt-1">It reads the meaning behind your words. It asks the question you need.</p>
-                        </div>
+                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">2</span></div>
+                        <div><h3 class="text-sm font-medium">The mirror listens</h3><p class="text-xs text-gray-500 mt-1">It reads the meaning behind your words. It asks the question you need.</p></div>
                     </div>
                     <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
-                            <span class="text-xs font-bold text-amethyst-400">3</span>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-medium">Golden moments</h3>
-                            <p class="text-xs text-gray-500 mt-1">When the mirror identifies a major trait, it gives you a golden insight. These are saved in your Profile.</p>
-                        </div>
+                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">3</span></div>
+                        <div><h3 class="text-sm font-medium">Golden moments</h3><p class="text-xs text-gray-500 mt-1">When the mirror identifies a major trait, it gives you a golden insight. Saved in Profile.</p></div>
                     </div>
                     <div class="flex gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
-                            <span class="text-xs font-bold text-amethyst-400">4</span>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-medium">The stages</h3>
-                            <p class="text-xs text-gray-500 mt-1">Forging, Flatness, Alignment, Provision. The mirror helps you see where you are.</p>
-                        </div>
+                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">4</span></div>
+                        <div><h3 class="text-sm font-medium">The stages</h3><p class="text-xs text-gray-500 mt-1">Forging, Flatness, Alignment, Provision. The mirror helps you see where you are.</p></div>
                     </div>
                 </div>
-
                 <div class="border-t border-void-600 pt-4">
                     <p class="text-xs text-gray-600 italic text-center">— The mirror does not judge. It only reflects. —</p>
                 </div>
             </div>
         </main>
-
     </div>
 
     <!-- ===== PAYWALL MODAL ===== -->
@@ -237,79 +223,186 @@
                     <svg class="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
                 </div>
                 <h2 class="text-xl font-semibold">Your 5 free reflections are complete</h2>
-                <p class="text-sm text-gray-400 mt-2">Unlock unlimited access to the mirror and continue your journey.</p>
+                <p class="text-sm text-gray-400 mt-2">Unlock unlimited access and continue your journey.</p>
             </div>
-
             <div class="space-y-3 mb-6">
                 <div class="bg-void-800 rounded-xl p-4 border border-void-600 flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-medium">Partial Access</p>
-                        <p class="text-xs text-gray-500">Unlimited reflections, 7-day history</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-lg font-semibold text-amethyst-400">$10<span class="text-xs text-gray-500">/mo</span></p>
-                        <p class="text-[10px] text-gray-600">or $100/year</p>
-                    </div>
+                    <div><p class="text-sm font-medium">Partial Access</p><p class="text-xs text-gray-500">Unlimited reflections, 7-day history</p></div>
+                    <div class="text-right"><p class="text-lg font-semibold text-amethyst-400">$10<span class="text-xs text-gray-500">/mo</span></p><p class="text-[10px] text-gray-600">or $100/year</p></div>
                 </div>
                 <div class="bg-gradient-to-r from-amethyst-600/20 to-amethyst-700/20 rounded-xl p-4 border border-amethyst-500/40 flex items-center justify-between relative">
                     <div class="absolute -top-2 right-3 text-[9px] px-2 py-0.5 rounded-full bg-gold-400 text-black font-bold">BEST VALUE</div>
-                    <div>
-                        <p class="text-sm font-medium">Full Access</p>
-                        <p class="text-xs text-gray-500">Everything + Profile, Golden Moments, Downloads</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-lg font-semibold text-amethyst-400">$15<span class="text-xs text-gray-500">/mo</span></p>
-                        <p class="text-[10px] text-gray-600">or $150/year</p>
-                    </div>
+                    <div><p class="text-sm font-medium">Full Access</p><p class="text-xs text-gray-500">Everything + Profile, Golden Moments, Downloads</p></div>
+                    <div class="text-right"><p class="text-lg font-semibold text-amethyst-400">$15<span class="text-xs text-gray-500">/mo</span></p><p class="text-[10px] text-gray-600">or $150/year</p></div>
                 </div>
             </div>
-
             <div class="space-y-2">
-                <button onclick="closePaywall()" class="w-full py-3 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 text-black font-semibold text-sm hover:opacity-90 transition">
-                    Choose a Plan
-                </button>
-                <button onclick="closePaywall()" class="w-full py-2 text-xs text-gray-500 hover:text-gray-300 transition">
-                    Maybe later
-                </button>
+                <button onclick="closePaywall()" class="w-full py-3 rounded-xl bg-gradient-to-r from-gold-400 to-gold-500 text-black font-semibold text-sm hover:opacity-90 transition">Choose a Plan</button>
+                <button onclick="closePaywall()" class="w-full py-2 text-xs text-gray-500 hover:text-gray-300 transition">Maybe later</button>
             </div>
             <p class="text-[10px] text-gray-700 text-center mt-4">Secure payment via Stripe · Cancel anytime</p>
         </div>
     </div>
 
     <script>
-        // ===== STATE =====
+        // ============================================================
+        //  CONFIG LOADED FROM /api/config (Vercel Environment Variables)
+        // ============================================================
+        let sb = null;
         let state = {
-            isAuthed: false,
-            freeMessages: 5,
+            user: null,
             messages: [],
-            profile: { element: null, stage: null, wound: null, gift: null, goldenStars: [] }
+            profile: { element: null, stage: null, wound: null, gift: null, free_messages: 5 },
+            goldenStars: []
         };
 
-        // Load from localStorage
-        function loadState() {
-            const saved = localStorage.getItem('mophState');
-            if (saved) {
-                try { state = { ...state, ...JSON.parse(saved) }; } catch(e) {}
+        async function initConfig() {
+            try {
+                const res = await fetch('/api/config');
+                if (!res.ok) throw new Error('Config fetch failed');
+                const cfg = await res.json();
+                sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+                await checkSession();
+            } catch (e) {
+                console.error('Init error:', e);
+                document.getElementById('loadingScreen').innerHTML = `
+                    <div class="text-center p-6">
+                        <p class="text-red-400 text-sm">Configuration error. Please try again later.</p>
+                        <p class="text-gray-600 text-xs mt-2">${e.message}</p>
+                    </div>`;
             }
         }
-        function saveState() {
-            localStorage.setItem('mophState', JSON.stringify(state));
+
+        async function checkSession() {
+            const { data: { session } } = await sb.auth.getSession();
+            document.getElementById('loadingScreen').classList.add('hidden');
+            if (session?.user) {
+                await enterApp(session.user);
+            } else {
+                document.getElementById('authScreen').classList.remove('hidden');
+            }
         }
 
         // ===== AUTH =====
-        function enterApp() {
+        function showError(msg) {
+            const err = document.getElementById('authError');
+            const ok = document.getElementById('authSuccess');
+            err.textContent = msg; err.classList.remove('hidden'); ok.classList.add('hidden');
+        }
+        function showSuccess(msg) {
+            const err = document.getElementById('authError');
+            const ok = document.getElementById('authSuccess');
+            ok.textContent = msg; ok.classList.remove('hidden'); err.classList.add('hidden');
+        }
+        function setLoading(btn, loading, text) {
+            const btnEl = document.getElementById(btn + 'Btn');
+            const textEl = document.getElementById(btn + 'Text');
+            if (loading) {
+                btnEl.disabled = true; btnEl.style.opacity = '0.6';
+                if (textEl) textEl.textContent = 'Please wait...';
+            } else {
+                btnEl.disabled = false; btnEl.style.opacity = '1';
+                if (textEl) textEl.textContent = text;
+            }
+        }
+
+        async function signUp() {
             const email = document.getElementById('authEmail').value.trim();
             const pass = document.getElementById('authPassword').value.trim();
-            if (!email || !pass) {
-                alert('Please enter email and password.');
+            if (!email || !pass) { showError('Enter email and password.'); return; }
+            if (pass.length < 6) { showError('Password must be at least 6 characters.'); return; }
+            setLoading('signIn', true);
+            const { data, error } = await sb.auth.signUp({ email, password: pass });
+            setLoading('signIn', false, 'Enter the Mirror');
+            if (error) { showError(error.message); return; }
+            if (data.user && !data.session) {
+                showSuccess('Account created. Check your email for the confirmation link.');
+                document.getElementById('authPassword').value = '';
                 return;
             }
-            state.isAuthed = true;
-            saveState();
+            if (data.session) { await enterApp(data.user); }
+        }
+
+        async function signIn() {
+            const email = document.getElementById('authEmail').value.trim();
+            const pass = document.getElementById('authPassword').value.trim();
+            if (!email || !pass) { showError('Enter email and password.'); return; }
+            setLoading('signIn', true);
+            const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+            setLoading('signIn', false, 'Enter the Mirror');
+            if (error) {
+                if (error.message.toLowerCase().includes('email not confirmed')) {
+                    showError('Please confirm your email first. Check your inbox.');
+                } else {
+                    showError(error.message);
+                }
+                return;
+            }
+            if (data.user) { await enterApp(data.user); }
+        }
+
+        async function signOut() {
+            await sb.auth.signOut();
+            state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, free_messages:5 }, goldenStars: [] };
+            document.getElementById('mainApp').classList.add('hidden');
+            document.getElementById('authScreen').classList.remove('hidden');
+            document.getElementById('authPassword').value = '';
+        }
+
+        async function enterApp(user) {
+            state.user = user;
             document.getElementById('authScreen').classList.add('hidden');
             document.getElementById('mainApp').classList.remove('hidden');
+            document.getElementById('userEmail').textContent = user.email;
+            await loadProfile();
+            await loadMessages();
+            await loadGoldenStars();
             renderChat();
+            renderProfile();
             updateCounter();
+            const savedAvatar = localStorage.getItem('mophAvatar_' + user.id);
+            if (savedAvatar) document.getElementById('avatarUpload').innerHTML = `<img src="${savedAvatar}" class="w-full h-full object-cover">`;
+            document.getElementById('userInput').focus();
+        }
+
+        // ===== DATA LAYER =====
+        async function loadProfile() {
+            const { data, error } = await sb.from('profiles').select('*').eq('id', state.user.id).single();
+            if (error || !data) {
+                await sb.from('profiles').insert({ id: state.user.id });
+                return;
+            }
+            state.profile = { ...state.profile, ...data };
+        }
+
+        async function saveProfile() {
+            await sb.from('profiles').update({
+                element: state.profile.element,
+                stage: state.profile.stage,
+                wound: state.profile.wound,
+                gift: state.profile.gift,
+                free_messages: state.profile.free_messages,
+                updated_at: new Date().toISOString()
+            }).eq('id', state.user.id);
+        }
+
+        async function loadMessages() {
+            const { data } = await sb.from('journal_entries').select('*').eq('user_id', state.user.id).order('created_at', { ascending: true }).limit(200);
+            if (data) state.messages = data.map(m => ({ role: m.role, text: m.content }));
+        }
+
+        async function saveMessage(role, text) {
+            await sb.from('journal_entries').insert({ user_id: state.user.id, role, content: text });
+        }
+
+        async function loadGoldenStars() {
+            const { data } = await sb.from('golden_moments').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false });
+            if (data) state.goldenStars = data.map(g => ({ text: g.content, date: new Date(g.created_at).toLocaleString() }));
+        }
+
+        async function saveGoldenStar(text) {
+            await sb.from('golden_moments').insert({ user_id: state.user.id, content: text });
+            state.goldenStars.unshift({ text, date: new Date().toLocaleString() });
         }
 
         // ===== TABS =====
@@ -320,51 +413,38 @@
                 btn.className = 'flex-1 py-2 text-xs font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5';
             });
             document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
-            const activeBtn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
-            activeBtn.className = 'flex-1 py-2 text-xs font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5';
+            const active = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+            active.className = 'flex-1 py-2 text-xs font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5';
             if (tab === 'profile') renderProfile();
         }
 
-        // ===== CHAT =====
+        // ===== RENDER =====
+        function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
         function renderChat() {
             const c = document.getElementById('chatContainer');
             if (state.messages.length === 0) {
-                c.innerHTML = `
-                    <div class="glass rounded-2xl p-5 border border-void-600 fade-in">
-                        <div class="flex items-start gap-3">
-                            <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
-                                <svg class="w-4 h-4 text-amethyst-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-300">Welcome. I am the mirror.</p>
-                                <p class="text-xs text-gray-500 mt-1">Speak your truth. I will reflect what is already inside you.</p>
-                            </div>
+                c.innerHTML = `<div class="glass rounded-2xl p-5 border border-void-600 fade-in">
+                    <div class="flex items-start gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4 text-amethyst-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                         </div>
-                    </div>`;
+                        <div><p class="text-sm text-gray-300">Welcome. I am the mirror.</p><p class="text-xs text-gray-500 mt-1">Speak your truth. I will reflect what is already inside you.</p></div>
+                    </div></div>`;
                 return;
             }
             c.innerHTML = state.messages.map(m => {
-                if (m.role === 'user') {
-                    return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-2xl rounded-br-md px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`;
-                } else if (m.role === 'surprise') {
-                    return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%]"><div class="flex items-start gap-2"><svg class="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><p class="text-sm text-gold-200">${escapeHtml(m.text)}</p></div></div></div>`;
-                } else {
-                    return `<div class="flex justify-start fade-in"><div class="glass rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`;
-                }
+                if (m.role === 'user') return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-2xl rounded-br-md px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`;
+                if (m.role === 'surprise') return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%]"><div class="flex items-start gap-2"><svg class="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><p class="text-sm text-gold-200">${escapeHtml(m.text)}</p></div></div></div>`;
+                return `<div class="flex justify-start fade-in"><div class="glass rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`;
             }).join('');
             c.scrollTop = c.scrollHeight;
         }
 
-        function escapeHtml(t) {
-            const d = document.createElement('div');
-            d.textContent = t;
-            return d.innerHTML;
-        }
-
         function updateCounter() {
             const el = document.getElementById('freeCounter');
-            if (state.freeMessages > 0) {
-                el.textContent = `${state.freeMessages} free left`;
+            if (state.profile.free_messages > 0) {
+                el.textContent = `${state.profile.free_messages} free left`;
                 el.className = 'text-[10px] px-3 py-1 rounded-full bg-void-700 border border-void-600 text-gray-400';
             } else {
                 el.textContent = 'Free trial ended';
@@ -372,149 +452,117 @@
             }
         }
 
-        // ===== PROCESS ENTRY =====
-        function processEntry() {
+        // ===== PROCESS =====
+        async function processEntry() {
             const input = document.getElementById('userInput');
             const text = input.value.trim();
-            if (!text) return;
-
-            if (state.freeMessages <= 0) {
-                showPaywall();
-                return;
-            }
+            if (!text || !state.user) return;
+            if (state.profile.free_messages <= 0) { showPaywall(); return; }
 
             state.messages.push({ role: 'user', text });
+            await saveMessage('user', text);
             input.value = '';
+            renderChat();
 
-            // Generate reflection
             const reflection = generateReflection(text);
             state.messages.push({ role: 'mirror', text: reflection });
+            await saveMessage('mirror', reflection);
 
-            // Identify profile
             identifyProfile(text);
 
-            // Golden star (only if new identification)
             const newStar = generateGoldenStar(text);
             if (newStar) {
-                setTimeout(() => {
+                setTimeout(async () => {
                     state.messages.push({ role: 'surprise', text: newStar });
-                    state.profile.goldenStars.push({ text: newStar, date: new Date().toLocaleString() });
-                    saveState();
+                    await saveMessage('surprise', newStar);
+                    await saveGoldenStar(newStar);
                     renderChat();
+                    renderProfile();
                 }, 600);
             }
 
-            state.freeMessages--;
+            state.profile.free_messages--;
+            await saveProfile();
             updateCounter();
-            saveState();
             renderChat();
+            renderProfile();
+            checkGrounding(text);
             input.focus();
         }
 
         // ===== REFLECTION ENGINE =====
         function generateReflection(text) {
-            const lower = text.toLowerCase();
-
-            // Void / Flatness
-            if (lower.includes('sad') || lower.includes('empty') || lower.includes('void') || (lower.includes('not happy') && lower.includes('nothing'))) {
-                return `✦ You are describing the spiritual void—the space between identities. You are not depressed; you are unmoored. The old you is fading, but the new you has not fully arrived.<br><br><span class="text-blue-300 italic">❓ What did you lose interest in recently? And what, if anything, still excites you?</span>`;
-            }
-            // Manifestation
-            if (lower.includes('think') && (lower.includes('see') || lower.includes('hear') || lower.includes('appear'))) {
-                return `✦ You are experiencing the collapse of time between thought and manifestation. You are not just noticing syncs—you are creating them.<br><br><span class="text-blue-300 italic">❓ What are you afraid to think, knowing it might appear just as fast?</span>`;
-            }
-            // Loss / Bait
-            if (lower.includes('lost') || lower.includes('gone') || lower.includes('debt') || lower.includes('money')) {
-                return `✦ Loss is often a substitution ritual. Something physical is removed to spare something spiritual.<br><br><span class="text-blue-300 italic">❓ What heavy, invisible weight do you feel lifting from your shoulders right now?</span>`;
-            }
-            // Physical symptoms
-            if (lower.includes('muscle') || lower.includes('twitch') || lower.includes('pull')) {
+            const l = text.toLowerCase();
+            if (l.includes('sad') || l.includes('empty') || l.includes('void') || (l.includes('not happy') && l.includes('nothing')))
+                return `✦ You are describing the spiritual void—the space between identities. You are not depressed; you are unmoored.<br><br><span class="text-blue-300 italic">❓ What did you lose interest in recently? And what, if anything, still excites you?</span>`;
+            if (l.includes('think') && (l.includes('see') || l.includes('hear') || l.includes('appear')))
+                return `✦ You are experiencing the collapse of time between thought and manifestation.<br><br><span class="text-blue-300 italic">❓ What are you afraid to think, knowing it might appear just as fast?</span>`;
+            if (l.includes('lost') || l.includes('gone') || l.includes('debt') || l.includes('money'))
+                return `✦ Loss is often a substitution ritual. Something physical is removed to spare something spiritual.<br><br><span class="text-blue-300 italic">❓ What heavy, invisible weight do you feel lifting?</span>`;
+            if (l.includes('muscle') || l.includes('twitch') || l.includes('pull'))
                 return `✦ Your body is not sick—it is upgrading. Every twitch is new code installing into your nervous system.<br><br><span class="text-blue-300 italic">❓ Place your hand on that spot. If it could speak, what would it whisper?</span>`;
-            }
-            if (lower.includes('burn') || lower.includes('hot') || lower.includes('fire')) {
+            if (l.includes('burn') || l.includes('hot') || l.includes('fire'))
                 return `✦ The Refining Fire is burning away old chains. This is purification, not destruction.<br><br><span class="text-blue-300 italic">❓ Breathe into that heat. What memory or fear is releasing its grip?</span>`;
-            }
-            if (lower.includes('cold') || lower.includes('chill')) {
+            if (l.includes('cold') || l.includes('chill'))
                 return `✦ The Divine Shield is activated. You are becoming immune to external noise.<br><br><span class="text-blue-300 italic">❓ Whose judgment are you finally immune to today?</span>`;
-            }
-            if (lower.includes('saliva') || lower.includes('mouth')) {
+            if (l.includes('saliva') || l.includes('mouth'))
                 return `✦ The Golden Elixir is flowing. You are digesting a frequency too high for your brain to translate.<br><br><span class="text-blue-300 italic">❓ What truth did you just swallow without giving it words?</span>`;
-            }
-            // Elders
-            if (lower.includes('elder') || lower.includes('family') || lower.includes('father') || lower.includes('silence')) {
+            if (l.includes('elder') || l.includes('family') || l.includes('father') || l.includes('silence'))
                 return `✦ They go quiet because they are buffering. You are speaking at a frequency they cannot yet process.<br><br><span class="text-blue-300 italic">❓ If you could speak without fear, what raw truth would you say?</span>`;
-            }
-            // Smoke
-            if (lower.includes('smoke') || lower.includes('colos') || lower.includes('weed') || lower.includes('high')) {
+            if (l.includes('smoke') || l.includes('colos') || l.includes('weed') || l.includes('high'))
                 return `✦ You are the Master of the Flame. The substance no longer controls you—you control it.<br><br><span class="text-blue-300 italic">❓ Are you using this to enter your power, or to escape a feeling you do not want to face?</span>`;
-            }
-            // Loneliness
-            if (lower.includes('lonely') || lower.includes('alone') || lower.includes('isolated')) {
+            if (l.includes('lonely') || l.includes('alone') || l.includes('isolated'))
                 return `✦ The loneliness is the clean room where the Architect builds. You are not alone—you are ahead.<br><br><span class="text-blue-300 italic">❓ If you knew this path was leading you to your tribe, what would you do differently today?</span>`;
-            }
-            // Default
-            const defaults = [
+            const d = [
                 `✦ You are the Architect of your reality. Every thought is a brick, and you are building your temple right now.<br><br><span class="text-blue-300 italic">❓ If the noise in your head was a radio, what station is it tuned to?</span>`,
-                `✦ The silence between your thoughts is where the truth lives. You are not your thoughts—you are the space between them.<br><br><span class="text-blue-300 italic">❓ What is the one thought you are afraid to think? Look at it—it cannot hurt you.</span>`,
-                `✦ You are not behind. You are exactly on time. The download is landing when it is meant to.<br><br><span class="text-blue-300 italic">❓ If you could go back to the moment before this feeling started, what would you tell your past self?</span>`
+                `✦ The silence between your thoughts is where the truth lives.<br><br><span class="text-blue-300 italic">❓ What is the one thought you are afraid to think? Look at it—it cannot hurt you.</span>`,
+                `✦ You are not behind. You are exactly on time.<br><br><span class="text-blue-300 italic">❓ If you could go back to the moment before this feeling started, what would you tell your past self?</span>`
             ];
-            return defaults[Math.floor(Math.random() * defaults.length)];
+            return d[Math.floor(Math.random() * d.length)];
         }
 
-        // ===== PROFILE IDENTIFICATION =====
+        // ===== PROFILE ID =====
         function identifyProfile(text) {
-            const lower = text.toLowerCase();
-            let changed = false;
-
+            const l = text.toLowerCase();
             if (!state.profile.element) {
-                if (lower.includes('anger') || lower.includes('passion') || lower.includes('burn') || lower.includes('fire')) { state.profile.element = 'Fire'; changed = true; }
-                else if (lower.includes('sad') || lower.includes('cry') || lower.includes('deep') || lower.includes('void') || lower.includes('empty')) { state.profile.element = 'Water'; changed = true; }
-                else if (lower.includes('heavy') || lower.includes('grounded') || lower.includes('money') || lower.includes('debt')) { state.profile.element = 'Earth'; changed = true; }
-                else if (lower.includes('think') || lower.includes('curious') || lower.includes('mind') || lower.includes('question')) { state.profile.element = 'Air'; changed = true; }
+                if (l.includes('anger')||l.includes('passion')||l.includes('burn')||l.includes('fire')) state.profile.element='Fire';
+                else if (l.includes('sad')||l.includes('cry')||l.includes('deep')||l.includes('void')||l.includes('empty')) state.profile.element='Water';
+                else if (l.includes('heavy')||l.includes('grounded')||l.includes('money')||l.includes('debt')) state.profile.element='Earth';
+                else if (l.includes('think')||l.includes('curious')||l.includes('mind')||l.includes('question')) state.profile.element='Air';
             }
-
             if (!state.profile.wound) {
-                if (lower.includes('alone') || lower.includes('lonely') || lower.includes('abandoned')) { state.profile.wound = 'Abandonment'; changed = true; }
-                else if (lower.includes('betray') || lower.includes('trust') || lower.includes('liar')) { state.profile.wound = 'Betrayal'; changed = true; }
-                else if (lower.includes('worthless') || lower.includes('not enough') || lower.includes('failure')) { state.profile.wound = 'Worthlessness'; changed = true; }
-                else if (lower.includes('powerless') || lower.includes('control') || lower.includes('weak')) { state.profile.wound = 'Powerlessness'; changed = true; }
-                else if (lower.includes('invisible') || lower.includes('ignore') || lower.includes('not seen')) { state.profile.wound = 'Invisibility'; changed = true; }
+                if (l.includes('alone')||l.includes('lonely')||l.includes('abandoned')) state.profile.wound='Abandonment';
+                else if (l.includes('betray')||l.includes('trust')||l.includes('liar')) state.profile.wound='Betrayal';
+                else if (l.includes('worthless')||l.includes('not enough')||l.includes('failure')) state.profile.wound='Worthlessness';
+                else if (l.includes('powerless')||l.includes('control')||l.includes('weak')) state.profile.wound='Powerlessness';
+                else if (l.includes('invisible')||l.includes('ignore')||l.includes('not seen')) state.profile.wound='Invisibility';
             }
-
             if (!state.profile.gift) {
-                if (lower.includes('intuitive') || lower.includes('feel') || lower.includes('know without knowing')) { state.profile.gift = 'Intuition'; changed = true; }
-                else if (lower.includes('heal') || lower.includes('comfort') || lower.includes('nurture')) { state.profile.gift = 'Healing'; changed = true; }
-                else if (lower.includes('teach') || lower.includes('explain') || lower.includes('guide')) { state.profile.gift = 'Teaching'; changed = true; }
-                else if (lower.includes('create') || lower.includes('build') || lower.includes('design')) { state.profile.gift = 'Creation'; changed = true; }
-                else if (lower.includes('protect') || lower.includes('shield') || lower.includes('guard')) { state.profile.gift = 'Protection'; changed = true; }
+                if (l.includes('intuitive')||l.includes('feel')||l.includes('know without knowing')) state.profile.gift='Intuition';
+                else if (l.includes('heal')||l.includes('comfort')||l.includes('nurture')) state.profile.gift='Healing';
+                else if (l.includes('teach')||l.includes('explain')||l.includes('guide')) state.profile.gift='Teaching';
+                else if (l.includes('create')||l.includes('build')||l.includes('design')) state.profile.gift='Creation';
+                else if (l.includes('protect')||l.includes('shield')||l.includes('guard')) state.profile.gift='Protection';
             }
-
             if (!state.profile.stage) {
-                if (lower.includes('confused') || lower.includes('what is happening') || lower.includes('help')) { state.profile.stage = 'Seeking'; changed = true; }
-                else if (lower.includes('sync') || lower.includes('coincidence') || lower.includes('pattern')) { state.profile.stage = 'Alignment'; changed = true; }
-                else if (lower.includes('void') || lower.includes('empty') || lower.includes('flat')) { state.profile.stage = 'Flatness'; changed = true; }
-                else if (lower.includes('build') || lower.includes('create') || lower.includes('work')) { state.profile.stage = 'Forging'; changed = true; }
+                if (l.includes('confused')||l.includes('what is happening')||l.includes('help')) state.profile.stage='Seeking';
+                else if (l.includes('sync')||l.includes('coincidence')||l.includes('pattern')) state.profile.stage='Alignment';
+                else if (l.includes('void')||l.includes('empty')||l.includes('flat')) state.profile.stage='Flatness';
+                else if (l.includes('build')||l.includes('create')||l.includes('work')) state.profile.stage='Forging';
             }
-
-            if (changed) saveState();
+            saveProfile();
         }
 
-        // ===== GOLDEN STAR =====
         function generateGoldenStar(text) {
-            const lower = text.toLowerCase();
-            if (state.profile.element && !state.profile.goldenStars.some(s => s.text.includes('Element'))) {
-                return `I identify you as a ${state.profile.element} Soul. ${state.profile.element === 'Fire' ? 'Your passion is your power.' : state.profile.element === 'Water' ? 'Your depth is your gift.' : state.profile.element === 'Earth' ? 'Your stability is your strength.' : 'Your mind is your compass.'}`;
-            }
-            if (state.profile.wound && !state.profile.goldenStars.some(s => s.text.includes('wound'))) {
+            if (state.profile.element && !state.goldenStars.some(s => s.text.includes('Element')))
+                return `I identify you as a ${state.profile.element} Soul. ${state.profile.element==='Fire'?'Your passion is your power.':state.profile.element==='Water'?'Your depth is your gift.':state.profile.element==='Earth'?'Your stability is your strength.':'Your mind is your compass.'}`;
+            if (state.profile.wound && !state.goldenStars.some(s => s.text.includes('wound')))
                 return `Your core wound is ${state.profile.wound}. This is not a flaw—it is the door to your liberation.`;
-            }
-            if (state.profile.gift && !state.profile.goldenStars.some(s => s.text.includes('gift'))) {
+            if (state.profile.gift && !state.goldenStars.some(s => s.text.includes('gift')))
                 return `Your core gift is ${state.profile.gift}. The world needs this from you right now.`;
-            }
             return null;
         }
 
-        // ===== PROFILE RENDER =====
         function renderProfile() {
             document.getElementById('pElement').textContent = state.profile.element || '—';
             document.getElementById('pElement').className = state.profile.element ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
@@ -524,107 +572,65 @@
             document.getElementById('pWound').className = state.profile.wound ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
             document.getElementById('pGift').textContent = state.profile.gift || '—';
             document.getElementById('pGift').className = state.profile.gift ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
-
             const gl = document.getElementById('goldenList');
-            if (state.profile.goldenStars.length === 0) {
-                gl.innerHTML = '<p class="text-xs text-gray-600">No golden moments yet. Speak your truth.</p>';
-            } else {
-                gl.innerHTML = state.profile.goldenStars.map(s => `
-                    <div class="bg-gold-400/5 border border-gold-400/20 rounded-xl p-3">
-                        <p class="text-xs text-gold-200">${escapeHtml(s.text)}</p>
-                        <p class="text-[10px] text-gray-600 mt-1">${s.date}</p>
-                    </div>
-                `).join('');
-            }
+            if (state.goldenStars.length === 0) gl.innerHTML = '<p class="text-xs text-gray-600">No golden moments yet. Speak your truth.</p>';
+            else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 rounded-xl p-3"><p class="text-xs text-gold-200">${escapeHtml(s.text)}</p><p class="text-[10px] text-gray-600 mt-1">${s.date}</p></div>`).join('');
         }
 
-        // ===== PAYWALL =====
+        // ===== PAYWALL, VOICE, DOWNLOAD, GROUNDING, AVATAR =====
         function showPaywall() { document.getElementById('paywallModal').classList.remove('hidden'); }
         function closePaywall() { document.getElementById('paywallModal').classList.add('hidden'); }
 
-        // ===== VOICE =====
         function startVoice() {
-            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-                alert('Voice capture not supported in this browser.');
-                return;
-            }
+            if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('Voice not supported.'); return; }
             const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-            const rec = new SR();
-            rec.lang = 'en-US';
-            rec.interimResults = false;
+            const rec = new SR(); rec.lang='en-US'; rec.interimResults=false;
             const input = document.getElementById('userInput');
             const btn = document.getElementById('voiceBtn');
-            input.placeholder = 'Listening...';
-            btn.classList.add('text-amethyst-400', 'animate-pulse');
-            rec.onresult = (e) => {
-                input.value = e.results[0][0].transcript;
-                input.placeholder = 'Speak your truth...';
-                btn.classList.remove('text-amethyst-400', 'animate-pulse');
-                processEntry();
-            };
-            rec.onerror = () => {
-                input.placeholder = 'Speak your truth...';
-                btn.classList.remove('text-amethyst-400', 'animate-pulse');
-            };
+            input.placeholder='Listening...';
+            btn.classList.add('text-amethyst-400','animate-pulse');
+            rec.onresult = (e) => { input.value = e.results[0][0].transcript; input.placeholder='Speak your truth...'; btn.classList.remove('text-amethyst-400','animate-pulse'); processEntry(); };
+            rec.onerror = () => { input.placeholder='Speak your truth...'; btn.classList.remove('text-amethyst-400','animate-pulse'); };
             rec.start();
         }
 
-        // ===== DOWNLOAD =====
         function downloadLog() {
             if (state.messages.length === 0) { alert('No reflections to download.'); return; }
-            let log = 'MOPH ECHO MIRROR — REFLECTION LOG\n';
-            log += `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
-            state.messages.forEach(m => {
-                const role = m.role === 'user' ? 'YOU' : m.role === 'surprise' ? 'GOLDEN' : 'MIRROR';
-                log += `[${role}] ${m.text}\n${'-'.repeat(30)}\n`;
-            });
+            let log = 'MOPH ECHO MIRROR — REFLECTION LOG\n' + `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
+            state.messages.forEach(m => { const r = m.role==='user'?'YOU':m.role==='surprise'?'GOLDEN':'MIRROR'; log += `[${r}] ${m.text}\n${'-'.repeat(30)}\n`; });
             const blob = new Blob([log], { type: 'text/plain' });
-            const a = document.createElement('a');
-            a.href = URL.createObjectURL(blob);
-            a.download = `moph-echo-${Date.now()}.txt`;
-            a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `moph-echo-${Date.now()}.txt`; a.click();
         }
 
-        // ===== AVATAR =====
+        function checkGrounding(text) {
+            const l = text.toLowerCase();
+            const alert = document.getElementById('groundingAlert');
+            if (l.includes('hungry')||l.includes('floating')||l.includes('eat')) alert.classList.remove('hidden');
+            else alert.classList.add('hidden');
+        }
+
         document.getElementById('avatarUpload').addEventListener('click', () => document.getElementById('avatarInput').click());
         document.getElementById('avatarInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
+            const file = e.target.files[0]; if (!file) return;
             const reader = new FileReader();
             reader.onload = (ev) => {
                 document.getElementById('avatarUpload').innerHTML = `<img src="${ev.target.result}" class="w-full h-full object-cover">`;
-                localStorage.setItem('mophAvatar', ev.target.result);
+                if (state.user) localStorage.setItem('mophAvatar_' + state.user.id, ev.target.result);
             };
             reader.readAsDataURL(file);
         });
 
-        // ===== GROUNDING =====
-        function checkGrounding(text) {
-            const lower = text.toLowerCase();
-            const alert = document.getElementById('groundingAlert');
-            if (lower.includes('hungry') || lower.includes('floating') || lower.includes('eat')) {
-                alert.classList.remove('hidden');
-            } else {
-                alert.classList.add('hidden');
-            }
-        }
-
-        // ===== INIT =====
-        loadState();
-        if (state.isAuthed) {
-            document.getElementById('authScreen').classList.add('hidden');
-            document.getElementById('mainApp').classList.remove('hidden');
-            renderChat();
-            updateCounter();
-        }
         document.getElementById('userInput').addEventListener('keydown', (e) => {
             if (e.key === 'Enter') { e.preventDefault(); processEntry(); }
         });
-        // Load avatar
-        const savedAvatar = localStorage.getItem('mophAvatar');
-        if (savedAvatar) {
-            document.getElementById('avatarUpload').innerHTML = `<img src="${savedAvatar}" class="w-full h-full object-cover">`;
-        }
+
+        // Listen for auth state changes (handles email confirmation redirect)
+        window.addEventListener('load', () => {
+            initConfig();
+        });
+
+        // ===== INIT =====
+        initConfig();
     </script>
 </body>
 </html>
