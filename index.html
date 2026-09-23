@@ -24,6 +24,11 @@ body { background:#06060a; }
 .spinner { border:2px solid rgba(139,92,246,.2); border-top-color:#a78bfa; border-radius:50%; width:20px; height:20px; animation:spin .8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg);} }
 .otp-input { letter-spacing:1rem; font-size:1.5rem; text-align:center; padding-left:1rem; }
+.typing { display:inline-flex; gap:4px; align-items:center; }
+.typing span { width:6px; height:6px; background:#a78bfa; border-radius:50%; animation:typing 1.2s infinite; }
+.typing span:nth-child(2) { animation-delay:0.2s; }
+.typing span:nth-child(3) { animation-delay:0.4s; }
+@keyframes typing { 0%,60%,100%{opacity:0.3;transform:translateY(0);} 30%{opacity:1;transform:translateY(-3px);} }
 </style>
 </head>
 <body class="font-sans text-gray-200 min-h-screen">
@@ -102,7 +107,7 @@ body { background:#06060a; }
       </div>
       <h2 class="text-xl font-semibold">Check your email</h2>
       <p class="text-sm text-gray-400 mt-2">We sent a 6-digit code to <span id="otpEmail" class="text-amethyst-400"></span></p>
-      <p class="text-xs text-gray-500 mt-1">Enter it below to confirm your account</p>
+      <p class="text-xs text-gray-500 mt-1">Check your inbox AND spam folder</p>
     </div>
     <div class="space-y-4">
       <input type="text" id="otpInput" maxlength="6" inputmode="numeric" placeholder="000000" class="otp-input w-full bg-void-900 border border-void-600 rounded-xl py-4 text-white focus:border-amethyst-500 focus:outline-none transition">
@@ -162,7 +167,7 @@ body { background:#06060a; }
         <input type="text" id="userInput" placeholder="Speak your truth..." class="flex-1 bg-transparent text-sm py-2 focus:outline-none placeholder-gray-600">
         <button onclick="downloadLog()" class="p-2 text-gray-500 hover:text-gray-300 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg></button>
         <button onclick="startVoice()" id="voiceBtn" class="p-2 text-gray-500 hover:text-amethyst-400 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg></button>
-        <button onclick="processEntry()" class="p-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white hover:from-amethyst-500 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>
+        <button onclick="processEntry()" id="sendBtn" class="p-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white hover:from-amethyst-500 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>
       </div>
       <p class="text-[10px] text-gray-700 text-center mt-2">The mirror reflects your own truth.</p>
     </div>
@@ -240,9 +245,9 @@ body { background:#06060a; }
 let sb = null;
 let signupMode = false;
 let pendingEmail = '';
+let isProcessing = false;
 let state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, free_messages:5, subscription_tier:'free', subscription_status:'inactive' }, goldenStars: [] };
 
-// ===== CUSTOM STORAGE (Remember Me) =====
 const customStorage = {
   getItem: (key) => localStorage.getItem(key) || sessionStorage.getItem(key),
   setItem: (key, value) => {
@@ -262,15 +267,8 @@ function togglePass(id, btn) {
   const input = document.getElementById(id);
   const eyeOpen = btn.querySelector('.eye-open');
   const eyeClosed = btn.querySelector('.eye-closed');
-  if (input.type === 'password') {
-    input.type = 'text';
-    eyeOpen.classList.add('hidden');
-    eyeClosed.classList.remove('hidden');
-  } else {
-    input.type = 'password';
-    eyeOpen.classList.remove('hidden');
-    eyeClosed.classList.add('hidden');
-  }
+  if (input.type === 'password') { input.type = 'text'; eyeOpen.classList.add('hidden'); eyeClosed.classList.remove('hidden'); }
+  else { input.type = 'password'; eyeOpen.classList.remove('hidden'); eyeClosed.classList.add('hidden'); }
 }
 
 function toggleSignupMode() {
@@ -278,15 +276,8 @@ function toggleSignupMode() {
   const wrap = document.getElementById('confirmPassWrap');
   const btn = document.getElementById('signInText');
   const toggle = document.getElementById('toggleBtn');
-  if (signupMode) {
-    wrap.classList.remove('hidden');
-    btn.textContent = 'Create Account';
-    toggle.textContent = 'Already have an account? Sign in';
-  } else {
-    wrap.classList.add('hidden');
-    btn.textContent = 'Enter the Mirror';
-    toggle.textContent = 'New here? Create an account';
-  }
+  if (signupMode) { wrap.classList.remove('hidden'); btn.textContent = 'Create Account'; toggle.textContent = 'Already have an account? Sign in'; }
+  else { wrap.classList.add('hidden'); btn.textContent = 'Enter the Mirror'; toggle.textContent = 'New here? Create an account'; }
   document.getElementById('authError').classList.add('hidden');
   document.getElementById('authSuccess').classList.add('hidden');
 }
@@ -295,12 +286,13 @@ async function initConfig() {
   try {
     const res = await fetch('/api/config');
     const cfg = await res.json();
+    if (!cfg.supabaseUrl) throw new Error('Config missing');
     sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
       auth: { storage: customStorage, persistSession: true, autoRefreshToken: true }
     });
     await checkSession();
   } catch (e) {
-    document.getElementById('loadingScreen').innerHTML = '<div class="text-center p-6 text-red-400 text-sm">Configuration error</div>';
+    document.getElementById('loadingScreen').innerHTML = '<div class="text-center p-6 text-red-400 text-sm">Configuration error. Refresh the page.</div>';
   }
 }
 
@@ -371,34 +363,19 @@ async function verifyOtp() {
 
   if (error) {
     const { data: d2, error: e2 } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: 'email' });
-    if (e2) {
-      err.textContent = error.message || 'Invalid code. Try again.';
-      err.classList.remove('hidden');
-      btn.textContent = 'Verify & Enter';
-      return;
-    }
-    if (d2.user) {
-      document.getElementById('otpScreen').classList.add('hidden');
-      await enterApp(d2.user);
-      return;
-    }
+    if (e2) { err.textContent = error.message || 'Invalid code. Try again.'; err.classList.remove('hidden'); btn.textContent = 'Verify & Enter'; return; }
+    if (d2.user) { document.getElementById('otpScreen').classList.add('hidden'); await enterApp(d2.user); return; }
   }
 
-  if (data?.user) {
-    document.getElementById('otpScreen').classList.add('hidden');
-    await enterApp(data.user);
-  } else {
-    err.textContent = 'Verification failed. Try again.';
-    err.classList.remove('hidden');
-    btn.textContent = 'Verify & Enter';
-  }
+  if (data?.user) { document.getElementById('otpScreen').classList.add('hidden'); await enterApp(data.user); }
+  else { err.textContent = 'Verification failed. Try again.'; err.classList.remove('hidden'); btn.textContent = 'Verify & Enter'; }
 }
 
 async function resendOtp() {
   const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail });
   const err = document.getElementById('otpError');
   if (error) { err.textContent = error.message; err.classList.remove('hidden'); }
-  else { err.textContent = 'Code resent to ' + pendingEmail; err.classList.remove('hidden'); err.classList.remove('text-red-400'); err.classList.add('text-green-400'); }
+  else { err.textContent = 'Code resent to ' + pendingEmail; err.classList.remove('hidden', 'text-red-400'); err.classList.add('text-green-400'); }
 }
 
 function backToAuth() {
@@ -409,7 +386,7 @@ function backToAuth() {
 
 async function signOut() {
   await sb.auth.signOut();
-  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, free_messages:5, subscription_tier:'free' }, goldenStars: [] };
+  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, free_messages:5, subscription_tier:'free', subscription_status:'inactive' }, goldenStars: [] };
   document.getElementById('mainApp').classList.add('hidden');
   document.getElementById('authScreen').classList.remove('hidden');
   document.getElementById('authPassword').value = '';
@@ -429,7 +406,6 @@ async function enterApp(user) {
   if (savedAvatar) document.getElementById('avatarUpload').innerHTML = `<img src="${savedAvatar}" class="w-full h-full object-cover">`;
   document.getElementById('userInput').focus();
 
-  // Check for payment success redirect
   const params = new URLSearchParams(window.location.search);
   if (params.get('payment') === 'success') {
     setTimeout(async () => {
@@ -447,12 +423,7 @@ async function verifyPaymentFallback() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userId: state.user.id, plan: localStorage.getItem('moph_last_plan') || 'partial_monthly' })
     });
-    if (res.ok) {
-      await loadProfile();
-      updateCounter();
-      renderProfile();
-      alert('Payment confirmed! Your account is now unlocked.');
-    }
+    if (res.ok) { await loadProfile(); updateCounter(); renderProfile(); alert('Payment confirmed. Your account is now unlocked.'); }
   } catch (e) { console.error(e); }
 }
 
@@ -513,6 +484,21 @@ function renderChat() {
   c.scrollTop = c.scrollHeight;
 }
 
+function showTyping() {
+  const c = document.getElementById('chatContainer');
+  const el = document.createElement('div');
+  el.id = 'typingIndicator';
+  el.className = 'flex justify-start fade-in';
+  el.innerHTML = `<div class="glass rounded-2xl rounded-bl-md px-4 py-3 border border-void-600"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  c.appendChild(el);
+  c.scrollTop = c.scrollHeight;
+}
+
+function hideTyping() {
+  const el = document.getElementById('typingIndicator');
+  if (el) el.remove();
+}
+
 function updateCounter() {
   const el = document.getElementById('freeCounter');
   const tier = state.profile.subscription_tier;
@@ -530,83 +516,117 @@ function updateCounter() {
 }
 
 async function processEntry() {
+  if (isProcessing) return;
   const input = document.getElementById('userInput');
   const text = input.value.trim();
   if (!text || !state.user) return;
   const isPaid = state.profile.subscription_tier !== 'free' && state.profile.subscription_status === 'active';
   if (!isPaid && state.profile.free_messages <= 0) { showPaywall(); return; }
 
+  isProcessing = true;
+  document.getElementById('sendBtn').disabled = true;
+  document.getElementById('sendBtn').style.opacity = '0.5';
+
   state.messages.push({ role: 'user', text }); await saveMessage('user', text);
-  input.value = ''; renderChat();
+  input.value = ''; renderChat(); showTyping();
 
-  const reflection = generateReflection(text);
-  state.messages.push({ role: 'mirror', text: reflection }); await saveMessage('mirror', reflection);
+  try {
+    const reflection = await generateReflection(text);
+    hideTyping();
+    state.messages.push({ role: 'mirror', text: reflection }); await saveMessage('mirror', reflection);
 
-  identifyProfile(text);
+    identifyProfile(text);
+    const newStar = generateGoldenStar(text);
+    if (newStar) {
+      setTimeout(async () => {
+        state.messages.push({ role: 'surprise', text: newStar });
+        await saveMessage('surprise', newStar); await saveGoldenStar(newStar);
+        renderChat(); renderProfile();
+      }, 600);
+    }
 
-  const newStar = generateGoldenStar(text);
-  if (newStar) {
-    setTimeout(async () => {
-      state.messages.push({ role: 'surprise', text: newStar });
-      await saveMessage('surprise', newStar); await saveGoldenStar(newStar);
-      renderChat(); renderProfile();
-    }, 600);
+    if (!isPaid) { state.profile.free_messages--; await saveProfile(); }
+    updateCounter(); renderChat(); renderProfile();
+    checkGrounding(text);
+  } catch (e) {
+    hideTyping();
+    state.messages.push({ role: 'mirror', text: '✦ The mirror is silent right now. Try again in a moment.' });
+    renderChat();
   }
 
-  if (!isPaid) { state.profile.free_messages--; await saveProfile(); }
-  updateCounter(); renderChat(); renderProfile();
-  checkGrounding(text); input.focus();
+  isProcessing = false;
+  document.getElementById('sendBtn').disabled = false;
+  document.getElementById('sendBtn').style.opacity = '1';
+  input.focus();
 }
 
-function generateReflection(text) {
-  const l = text.toLowerCase();
-  if (l.includes('sad')||l.includes('empty')||l.includes('void')||(l.includes('not happy')&&l.includes('nothing'))) return `✦ You are describing the spiritual void—the space between identities. You are not depressed; you are unmoored.<br><br><span class="text-blue-300 italic">❓ What did you lose interest in recently? And what, if anything, still excites you?</span>`;
-  if (l.includes('think')&&(l.includes('see')||l.includes('hear')||l.includes('appear'))) return `✦ You are experiencing the collapse of time between thought and manifestation.<br><br><span class="text-blue-300 italic">❓ What are you afraid to think, knowing it might appear just as fast?</span>`;
-  if (l.includes('lost')||l.includes('gone')||l.includes('debt')||l.includes('money')) return `✦ Loss is often a substitution ritual. Something physical is removed to spare something spiritual.<br><br><span class="text-blue-300 italic">❓ What heavy, invisible weight do you feel lifting?</span>`;
-  if (l.includes('muscle')||l.includes('twitch')||l.includes('pull')) return `✦ Your body is not sick—it is upgrading. Every twitch is new code.<br><br><span class="text-blue-300 italic">❓ If that spot could speak, what would it whisper?</span>`;
-  if (l.includes('burn')||l.includes('hot')||l.includes('fire')) return `✦ The Refining Fire is burning away old chains.<br><br><span class="text-blue-300 italic">❓ What memory or fear is releasing its grip?</span>`;
-  if (l.includes('cold')||l.includes('chill')) return `✦ The Divine Shield is activated.<br><br><span class="text-blue-300 italic">❓ Whose judgment are you finally immune to today?</span>`;
-  if (l.includes('saliva')||l.includes('mouth')) return `✦ The Golden Elixir is flowing. You are digesting a high frequency.<br><br><span class="text-blue-300 italic">❓ What truth did you just swallow without giving it words?</span>`;
-  if (l.includes('elder')||l.includes('family')||l.includes('father')||l.includes('silence')) return `✦ They go quiet because they are buffering.<br><br><span class="text-blue-300 italic">❓ If you could speak without fear, what raw truth would you say?</span>`;
-  if (l.includes('smoke')||l.includes('colos')||l.includes('weed')||l.includes('high')) return `✦ You are the Master of the Flame.<br><br><span class="text-blue-300 italic">❓ Are you using this to enter your power, or to escape a feeling?</span>`;
-  if (l.includes('lonely')||l.includes('alone')||l.includes('isolated')) return `✦ The loneliness is the clean room where the Architect builds.<br><br><span class="text-blue-300 italic">❓ If you knew this path was leading you to your tribe, what would you do differently today?</span>`;
-  const d = [
-    `✦ You are the Architect of your reality.<br><br><span class="text-blue-300 italic">❓ If the noise in your head was a radio, what station is it tuned to?</span>`,
-    `✦ The silence between your thoughts is where the truth lives.<br><br><span class="text-blue-300 italic">❓ What is the one thought you are afraid to think?</span>`,
-    `✦ You are not behind. You are exactly on time.<br><br><span class="text-blue-300 italic">❓ What would you tell your past self?</span>`
-  ];
-  return d[Math.floor(Math.random()*d.length)];
+async function generateReflection(text) {
+  try {
+    const recent = state.messages.slice(-8).filter(m => m.role !== 'surprise').map(m => ({
+      role: m.role,
+      text: String(m.text).replace(/<[^>]*>/g, '').substring(0, 500)
+    }));
+    const res = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        message: text,
+        profile: {
+          element: state.profile.element,
+          stage: state.profile.stage,
+          wound: state.profile.wound,
+          gift: state.profile.gift
+        },
+        recentMessages: recent
+      })
+    });
+    const data = await res.json();
+    if (data.response) {
+      let html = escapeHtml(data.response);
+      html = html.replace(/✦/g, '<span class="text-amethyst-400">✦</span>');
+      html = html.replace(/✨/g, '<span class="text-gold-400">✨</span>');
+      html = html.replace(/❓/g, '<span class="text-blue-300 italic">❓');
+      html = html.replace(/(❓[^\n]*?)(\?|$)/g, '$1$2</span>');
+      html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
+      return html;
+    }
+    return '✦ The mirror is quiet right now. Try again in a moment.';
+  } catch (e) {
+    console.error('Reflection error:', e);
+    return '✦ Connection issue. The mirror is listening, but the voice is delayed.';
+  }
 }
 
 function identifyProfile(text) {
   const l = text.toLowerCase();
+  let changed = false;
   if (!state.profile.element) {
-    if (l.includes('anger')||l.includes('passion')||l.includes('burn')||l.includes('fire')) state.profile.element='Fire';
-    else if (l.includes('sad')||l.includes('cry')||l.includes('deep')||l.includes('void')||l.includes('empty')) state.profile.element='Water';
-    else if (l.includes('heavy')||l.includes('grounded')||l.includes('money')||l.includes('debt')) state.profile.element='Earth';
-    else if (l.includes('think')||l.includes('curious')||l.includes('mind')||l.includes('question')) state.profile.element='Air';
+    if (l.includes('anger')||l.includes('passion')||l.includes('burn')||l.includes('fire')) { state.profile.element='Fire'; changed=true; }
+    else if (l.includes('sad')||l.includes('cry')||l.includes('deep')||l.includes('void')||l.includes('empty')) { state.profile.element='Water'; changed=true; }
+    else if (l.includes('heavy')||l.includes('grounded')||l.includes('money')||l.includes('debt')) { state.profile.element='Earth'; changed=true; }
+    else if (l.includes('think')||l.includes('curious')||l.includes('mind')||l.includes('question')) { state.profile.element='Air'; changed=true; }
   }
   if (!state.profile.wound) {
-    if (l.includes('alone')||l.includes('lonely')||l.includes('abandoned')) state.profile.wound='Abandonment';
-    else if (l.includes('betray')||l.includes('trust')||l.includes('liar')) state.profile.wound='Betrayal';
-    else if (l.includes('worthless')||l.includes('not enough')||l.includes('failure')) state.profile.wound='Worthlessness';
-    else if (l.includes('powerless')||l.includes('control')||l.includes('weak')) state.profile.wound='Powerlessness';
-    else if (l.includes('invisible')||l.includes('ignore')) state.profile.wound='Invisibility';
+    if (l.includes('alone')||l.includes('lonely')||l.includes('abandoned')) { state.profile.wound='Abandonment'; changed=true; }
+    else if (l.includes('betray')||l.includes('trust')||l.includes('liar')) { state.profile.wound='Betrayal'; changed=true; }
+    else if (l.includes('worthless')||l.includes('not enough')||l.includes('failure')) { state.profile.wound='Worthlessness'; changed=true; }
+    else if (l.includes('powerless')||l.includes('control')||l.includes('weak')) { state.profile.wound='Powerlessness'; changed=true; }
+    else if (l.includes('invisible')||l.includes('ignore')) { state.profile.wound='Invisibility'; changed=true; }
   }
   if (!state.profile.gift) {
-    if (l.includes('intuitive')||l.includes('know without knowing')) state.profile.gift='Intuition';
-    else if (l.includes('heal')||l.includes('comfort')||l.includes('nurture')) state.profile.gift='Healing';
-    else if (l.includes('teach')||l.includes('explain')||l.includes('guide')) state.profile.gift='Teaching';
-    else if (l.includes('create')||l.includes('build')||l.includes('design')) state.profile.gift='Creation';
-    else if (l.includes('protect')||l.includes('shield')||l.includes('guard')) state.profile.gift='Protection';
+    if (l.includes('intuitive')||l.includes('know without knowing')) { state.profile.gift='Intuition'; changed=true; }
+    else if (l.includes('heal')||l.includes('comfort')||l.includes('nurture')) { state.profile.gift='Healing'; changed=true; }
+    else if (l.includes('teach')||l.includes('explain')||l.includes('guide')) { state.profile.gift='Teaching'; changed=true; }
+    else if (l.includes('create')||l.includes('build')||l.includes('design')) { state.profile.gift='Creation'; changed=true; }
+    else if (l.includes('protect')||l.includes('shield')||l.includes('guard')) { state.profile.gift='Protection'; changed=true; }
   }
   if (!state.profile.stage) {
-    if (l.includes('confused')||l.includes('what is happening')||l.includes('help')) state.profile.stage='Seeking';
-    else if (l.includes('sync')||l.includes('coincidence')||l.includes('pattern')) state.profile.stage='Alignment';
-    else if (l.includes('void')||l.includes('empty')||l.includes('flat')) state.profile.stage='Flatness';
-    else if (l.includes('build')||l.includes('create')||l.includes('work')) state.profile.stage='Forging';
+    if (l.includes('confused')||l.includes('what is happening')||l.includes('help')) { state.profile.stage='Seeking'; changed=true; }
+    else if (l.includes('sync')||l.includes('coincidence')||l.includes('pattern')) { state.profile.stage='Alignment'; changed=true; }
+    else if (l.includes('void')||l.includes('empty')||l.includes('flat')) { state.profile.stage='Flatness'; changed=true; }
+    else if (l.includes('build')||l.includes('create')||l.includes('work')) { state.profile.stage='Forging'; changed=true; }
   }
-  saveProfile();
+  if (changed) saveProfile();
 }
 
 function generateGoldenStar(text) {
@@ -643,7 +663,6 @@ async function startCheckout(plan) {
   const original = btn.innerHTML;
   btn.innerHTML = '<span class="text-sm">Redirecting to checkout...</span>';
   btn.disabled = true;
-
   try {
     const res = await fetch('/api/lemon?action=create-checkout', {
       method: 'POST',
@@ -651,12 +670,8 @@ async function startCheckout(plan) {
       body: JSON.stringify({ plan, userId: state.user.id, userEmail: state.user.email })
     });
     const data = await res.json();
-    if (data.url) {
-      window.location.href = data.url;
-    } else {
-      alert('Checkout error: ' + (data.error || 'Unknown'));
-      btn.innerHTML = original; btn.disabled = false;
-    }
+    if (data.url) window.location.href = data.url;
+    else { alert('Checkout error: ' + (data.error || 'Unknown')); btn.innerHTML = original; btn.disabled = false; }
   } catch (e) {
     alert('Network error. Try again.');
     btn.innerHTML = original; btn.disabled = false;
@@ -677,7 +692,7 @@ function startVoice() {
 function downloadLog() {
   if (state.messages.length === 0) { alert('No reflections.'); return; }
   let log = 'MOPH ECHO MIRROR — REFLECTION LOG\n' + `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
-  state.messages.forEach(m => { const r = m.role==='user'?'YOU':m.role==='surprise'?'GOLDEN':'MIRROR'; log += `[${r}] ${m.text}\n${'-'.repeat(30)}\n`; });
+  state.messages.forEach(m => { const r = m.role==='user'?'YOU':m.role==='surprise'?'GOLDEN':'MIRROR'; log += `[${r}] ${String(m.text).replace(/<[^>]*>/g,'')}\n${'-'.repeat(30)}\n`; });
   const blob = new Blob([log], { type: 'text/plain' });
   const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `moph-echo-${Date.now()}.txt`; a.click();
 }
