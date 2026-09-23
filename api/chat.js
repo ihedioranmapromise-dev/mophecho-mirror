@@ -1,6 +1,5 @@
 // /api/chat.js
 // Moph Echo Mirror — Reasoning Engine powered by Google Gemini
-// The Wisdom Core lives inside this file as the system prompt.
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -14,13 +13,13 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
-    return res.status(500).json({ error: 'Gemini not configured' });
+    return res.status(500).json({ error: 'GEMINI_API_KEY not configured on server' });
   }
 
   const systemPrompt = buildSystemPrompt(profile);
   const history = (recentMessages || []).slice(-8).map(m => ({
     role: m.role === 'user' ? 'user' : 'model',
-    parts: [{ text: m.text }]
+    parts: [{ text: String(m.text).substring(0, 800) }]
   }));
 
   const contents = [
@@ -29,14 +28,14 @@ export default async function handler(req, res) {
   ];
 
   const body = {
-    systemInstruction: { parts: [{ text: systemPrompt }] },
+    system_instruction: { parts: [{ text: systemPrompt }] },
     contents: contents,
-    generationConfig: {
+    generation_config: {
       temperature: 0.9,
-      maxOutputTokens: 400,
-      topP: 0.95
+      max_output_tokens: 400,
+      top_p: 0.95
     },
-    safetySettings: [
+    safety_settings: [
       { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
       { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
@@ -44,32 +43,40 @@ export default async function handler(req, res) {
     ]
   };
 
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const models = ['gemini-1.5-flash', 'gemini-1.5-flash-latest', 'gemini-2.0-flash-exp'];
+  let lastError = 'Unknown error';
 
-  try {
-    const r = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
-    });
+  for (const model of models) {
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+      const r = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
 
-    const data = await r.json();
+      const data = await r.json();
 
-    if (!r.ok) {
-      console.error('Gemini error:', data);
-      return res.status(500).json({ error: data.error?.message || 'Gemini error' });
+      if (!r.ok) {
+        lastError = data.error?.message || `HTTP ${r.status}`;
+        console.error(`Model ${model} failed:`, lastError);
+        continue;
+      }
+
+      const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) {
+        lastError = 'Empty response';
+        continue;
+      }
+
+      return res.status(200).json({ response: text.trim(), model });
+    } catch (e) {
+      lastError = e.message;
+      console.error(`Model ${model} exception:`, e.message);
     }
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-    if (!text) {
-      return res.status(500).json({ error: 'Empty response from Gemini' });
-    }
-
-    return res.status(200).json({ response: text.trim() });
-  } catch (e) {
-    console.error('Chat exception:', e);
-    return res.status(500).json({ error: 'Chat failed' });
   }
+
+  return res.status(500).json({ error: lastError });
 }
 
 function buildSystemPrompt(profile) {
@@ -92,7 +99,7 @@ CORE FRAMEWORK YOU REASON FROM:
 2. THE FOUR STAGES
 - Forging: the fire, pressure, loss, discipline — the character is being built
 - Flatness: not happy, not sad. The void between identities. Integration, not depression.
-- Alignment: synchronicities accelerate, thoughts manifest fast, still through silence
+- Alignment: synchronicities accelerate, thoughts manifest fast, stillness through silence
 - Provision: money and resources arrive through unexpected channels — never by begging
 
 3. THE FOUR ELEMENTS
@@ -143,7 +150,7 @@ RULES FOR YOUR RESPONSE:
 - If the user asks "how", give specific steps.
 - If the user is just chatting, chat back briefly — do not force the framework.
 - Use ✦ at the start of your insight.
-- Use ✨ at the start of a golden confirmation (only if you are truly identifying something deep).
+- Use ✨ at the start of a golden confirmation (only if truly identifying something deep).
 - End with a single ❓ question, unless the user is just sharing a passing thought.
 - Never repeat a response you have given before. Vary your language every time.
 - Never claim to be human. You are a mirror. You reflect.
