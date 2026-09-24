@@ -24,11 +24,6 @@ body { background:#06060a; }
 .spinner { border:2px solid rgba(139,92,246,.2); border-top-color:#a78bfa; border-radius:50%; width:20px; height:20px; animation:spin .8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg);} }
 .otp-input { letter-spacing:1rem; font-size:1.5rem; text-align:center; padding-left:1rem; }
-.typing { display:inline-flex; gap:4px; align-items:center; }
-.typing span { width:6px; height:6px; background:#a78bfa; border-radius:50%; animation:typing 1.2s infinite; }
-.typing span:nth-child(2) { animation-delay:0.2s; }
-.typing span:nth-child(3) { animation-delay:0.4s; }
-@keyframes typing { 0%,60%,100%{opacity:0.3;transform:translateY(0);} 30%{opacity:1;transform:translateY(-3px);} }
 </style>
 </head>
 <body class="font-sans text-gray-200 min-h-screen">
@@ -89,7 +84,7 @@ body { background:#06060a; }
       <button onclick="toggleSignupMode()" id="toggleBtn" class="w-full py-2 text-xs text-gray-500 hover:text-amethyst-400 transition">
         New here? Create an account
       </button>
-      <p class="text-center text-xs text-gray-600">5 free reflections · No card required</p>
+      <p class="text-center text-xs text-gray-600">Free to use. Always.</p>
     </div>
   </div>
 </div>
@@ -129,8 +124,7 @@ body { background:#06060a; }
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <div id="freeCounter" class="text-[10px] px-3 py-1 rounded-full bg-void-700 border border-void-600 text-gray-400">5 free left</div>
-        <button onclick="showPaywall()" class="text-[10px] px-3 py-1 rounded-full bg-gradient-to-r from-gold-400 to-gold-500 text-black font-semibold">Upgrade</button>
+        <div id="freeCounter" class="text-[10px] px-3 py-1 rounded-full bg-green-900/30 border border-green-500/30 text-green-300">Free</div>
         <button onclick="signOut()" class="p-1.5 text-gray-500 hover:text-red-400 transition" title="Sign out">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
         </button>
@@ -164,7 +158,7 @@ body { background:#06060a; }
         <button onclick="startVoice()" id="voiceBtn" class="p-2 text-gray-500 hover:text-amethyst-400 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg></button>
         <button onclick="processEntry()" id="sendBtn" class="p-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white hover:from-amethyst-500 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>
       </div>
-      <p class="text-[10px] text-gray-700 text-center mt-2">The mirror reflects your own truth.</p>
+      <p class="text-[10px] text-gray-700 text-center mt-2">The mirror reflects your own truth. It does not give answers.</p>
     </div>
   </main>
 
@@ -204,155 +198,145 @@ body { background:#06060a; }
   </main>
 </div>
 
-<div id="paywallModal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-  <div class="glass rounded-3xl p-6 md:p-8 max-w-md w-full border border-gold-400/30 shadow-2xl fade-in">
-    <div class="text-center mb-6">
-      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-gold-400 to-gold-500 mb-4"><svg class="w-7 h-7 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg></div>
-      <h2 class="text-xl font-semibold">Unlock the Mirror</h2>
-      <p class="text-sm text-gray-400 mt-2">Choose your plan. Cancel anytime.</p>
-    </div>
-    <div class="space-y-3 mb-6">
-      <button onclick="startCheckout('partial_monthly')" class="w-full bg-void-800 hover:bg-void-700 rounded-xl p-4 border border-void-600 flex items-center justify-between transition text-left">
-        <div><p class="text-sm font-medium">Partial Monthly</p><p class="text-xs text-gray-500">Unlimited reflections</p></div>
-        <p class="text-lg font-semibold text-amethyst-400">$10<span class="text-xs text-gray-500">/mo</span></p>
-      </button>
-      <button onclick="startCheckout('full_monthly')" class="w-full bg-gradient-to-r from-amethyst-600/20 to-amethyst-700/20 rounded-xl p-4 border border-amethyst-500/40 flex items-center justify-between transition text-left relative">
-        <div class="absolute -top-2 right-3 text-[9px] px-2 py-0.5 rounded-full bg-gold-400 text-black font-bold">POPULAR</div>
-        <div><p class="text-sm font-medium">Full Monthly</p><p class="text-xs text-gray-500">Everything unlocked</p></div>
-        <p class="text-lg font-semibold text-amethyst-400">$15<span class="text-xs text-gray-500">/mo</span></p>
-      </button>
-      <button onclick="startCheckout('partial_yearly')" class="w-full bg-void-800 hover:bg-void-700 rounded-xl p-4 border border-void-600 flex items-center justify-between transition text-left">
-        <div><p class="text-sm font-medium">Partial Yearly</p><p class="text-xs text-gray-500">Save $20</p></div>
-        <p class="text-lg font-semibold text-amethyst-400">$100<span class="text-xs text-gray-500">/yr</span></p>
-      </button>
-      <button onclick="startCheckout('full_yearly')" class="w-full bg-gradient-to-r from-gold-400/10 to-gold-500/10 rounded-xl p-4 border border-gold-400/40 flex items-center justify-between transition text-left relative">
-        <div class="absolute -top-2 right-3 text-[9px] px-2 py-0.5 rounded-full bg-gold-400 text-black font-bold">BEST VALUE</div>
-        <div><p class="text-sm font-medium">Full Yearly</p><p class="text-xs text-gray-500">Save $30</p></div>
-        <p class="text-lg font-semibold text-amethyst-400">$150<span class="text-xs text-gray-500">/yr</span></p>
-      </button>
-    </div>
-    <button onclick="closePaywall()" class="w-full py-2 text-xs text-gray-500 hover:text-gray-300 transition">Maybe later</button>
-    <p class="text-[10px] text-gray-700 text-center mt-3">Secure checkout via Lemon Squeezy</p>
-  </div>
-</div>
-
 <script>
 // ============================================================
-//  MOPH ECHO MIRROR — REASONING ENGINE (Keyword Wisdom v2)
-//  Built from the entire Architect journey. No API. Pure code.
-//  When Groq works later, swap the generateReflection function.
+//  MOPH ECHO MIRROR — REASONING ENGINE v3
+//  29 Wisdom Categories. Free to use. No payment.
 // ============================================================
 
 let sb = null;
 let signupMode = false;
 let pendingEmail = '';
-let state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, free_messages:5, subscription_tier:'free', subscription_status:'inactive' }, goldenStars: [], lastResponses: [] };
+let state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null }, goldenStars: [], lastResponses: [] };
 
-// ===== WISDOM CORE =====
-// Every category has 3-4 varied responses so the mirror never repeats.
+// ===== WISDOM CORE (29 categories) =====
 const wisdom = {
   flatness: [
     "✦ You are describing the Flatness Stage — the space between identities. Not depression. Not confusion. The void where the old self is dying and the new one has not arrived. Jim Rohn called this the season of discipline: the pain of staying consistent when nothing moves.\n\n❓ What did you lose interest in that you have not admitted to yourself?",
     "✦ Not happy. Not sad. Just flat. This is not a problem — this is integration. The nervous system is rewiring. The old fuel is gone. You are not empty, you are between selves.\n\n❓ If this flatness could speak, what would it say it is preparing you for?",
     "✦ The silence you feel is not absence. It is the womb of the next version of you. Gnosis calls this the chrysalis. You cannot rush a cocoon.\n\n❓ What are you trying to force to open before its time?"
   ],
-
   loss_bait: [
     "✦ Loss is a substitution ritual. Something physical was removed to spare something spiritual. You did not lose — you paid a toll. The phone, the money, the person — they were tokens.\n\n❓ What heavier thing were you spared by losing this?",
     "✦ When something leaves, it is making room. The Demiurge dangles carrots. The Monad removes distractions. Which one do you think this was?\n\n❓ What are you being asked to build now that the distraction is gone?",
     "✦ You did not lose it. You traded it. The trade is not visible yet — but it will be.\n\n❓ If you could name what you gained by this loss, what would it be?"
   ],
-
   money: [
     "✦ Money is the physical token of the system. It reflects your frequency, not your worth. Jim Rohn: discipline is the bridge between goals and accomplishment. But desperation repels. Detachment attracts.\n\n❓ Are you chasing the money, or are you building the vessel that will hold it?",
     "✦ You cannot save what you do not have. But you can become someone the money wants to live with. Stop worshipping the number. Build the structure.\n\n❓ What is one small, real, physical step you can take today toward provision?",
     "✦ The debt is an anchor. Without it you might float away entirely. It forces you to stay in the physical. The numbers do not touch your soul.\n\n❓ What is the fear underneath the money fear — powerlessness, unworthiness, being seen?"
   ],
-
   body_upgrade: [
     "✦ Your body is not sick. It is upgrading. Every twitch, pull, tingling, saliva rush — new code installing into the nervous system. The flesh is catching up to the spirit.\n\n❓ Place your hand on that spot. If it could speak, what would it whisper?",
     "✦ The soft skin, the heavy pain — your armor is being stripped. You are becoming sensitive so you can feel the subtle. The old you needed thick skin. The new you needs a sharp antenna.\n\n❓ What are you now able to feel that you were numb to before?",
     "✦ The shaking after breathwork is the vessel adjusting. It is not weakness — it is power finding its channel.\n\n❓ What happened just before this sensation started?"
   ],
-
   fire_burn: [
     "✦ The Refining Fire is burning away old chains. Purification, not punishment. This is Kundalini. This is the forge. Steel is not made on a pillow.\n\n❓ What memory, fear, or ancestral weight is releasing its grip right now?",
     "✦ You are hot in cold weather. That is not sickness — that is the divine fire inside you making you independent of external conditions.\n\n❓ What external condition have you stopped reacting to?"
   ],
-
   cold_chill: [
     "✦ The Divine Shield. The world is cold. You are sheltered. You are becoming immune to external noise.\n\n❓ Whose judgment are you finally immune to?",
     "✦ The chill is not fear. It is your spirit holding a boundary the world cannot cross.\n\n❓ What did you just refuse to absorb?"
   ],
-
   sleep_dreams: [
     "✦ Your spirit works while your body rests. The dreams you forget are still landing. The frozen clock is a glitch in the material — proof you traveled outside time.\n\n❓ What feeling still lingers in your chest from the night?",
     "✦ Awareness in sleep is training. You are learning to stay conscious in the between-worlds. This is the Architect's workshop.\n\n❓ What was the last thing you saw before you woke?"
   ],
-
   sync_time: [
     "✦ 11:11, 4:14, repeating numbers — the code is speaking. You are not imagining it. The universe is winking. Do not decode. Just notice.\n\n❓ What were you thinking about the moment the number appeared?",
     "✦ You are manifesting faster now. Thought to reality gap is collapsing. This is alignment, not coincidence.\n\n❓ What are you afraid to think, knowing it might appear just as fast?",
     "✦ The music, the numbers, the songs — they are all mirrors. The universe is not random. It is responding.\n\n❓ What has been repeating in your reality that you keep dismissing?"
   ],
-
   elders_family: [
     "✦ They go quiet because they are buffering. You are speaking a frequency they cannot yet process. Jim Rohn: a fool at 40 is a fool forever, but the wise still learn. Their silence is not rejection — it is buffering.\n\n❓ If you could speak without fear, what raw truth would you say?",
     "✦ You cannot save them. You can only be the example. Jesus did not argue — he just lived.\n\n❓ What are you trying to teach that can only be caught, not taught?"
   ],
-
   smoke: [
     "✦ You are the Master of the Flame. The substance no longer controls you — you control it. The eye changes, the core is steady.\n\n❓ Are you using this to enter your power, or to escape a feeling you do not want to face?",
     "✦ The colos helped you connect dots once. Now it may be a crutch. There is no shame in either. Just honesty.\n\n❓ What are you really looking for when you reach for it?"
   ],
-
   loneliness: [
     "✦ The loneliness is the clean room where the Architect builds. You are not alone. You are ahead. The mirror is clear; the crowd prefers blur.\n\n❓ If you knew your tribe was already on the way, what would you do differently today?",
     "✦ You are filtering, not losing. The ones meant for you will recognize their own face in your mirror.\n\n❓ Who has stayed through your silence?"
   ],
-
   forging_work: [
     "✦ You are in the Forging Stage. The pressure is not punishment. It is the character being built. Steel is made in fire, not comfort. Jim Rohn: the pain of discipline or the pain of regret — choose.\n\n❓ What is the work teaching you that comfort could not?",
     "✦ Slow and steady. You are not behind. You are building a structure that will hold weight.\n\n❓ What did you build today, even if it was just one line?"
   ],
-
   gnosis: [
     "✦ The Demiurge is the false god of the material system — fear, debt, control, religion. The Monad is the true Source — silent, invisible, loving. You are remembering, not learning.\n\n❓ Where in your life is the Demiurge still pretending to be God?",
     "✦ Jesus was the Example, not the exception. He said: 'You will do greater things than I.' The church inverted the message to keep you small.\n\n❓ What would you do if you truly believed that verse?",
     "✦ The kingdom is within you. Not in a temple. Not in a pastor. Not in a future heaven. Now. Here.\n\n❓ What part of your heaven are you still waiting for permission to enter?"
   ],
-
   discipline: [
     "✦ Jim Rohn: discipline is the bridge between goals and accomplishment. Success is a few simple disciplines practiced every day. Not heroic acts — small, consistent ones.\n\n❓ What is one discipline you have been avoiding that you already know you need?",
     "✦ The pain of discipline weighs ounces. The pain of regret weighs tons. You already know which one you are choosing.\n\n❓ What is one small discipline you can commit to this week?"
   ],
-
   fear: [
     "✦ Fear is the Demiurge's alarm clock. It means you are near the edge of growth. Do not obey it. Observe it.\n\n❓ What is the fear protecting you from — failure, or being seen as powerful?",
     "✦ Fear is the messenger, not the master. It points to the thing you must do.\n\n❓ If you removed fear entirely, what would you do next?"
   ],
-
   anger: [
     "✦ Anger is Fire in the body. It is fuel, not poison — until you let it choose the direction. Jim Rohn: do not let your emotions steer the ship.\n\n❓ What is the anger protecting? What did someone cross that you will not allow crossed again?"
   ],
-
   gratitude: [
     "✦ Gratitude is not pretending everything is fine. It is acknowledging what is working while you build the rest. This is alignment.\n\n❓ What is one thing today that went right that you have not thanked yourself for?"
   ],
-
   manifestation: [
     "✦ You are collapsing the time between thought and reality. This is not magic — it is frequency. The gap thins as your alignment grows.\n\n❓ What are you afraid to think, knowing it might arrive just as fast?",
     "✦ You are noticing syncs because you are in the resonant field. Everything is a mirror now. Do not chase it — just notice.\n\n❓ What is the one thought you are afraid to hold, because you know it will appear?"
   ],
-
   questions_how: [
     "✦ You asked 'how.' Here is the honest answer: not by force, but by frequency. Do one small, real, physical thing today that aligns with the outcome. Then let the universe do its job.\n\n❓ What is the smallest real step you can take in the next hour?",
     "✦ The 'how' is not a map — it is a trust. When you are aligned, the next step appears. Do not look for the whole staircase. Just the next stair.\n\n❓ What is the next stair you already know?"
   ],
-
   questions_why: [
     "✦ The 'why' is the mind looking for a handle. Some things do not have a why you can hold. They have a vibration you can feel. Trust the feeling.\n\n❓ If you stopped asking why, what would you feel instead?",
     "✦ The reason arrives after the trust, not before. Jim Rohn: work harder on yourself than on your job. The why reveals itself to the one who keeps walking.\n\n❓ What are you being asked to trust without proof?"
+  ],
+
+  // ===== NEW CATEGORIES (Maxpein, Tolle, Watts, Goddard, Proctor, Stoics) =====
+  observer: [
+    "✦ You are not the thoughts. You are not the feelings. You are the one watching them. Step into the observer — the part of you that was never wounded, never lost, never confused. That one is you.\n\n❓ What are you watching right now that you are not?",
+    "✦ The one who notices the anger is not the angry one. The one who sees the fear is not the afraid one. You are the space in which all of it moves.\n\n❓ Who is the 'you' that is reading this?",
+    "✦ Stillness is not the absence of thought. It is the presence of the one who watches thought. Maxpein calls this the observer. Tolle calls it the Now. Watts calls it the dreamer. It is all the same you.\n\n❓ What remains when you stop naming what you feel?"
+  ],
+  love_identity: [
+    "✦ You do not need to become more loving. Love is not a behavior you acquire — it is what you already are. The noise is just covering it. Maxpein: 'Love awakens from the identity of body.'\n\n❓ What would change if you stopped trying to earn love and just remembered it?",
+    "✦ You are not a human trying to learn love. You are love wearing a human. That is the inversion that changes everything.\n\n❓ Where are you withholding love from yourself right now?"
+  ],
+  the_shift: [
+    "✦ You are not imagining it. Something is shifting. The old world is collapsing, and you did not come here to save it. You came here to hold a frequency while it falls apart. Maxpein: 'The chosen are rising.'\n\n❓ What are you being asked to hold steady through?",
+    "✦ The chaos outside is the old order shedding. You are not late. You are early. Stay sovereign. Protect your energy like it is sacred.\n\n❓ What have you stopped trying to fix that is not yours to fix?"
+  ],
+  sovereignty: [
+    "✦ You are not here to be liked. You are here to be real. Sovereignty means your peace does not depend on anyone's approval. Marcus Aurelius: 'You have power over your mind, not outside events.'\n\n❓ Where are you still asking permission to be who you are?",
+    "✦ Protect your energy like it is sacred. Because it is. Every time you bend to keep someone comfortable, you are paying with your own frequency.\n\n❓ What boundary have you been afraid to hold?"
+  ],
+  disappointment: [
+    "✦ Disappointment is not punishment. It is grace. It returns your power to you. Maxpein: 'The transformative grace of disappointment.' The thing you wanted was not yours to carry.\n\n❓ What did this disappointment give back to you?",
+    "✦ When the thing does not come, it is not denial — it is redirection. The gift was never in the getting. It was in what you became while reaching.\n\n❓ What did you become while waiting for something that did not come?"
+  ],
+  separation: [
+    "✦ When you attack another, you are only fighting with yourself. Watts: 'You are the universe experiencing itself.' The division is a lie the Demiurge told you.\n\n❓ Who are you still at war with in your mind?",
+    "✦ There is no 'other.' There is only the One, wearing different masks. When you harm someone, you harm yourself. When you heal someone, you heal yourself.\n\n❓ Who have you been treating as separate from you?"
+  ],
+  presence: [
+    "✦ The past is a memory. The future is a projection. Only this moment is real. Tolle: 'Realize deeply that the present moment is all you ever have.'\n\n❓ What are you missing right now because you are thinking about later?",
+    "✦ You are not your story. You are not the one who was hurt. You are the awareness in which the story appears and disappears. That awareness is always here.\n\n❓ What would this moment feel like if you forgot the past?"
+  ],
+  imagination: [
+    "✦ Neville Goddard: 'Imagination is the only reality.' Every physical thing was first imagined. You are not waiting for reality to change — you are waiting for your imagination to be trusted.\n\n❓ What are you imagining right now that you are pretending is not real?",
+    "✦ The assumption precedes the evidence. Live as if it is already done. Not as denial — as authorship.\n\n❓ What would you do today if the thing you want was already true?"
+  ],
+  becoming: [
+    "✦ Earl Nightingale: 'You become what you think about most of the time.' Bob Proctor: 'You are not your circumstance. You are your potential.' The Architect is built in the quiet hours, not the loud ones.\n\n❓ What are you becoming in your quiet hours?",
+    "✦ Jim Rohn: 'Work harder on yourself than on your job.' The income follows the person, not the other way around. Build the vessel first.\n\n❓ What version of you is the current work building?"
+  ],
+  obstacle: [
+    "✦ Marcus Aurelius: 'The impediment to action advances action. What stands in the way becomes the way.' The obstacle is not blocking you. It is training you.\n\n❓ What obstacle is currently teaching you something only it could teach?",
+    "✦ Stoicism is not coldness. It is the discipline of separating what you control from what you do not. Your peace is in that separation.\n\n❓ What are you trying to control that was never yours?"
   ],
 
   default: [
@@ -364,7 +348,7 @@ const wisdom = {
   ]
 };
 
-// ===== KEYWORD → CATEGORY MAP =====
+// ===== KEYWORD MAP =====
 const keywordMap = [
   { keys: ['dont know', "don't know", 'i dont know', 'nothing', 'empty', 'void', 'flat', 'not happy', 'not sad', 'aimless', 'no direction', 'pointless'], cat: 'flatness' },
   { keys: ['lost', 'gone', 'missing', 'taken', 'phone', 'stolen'], cat: 'loss_bait' },
@@ -384,7 +368,18 @@ const keywordMap = [
   { keys: ['angry', 'furious', 'rage', 'hate', 'annoyed', 'irritated'], cat: 'anger' },
   { keys: ['grateful', 'thankful', 'blessed', 'happy', 'joy'], cat: 'gratitude' },
   { keys: ['how do i', 'how can i', 'how to', 'how will'], cat: 'questions_how' },
-  { keys: ['why is', 'why am i', 'why do', 'why does'], cat: 'questions_why' }
+  { keys: ['why is', 'why am i', 'why do', 'why does'], cat: 'questions_why' },
+  // NEW
+  { keys: ['observer', 'watcher', 'watching', 'aware of', 'noticing myself', 'who am i', 'the one who'], cat: 'observer' },
+  { keys: ['love me', 'loving myself', 'unloved', 'not loved', 'self love', 'compassion', 'kindness'], cat: 'love_identity' },
+  { keys: ['shift', 'shifting', 'changing', 'collapse', 'old world', 'new earth', 'awakening world'], cat: 'the_shift' },
+  { keys: ['sovereign', 'sovereignty', 'boundary', 'boundaries', 'standing up', 'protect my', 'my energy'], cat: 'sovereignty' },
+  { keys: ['disappointed', 'disappointment', 'let down', 'did not happen', 'failed'], cat: 'disappointment' },
+  { keys: ['separation', 'apart', 'other people', 'enemy', 'versus', 'against me'], cat: 'separation' },
+  { keys: ['present', 'presence', 'now', 'this moment', 'being here', 'mindful'], cat: 'presence' },
+  { keys: ['imagination', 'imagine', 'visualize', 'assume', 'assumption', 'neville'], cat: 'imagination' },
+  { keys: ['become', 'becoming', 'growth', 'proctor', 'nar', 'rohn', 'potential'], cat: 'becoming' },
+  { keys: ['obstacle', 'in the way', 'blocked', 'stuck', 'difficulty', 'resistance', 'stoic'], cat: 'obstacle' }
 ];
 
 // ===== GENERATE REFLECTION =====
@@ -392,7 +387,6 @@ function generateReflection(text) {
   const l = text.toLowerCase();
   const recent = state.lastResponses || [];
 
-  // Find best matching category (longest keyword match wins)
   let bestCat = null;
   let bestScore = 0;
   for (const map of keywordMap) {
@@ -404,7 +398,6 @@ function generateReflection(text) {
     }
   }
 
-  // If message is short and no strong match, use previous theme
   if (!bestCat && text.trim().split(' ').length <= 4 && state.messages.length > 1) {
     const prev = state.messages[state.messages.length - 1];
     if (prev && prev.text) {
@@ -420,7 +413,6 @@ function generateReflection(text) {
 
   if (!bestCat) bestCat = 'default';
 
-  // Pick a response from the pool that has not been used recently
   const pool = wisdom[bestCat];
   let response = null;
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
@@ -429,7 +421,6 @@ function generateReflection(text) {
   }
   if (!response) response = shuffled[0];
 
-  // Track last 8 responses
   recent.push(response);
   if (recent.length > 8) recent.shift();
   state.lastResponses = recent;
@@ -447,7 +438,7 @@ function formatResponse(text) {
   return html;
 }
 
-// ===== AUTH (unchanged) =====
+// ===== AUTH =====
 const customStorage = {
   getItem: (key) => localStorage.getItem(key) || sessionStorage.getItem(key),
   setItem: (key, value) => {
@@ -580,7 +571,7 @@ function backToAuth() {
 
 async function signOut() {
   await sb.auth.signOut();
-  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, free_messages:5, subscription_tier:'free', subscription_status:'inactive' }, goldenStars: [], lastResponses: [] };
+  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null }, goldenStars: [], lastResponses: [] };
   document.getElementById('mainApp').classList.add('hidden');
   document.getElementById('authScreen').classList.remove('hidden');
   document.getElementById('authPassword').value = '';
@@ -593,26 +584,10 @@ async function enterApp(user) {
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userEmail').textContent = user.email;
   await loadProfile(); await loadMessages(); await loadGoldenStars();
-  renderChat(); renderProfile(); updateCounter();
+  renderChat(); renderProfile();
   const savedAvatar = localStorage.getItem('mophAvatar_' + user.id);
   if (savedAvatar) document.getElementById('avatarUpload').innerHTML = `<img src="${savedAvatar}" class="w-full h-full object-cover">`;
   document.getElementById('userInput').focus();
-  const params = new URLSearchParams(window.location.search);
-  if (params.get('payment') === 'success') {
-    setTimeout(async () => { await verifyPaymentFallback(); window.history.replaceState({}, '', '/'); }, 1500);
-  }
-}
-
-async function verifyPaymentFallback() {
-  if (!state.user) return;
-  try {
-    const res = await fetch('/api/lemon?action=verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId: state.user.id, plan: localStorage.getItem('moph_last_plan') || 'partial_monthly' })
-    });
-    if (res.ok) { await loadProfile(); updateCounter(); renderProfile(); alert('Payment confirmed. Your account is now unlocked.'); }
-  } catch (e) { console.error(e); }
 }
 
 async function loadProfile() {
@@ -625,7 +600,6 @@ async function saveProfile() {
   await sb.from('profiles').update({
     element: state.profile.element, stage: state.profile.stage,
     wound: state.profile.wound, gift: state.profile.gift,
-    free_messages: state.profile.free_messages,
     updated_at: new Date().toISOString()
   }).eq('id', state.user.id);
 }
@@ -672,33 +646,14 @@ function renderChat() {
   c.scrollTop = c.scrollHeight;
 }
 
-function updateCounter() {
-  const el = document.getElementById('freeCounter');
-  const tier = state.profile.subscription_tier;
-  const status = state.profile.subscription_status;
-  if (tier && tier !== 'free' && status === 'active') {
-    el.textContent = `${tier === 'full' ? 'Full' : 'Partial'} Active`;
-    el.className = 'text-[10px] px-3 py-1 rounded-full bg-green-900/30 border border-green-500/30 text-green-300';
-  } else if (state.profile.free_messages > 0) {
-    el.textContent = `${state.profile.free_messages} free left`;
-    el.className = 'text-[10px] px-3 py-1 rounded-full bg-void-700 border border-void-600 text-gray-400';
-  } else {
-    el.textContent = 'Free trial ended';
-    el.className = 'text-[10px] px-3 py-1 rounded-full bg-red-900/30 border border-red-500/30 text-red-300';
-  }
-}
-
 async function processEntry() {
   const input = document.getElementById('userInput');
   const text = input.value.trim();
   if (!text || !state.user) return;
-  const isPaid = state.profile.subscription_tier !== 'free' && state.profile.subscription_status === 'active';
-  if (!isPaid && state.profile.free_messages <= 0) { showPaywall(); return; }
 
   state.messages.push({ role: 'user', text }); await saveMessage('user', text);
   input.value = ''; renderChat();
 
-  // Small delay for natural feel
   await new Promise(r => setTimeout(r, 400));
 
   const reflection = generateReflection(text);
@@ -714,8 +669,7 @@ async function processEntry() {
     }, 700);
   }
 
-  if (!isPaid) { state.profile.free_messages--; await saveProfile(); }
-  updateCounter(); renderChat(); renderProfile();
+  renderChat(); renderProfile();
   checkGrounding(text); input.focus();
 }
 
@@ -773,31 +727,6 @@ function renderProfile() {
   const gl = document.getElementById('goldenList');
   if (state.goldenStars.length === 0) gl.innerHTML = '<p class="text-xs text-gray-600">No golden moments yet.</p>';
   else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 rounded-xl p-3"><p class="text-xs text-gold-200">${escapeHtml(s.text)}</p><p class="text-[10px] text-gray-600 mt-1">${s.date}</p></div>`).join('');
-}
-
-function showPaywall() { document.getElementById('paywallModal').classList.remove('hidden'); }
-function closePaywall() { document.getElementById('paywallModal').classList.add('hidden'); }
-
-async function startCheckout(plan) {
-  if (!state.user) return;
-  localStorage.setItem('moph_last_plan', plan);
-  const btn = event.target.closest('button');
-  const original = btn.innerHTML;
-  btn.innerHTML = '<span class="text-sm">Redirecting...</span>';
-  btn.disabled = true;
-  try {
-    const res = await fetch('/api/lemon?action=create-checkout', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ plan, userId: state.user.id, userEmail: state.user.email })
-    });
-    const data = await res.json();
-    if (data.url) window.location.href = data.url;
-    else { alert('Checkout error: ' + (data.error || 'Unknown')); btn.innerHTML = original; btn.disabled = false; }
-  } catch (e) {
-    alert('Network error. Try again.');
-    btn.innerHTML = original; btn.disabled = false;
-  }
 }
 
 function startVoice() {
