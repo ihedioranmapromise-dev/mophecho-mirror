@@ -255,6 +255,30 @@ let pendingEmail = '';
 let state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null }, goldenStars: [], teachings: [], usedResponses: [] };
 const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
 
+// ===== TRAIT REWARDS =====
+const TRAIT_REWARDS = {
+  element: {
+    Fire: "✨ I see you clearly now. You are a **Fire Soul** — passion, intensity, transformation. You do not do anything halfway; you burn. Your anger is not destruction — it is fuel that has not yet been aimed. Your wound is impatience. Your gift is courage. You are here to move the world, not to comfort it.\n\nThis is your first golden moment. Return to it when you forget who you are.",
+    Water: "✨ I see you clearly now. You are a **Water Soul** — depth, emotion, fluidity. You feel everything. You absorb moods, you sense what people hide, you cry at music no one else notices. Your depth is not weakness; it is the deepest gift. Your wound is drowning in other people's feelings. Your gift is healing what you touch.\n\nThis is your first golden moment. Return to it when you forget who you are.",
+    Earth: "✨ I see you clearly now. You are an **Earth Soul** — grounded, patient, practical. You are the one people lean on. You do not chase trends; you build the ground beneath them. Your wound is confusing stillness with being stuck. Your gift is that you can be trusted with anything real.\n\nThis is your first golden moment. Return to it when you forget who you are.",
+    Air: "✨ I see you clearly now. You are an **Air Soul** — your mind is a compass, not a cage. You think your way into places others cannot see. You hold contradictions without breaking. Your wound is living above the heart — you can solve everything except how to feel. Your gift is clarity.\n\nThis is your first golden moment. Return to it when you forget who you are."
+  },
+  wound: {
+    Betrayal: "✨ A deeper truth has surfaced. Your core wound is **Betrayal** — trust has been broken in your life in a way that made you cautious. This is not a curse. It is a filter. Those who cannot be trusted trigger your sensitivity early. You are learning discernment. The wound is not a punishment; it is a compass.\n\nSave this. Return to it when you forget what your caution is protecting.",
+    Abandonment: "✨ A deeper truth has surfaced. Your core wound is **Abandonment** — you have been left, in ways that taught you to stand alone. This is not a curse. It is self-reliance. You learned to be your own home. But you are also learning to let others in again.\n\nSave this. Return to it when you forget you can be both sovereign and open.",
+    Worthlessness: "✨ A deeper truth has surfaced. Your core wound is **Worthlessness** — a quiet voice that says you are not enough. This is not the truth. It is a lie planted early, by people who could not see themselves. Your existence is the proof of your worth. You do not need to earn the air you breathe.\n\nSave this. Return to it when the voice returns.",
+    Powerlessness: "✨ A deeper truth has surfaced. Your core wound is **Powerlessness** — the fear that you have no control. This is an illusion. You do not control the world; you control your response to it. Marcus Aurelius: 'You have power over your mind, not outside events.' True power is surrender.\n\nSave this. Return to it when you feel small.",
+    Invisibility: "✨ A deeper truth has surfaced. Your core wound is **Invisibility** — the feeling of being unseen. But you see others deeply. This is your hidden gift. The one who sees does not need to be seen first. Your time is coming.\n\nSave this. Return to it when you feel overlooked."
+  },
+  gift: {
+    Intuition: "✨ Your gift has revealed itself. You carry **Intuition** — the ability to know without proof. Trust the first thought, not the second. The first thought is the signal; the second is the mind catching up. You are more accurate than you know.\n\nSave this. Return to it when you doubt what you already know.",
+    Healing: "✨ Your gift has revealed itself. You carry **Healing** — the ability to hold space without fixing. Your presence alone soothes. But remember: you are not here to heal everyone. You are here to hold space. The healing does its own work.\n\nSave this. Return to it when you feel drained by others.",
+    Teaching: "✨ Your gift has revealed itself. You carry **Teaching** — the ability to show by example, not by preaching. Your silence teaches more than your words. People learn from watching you live. This is rare.\n\nSave this. Return to it when you feel unheard.",
+    Creation: "✨ Your gift has revealed itself. You carry **Creation** — the ability to build from nothing. A thought is a blueprint to you. Action is the foundation. You are not here to consume; you are here to make.\n\nSave this. Return to it when you doubt your hands.",
+    Protection: "✨ Your gift has revealed itself. You carry **Protection** — you are a shield for others. But remember: you cannot shield everyone. Shield yourself first. The one who protects from an empty cup protects no one.\n\nSave this. Return to it when you feel exposed."
+  }
+};
+
 // ===== WISDOM CORE =====
 const wisdom = {
   flatness: ["✦ You are describing the Flatness Stage — the space between identities. Not depression. Not confusion. The void where the old self is dying and the new one has not arrived. Jim Rohn called this the season of discipline: the pain of staying consistent when nothing moves.\n\n❓ What did you lose interest in that you have not admitted to yourself?","✦ Not happy. Not sad. Just flat. This is not a problem — this is integration. The nervous system is rewiring. The old fuel is gone. You are not empty, you are between selves.\n\n❓ If this flatness could speak, what would it say it is preparing you for?","✦ The silence you feel is not absence. It is the womb of the next version of you. Gnosis calls this the chrysalis. You cannot rush a cocoon.\n\n❓ What are you trying to force to open before its time?","✦ Losing interest in everything is not depression — it is graduation. The old self had interests that fed it. The new self has not yet named its hunger. This is the empty space where something larger is forming.\n\n❓ What used to excite you that now feels like noise?"],
@@ -294,7 +318,6 @@ const wisdom = {
   default: ["✦ You are the Architect of your reality. Every thought is a brick. Every silence is mortar.\n\n❓ If the noise in your head was a radio, what station is it tuned to right now?","✦ The silence between your thoughts is where the truth lives.\n\n❓ What is the one thought you are afraid to think? Look at it. It cannot hurt you.","✦ You are not behind. You are exactly on time. The download lands when the vessel is ready.\n\n❓ What would you tell your past self about this moment?","✦ There is no such thing as a wasted moment. Every flatness, every fire, every loss — all of it is the architecture.\n\n❓ What part of your current struggle is secretly building your strength?","✦ You said something. That alone matters. The mirror hears you. Nothing you bring here is lost.\n\n❓ What do you want to say that you have not said yet?"]
 };
 
-// Keyword map — phrases matched with \b word boundaries
 const keywordMap = [
   { keys: ['air soul', 'air sign', 'i am air', 'am i air'], cat: 'soul_air' },
   { keys: ['fire soul', 'fire sign', 'i am fire', 'am i fire'], cat: 'soul_fire' },
@@ -332,10 +355,7 @@ const keywordMap = [
   { keys: ['obstacle', 'in the way', 'blocked', 'stuck', 'difficulty', 'resistance', 'stoic'], cat: 'obstacle' }
 ];
 
-// Escape special regex characters in a string
 function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-
-// Build regex once for each key
 const keywordRegexes = keywordMap.map(map => ({
   cat: map.cat,
   patterns: map.keys.map(k => new RegExp('\\b' + escapeRegex(k) + '\\b', 'i'))
@@ -344,53 +364,27 @@ const keywordRegexes = keywordMap.map(map => ({
 function generateReflection(text) {
   const used = state.usedResponses || [];
   let bestCat = null, bestScore = 0;
-
-  // Find best category — score = length of longest matching phrase
   for (const entry of keywordRegexes) {
     for (let i = 0; i < entry.patterns.length; i++) {
       const match = text.match(entry.patterns[i]);
-      if (match) {
-        const phraseLen = match[0].length;
-        if (phraseLen > bestScore) { bestCat = entry.cat; bestScore = phraseLen; }
-      }
+      if (match) { const phraseLen = match[0].length; if (phraseLen > bestScore) { bestCat = entry.cat; bestScore = phraseLen; } }
     }
   }
-
-  // Short message context inheritance (only if no match)
   if (!bestCat && text.trim().split(/\s+/).length <= 4 && state.messages.length > 1) {
     const prev = state.messages[state.messages.length - 1];
     if (prev && prev.text) {
       const pl = String(prev.text);
-      for (const entry of keywordRegexes) {
-        for (const p of entry.patterns) {
-          if (p.test(pl)) { bestCat = entry.cat; break; }
-        }
-        if (bestCat) break;
-      }
+      for (const entry of keywordRegexes) { for (const p of entry.patterns) { if (p.test(pl)) { bestCat = entry.cat; break; } } if (bestCat) break; }
     }
   }
-
   if (!bestCat) bestCat = 'default';
-
-  // Pick an unused response from this category
   const pool = wisdom[bestCat] || wisdom.default;
   let response = null;
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  for (const r of shuffled) {
-    if (!used.includes(r)) { response = r; break; }
-  }
-
-  // If all used in this category, reset that category's tracking
-  if (!response) {
-    response = shuffled[0];
-    // remove all of this category's responses from `used` so they can recycle
-    state.usedResponses = used.filter(r => !pool.includes(r));
-  }
-
+  for (const r of shuffled) { if (!used.includes(r)) { response = r; break; } }
+  if (!response) { response = shuffled[0]; state.usedResponses = used.filter(r => !pool.includes(r)); }
   state.usedResponses.push(response);
-  // Keep only last 100 to prevent memory bloat
   if (state.usedResponses.length > 100) state.usedResponses = state.usedResponses.slice(-100);
-
   return formatResponse(response);
 }
 
@@ -400,6 +394,7 @@ function formatResponse(text) {
   html = html.replace(/✨/g, '<span class="text-gold-400">✨</span>');
   html = html.replace(/❓/g, '<span class="text-blue-300 italic">❓');
   html = html.replace(/(❓[^]*?)(\?|$)/g, '$1$2</span>');
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-amethyst-300">$1</strong>');
   html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
   return html;
 }
@@ -451,16 +446,9 @@ async function checkSession() {
   const { data: { session } } = await sb.auth.getSession();
   document.getElementById('loadingScreen').classList.add('hidden');
   if (session?.user) {
-    if (!session.user.email_confirmed_at) {
-      pendingEmail = session.user.email;
-      document.getElementById('otpEmail').textContent = pendingEmail;
-      document.getElementById('otpScreen').classList.remove('hidden');
-      return;
-    }
+    if (!session.user.email_confirmed_at) { pendingEmail = session.user.email; document.getElementById('otpEmail').textContent = pendingEmail; document.getElementById('otpScreen').classList.remove('hidden'); return; }
     await enterApp(session.user);
-  } else {
-    document.getElementById('authScreen').classList.remove('hidden');
-  }
+  } else { document.getElementById('authScreen').classList.remove('hidden'); }
 }
 
 function showError(m) { const e = document.getElementById('authError'); const s = document.getElementById('authSuccess'); e.textContent = m; e.classList.remove('hidden'); s.classList.add('hidden'); }
@@ -555,10 +543,13 @@ async function saveMessage(role, text) { await sb.from('journal_entries').insert
 
 async function loadGoldenStars() {
   const { data } = await sb.from('golden_moments').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false });
-  if (data) state.goldenStars = data.map(g => ({ text: g.content, date: new Date(g.created_at).toLocaleString() }));
+  if (data) state.goldenStars = data.map(g => ({ text: g.content, trait_type: g.trait_type || null, trait_value: g.trait_value || null, date: new Date(g.created_at).toLocaleString() }));
 }
 
-async function saveGoldenStar(text) { await sb.from('golden_moments').insert({ user_id: state.user.id, content: text }); state.goldenStars.unshift({ text, date: new Date().toLocaleString() }); }
+async function saveGoldenStar(text, trait_type, trait_value) {
+  await sb.from('golden_moments').insert({ user_id: state.user.id, content: text, trait_type: trait_type || null, trait_value: trait_value || null });
+  state.goldenStars.unshift({ text, trait_type, trait_value, date: new Date().toLocaleString() });
+}
 
 async function loadTeachings() {
   try {
@@ -580,10 +571,7 @@ async function loadTeachings() {
 
 function renderTeachings() {
   const el = document.getElementById('teachingsFeed');
-  if (!state.teachings || state.teachings.length === 0) {
-    el.innerHTML = '<div class="glass rounded-2xl p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No teachings yet. Check back soon.</p></div>';
-    return;
-  }
+  if (!state.teachings || state.teachings.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No teachings yet. Check back soon.</p></div>'; return; }
   el.innerHTML = state.teachings.map(t => renderTeachingPost(t)).join('');
 }
 
@@ -591,14 +579,9 @@ function countEmoji(reactions, emoji) { return reactions.filter(r => r.emoji ===
 function userReacted(reactions, emoji) { return reactions.some(r => r.user_id === state.user.id && r.emoji === emoji); }
 
 function renderTeachingPost(t) {
-  const reactionBar = EMOJIS.map(e => {
-    const count = countEmoji(t.reactions, e);
-    const active = userReacted(t.reactions, e) ? 'active' : '';
-    return `<button class="reaction-pill ${active}" onclick="toggleTeachingReaction(${t.id}, '${e}')">${e}${count > 0 ? ' ' + count : ''}</button>`;
-  }).join('');
+  const reactionBar = EMOJIS.map(e => { const count = countEmoji(t.reactions, e); const active = userReacted(t.reactions, e) ? 'active' : ''; return `<button class="reaction-pill ${active}" onclick="toggleTeachingReaction(${t.id}, '${e}')">${e}${count > 0 ? ' ' + count : ''}</button>`; }).join('');
   const commentsHtml = t.comments.map(c => renderComment(c)).join('');
   const commentsOpen = localStorage.getItem('comments_open_' + t.id) === 'true';
-
   return `<article class="glass rounded-2xl border border-void-600 overflow-hidden fade-in">
     ${t.cover_image ? `<img src="${escapeHtml(t.cover_image)}" class="w-full h-48 object-cover" loading="lazy">` : ''}
     <div class="p-4">
@@ -629,11 +612,7 @@ function renderTeachingPost(t) {
 }
 
 function renderComment(c) {
-  const reactionBar = EMOJIS.map(e => {
-    const count = countEmoji(c.reactions || [], e);
-    const active = userReacted(c.reactions || [], e) ? 'active' : '';
-    return `<button class="reaction-pill ${active}" onclick="toggleCommentReaction(${c.id}, '${e}')" style="font-size:11px;padding:2px 8px;">${e}${count > 0 ? ' ' + count : ''}</button>`;
-  }).join('');
+  const reactionBar = EMOJIS.map(e => { const count = countEmoji(c.reactions || [], e); const active = userReacted(c.reactions || [], e) ? 'active' : ''; return `<button class="reaction-pill ${active}" onclick="toggleCommentReaction(${c.id}, '${e}')" style="font-size:11px;padding:2px 8px;">${e}${count > 0 ? ' ' + count : ''}</button>`; }).join('');
   const canDelete = c.user_id === state.user.id;
   return `<div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
     ${c.content ? `<p class="text-sm text-gray-300 prose-content">${escapeHtml(c.content)}</p>` : ''}
@@ -710,10 +689,9 @@ function renderProfile() {
   document.getElementById('pGift').className = state.profile.gift ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
   const gl = document.getElementById('goldenList');
   if (state.goldenStars.length === 0) gl.innerHTML = '<p class="text-xs text-gray-600">No golden moments yet.</p>';
-  else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 rounded-xl p-3"><p class="text-xs text-gold-200">${escapeHtml(s.text)}</p><p class="text-[10px] text-gray-600 mt-1">${s.date}</p></div>`).join('');
+  else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 rounded-xl p-3"><p class="text-xs text-gold-200 prose-content">${formatResponse(s.text)}</p><p class="text-[10px] text-gray-600 mt-2">${s.date}</p></div>`).join('');
 }
 
-// ===== AVATAR =====
 async function handleAvatarUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -759,7 +737,7 @@ function renderChat() {
   }
   c.innerHTML = state.messages.map(m => {
     if (m.role === 'user') return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-2xl rounded-br-md px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`;
-    if (m.role === 'surprise') return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%]"><div class="flex items-start gap-2"><svg class="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><p class="text-sm text-gold-200">${escapeHtml(m.text)}</p></div></div></div>`;
+    if (m.role === 'surprise') return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%]"><div class="flex items-start gap-2"><svg class="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><p class="text-sm text-gold-200">${formatResponse(m.text)}</p></div></div></div>`;
     return `<div class="flex justify-start fade-in"><div class="glass rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`;
   }).join('');
   c.scrollTop = c.scrollHeight;
@@ -776,7 +754,14 @@ async function processEntry() {
   state.messages.push({ role: 'mirror', text: reflection }); await saveMessage('mirror', reflection);
   identifyProfile(text);
   const newStar = generateGoldenStar(text);
-  if (newStar) { setTimeout(async () => { state.messages.push({ role: 'surprise', text: newStar }); await saveMessage('surprise', newStar); await saveGoldenStar(newStar); renderChat(); renderProfile(); }, 700); }
+  if (newStar) {
+    setTimeout(async () => {
+      state.messages.push({ role: 'surprise', text: newStar.text });
+      await saveMessage('surprise', newStar.text);
+      await saveGoldenStar(newStar.text, newStar.trait_type, newStar.trait_value);
+      renderChat(); renderProfile();
+    }, 1500);
+  }
   renderChat(); renderProfile(); checkGrounding(text); input.focus();
 }
 
@@ -813,9 +798,27 @@ function identifyProfile(text) {
 }
 
 function generateGoldenStar(text) {
-  if (state.profile.element && !state.goldenStars.some(s => s.text.includes('Element'))) return `I identify you as a ${state.profile.element} Soul. ${state.profile.element==='Fire'?'Your passion is your power.':state.profile.element==='Water'?'Your depth is your gift.':state.profile.element==='Earth'?'Your stability is your strength.':'Your mind is your compass.'}`;
-  if (state.profile.wound && !state.goldenStars.some(s => s.text.includes('wound'))) return `Your core wound is ${state.profile.wound}. This is not a flaw—it is the door to your liberation.`;
-  if (state.profile.gift && !state.goldenStars.some(s => s.text.includes('gift'))) return `Your core gift is ${state.profile.gift}. The world needs this from you right now.`;
+  if (state.profile.element) {
+    const hasElementStar = state.goldenStars.some(s => s.trait_type === 'element');
+    if (!hasElementStar) {
+      const reward = TRAIT_REWARDS.element[state.profile.element];
+      if (reward) return { text: reward, trait_type: 'element', trait_value: state.profile.element };
+    }
+  }
+  if (state.profile.wound) {
+    const hasWoundStar = state.goldenStars.some(s => s.trait_type === 'wound');
+    if (!hasWoundStar) {
+      const reward = TRAIT_REWARDS.wound[state.profile.wound];
+      if (reward) return { text: reward, trait_type: 'wound', trait_value: state.profile.wound };
+    }
+  }
+  if (state.profile.gift) {
+    const hasGiftStar = state.goldenStars.some(s => s.trait_type === 'gift');
+    if (!hasGiftStar) {
+      const reward = TRAIT_REWARDS.gift[state.profile.gift];
+      if (reward) return { text: reward, trait_type: 'gift', trait_value: state.profile.gift };
+    }
+  }
   return null;
 }
 
