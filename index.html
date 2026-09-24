@@ -2,9 +2,15 @@
 <html lang="en" class="dark">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
+<meta name="theme-color" content="#7c3aed">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Moph Echo">
 <title>Moph Echo Mirror</title>
-<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a78bfa' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='12' r='4'/%3E%3Cpath d='M12 2v2m0 16v2M4 12H2m20 0h-2M5.64 5.64L4.22 4.22m15.56 15.56l-1.42-1.42M5.64 18.36l-1.42 1.42M19.78 4.22l-1.42 1.42'/%3E%3C/svg%3E">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon.svg">
+<link rel="icon" type="image/svg+xml" href="/icon.svg">
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -13,22 +19,31 @@ tailwind.config = { darkMode:'class', theme:{ extend:{ fontFamily:{ sans:['Inter
 </script>
 <style>
 * { -webkit-tap-highlight-color: transparent; }
-body { background:#06060a; }
-.glass { background:rgba(16,16,28,0.65); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); }
+html, body { height: 100%; overscroll-behavior: none; }
+body { background:#06060a; min-height: 100dvh; }
+.glass { background:rgba(16,16,28,0.75); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); }
 ::-webkit-scrollbar { width:4px; }
 ::-webkit-scrollbar-thumb { background:#3a2a5a; border-radius:10px; }
-.fade-in { animation:fadeIn .4s ease; }
+.fade-in { animation:fadeIn .35s ease; }
 @keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
 .pulse-glow { animation:pulseGlow 2s ease-in-out infinite; }
 @keyframes pulseGlow { 0%,100%{box-shadow:0 0 20px -5px rgba(139,92,246,.3);} 50%{box-shadow:0 0 30px -5px rgba(139,92,246,.6);} }
 .spinner { border:2px solid rgba(139,92,246,.2); border-top-color:#a78bfa; border-radius:50%; width:20px; height:20px; animation:spin .8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg);} }
 .otp-input { letter-spacing:1rem; font-size:1.5rem; text-align:center; padding-left:1rem; }
+.safe-bottom { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
+.safe-top { padding-top: env(safe-area-inset-top); }
+input:-webkit-autofill, input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #0a0a12 inset !important;
+  -webkit-text-fill-color: #d0d0e8 !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
 </style>
 </head>
-<body class="font-sans text-gray-200 min-h-screen">
+<body class="font-sans text-gray-200">
 
-<div id="loadingScreen" class="min-h-screen flex items-center justify-center">
+<!-- LOADING -->
+<div id="loadingScreen" class="fixed inset-0 flex items-center justify-center bg-void-900 z-[60]">
   <div class="flex flex-col items-center gap-4">
     <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center pulse-glow">
       <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
@@ -37,8 +52,9 @@ body { background:#06060a; }
   </div>
 </div>
 
-<div id="authScreen" class="hidden min-h-screen flex items-center justify-center p-4">
-  <div class="glass rounded-3xl p-8 md:p-12 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
+<!-- AUTH -->
+<div id="authScreen" class="hidden min-h-[100dvh] flex items-center justify-center p-4 safe-top safe-bottom">
+  <div class="glass rounded-3xl p-6 sm:p-10 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
     <div class="text-center mb-8">
       <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 mb-4 pulse-glow">
         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
@@ -46,17 +62,16 @@ body { background:#06060a; }
       <h1 class="text-2xl font-semibold bg-gradient-to-r from-amethyst-400 to-amethyst-600 bg-clip-text text-transparent tracking-wide">MOPH ECHO</h1>
       <p class="text-gray-500 text-sm mt-1">The Reasoning Mirror</p>
     </div>
-
     <div class="space-y-4">
       <div>
         <label class="text-xs text-gray-500 uppercase tracking-wider">Email</label>
-        <input type="email" id="authEmail" placeholder="you@example.com" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <input type="email" id="authEmail" autocomplete="email" placeholder="you@example.com" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-base focus:border-amethyst-500 focus:outline-none transition">
       </div>
       <div>
         <label class="text-xs text-gray-500 uppercase tracking-wider">Password</label>
         <div class="relative mt-1">
-          <input type="password" id="authPassword" placeholder="••••••••" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 pr-12 text-sm focus:border-amethyst-500 focus:outline-none transition">
-          <button type="button" onclick="togglePass('authPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-amethyst-400 transition">
+          <input type="password" id="authPassword" autocomplete="current-password" placeholder="••••••••" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 pr-12 text-base focus:border-amethyst-500 focus:outline-none transition">
+          <button type="button" onclick="togglePass('authPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-amethyst-400 transition p-2">
             <svg class="w-5 h-5 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
             <svg class="w-5 h-5 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
           </button>
@@ -65,8 +80,8 @@ body { background:#06060a; }
       <div id="confirmPassWrap" class="hidden">
         <label class="text-xs text-gray-500 uppercase tracking-wider">Confirm Password</label>
         <div class="relative mt-1">
-          <input type="password" id="authConfirmPassword" placeholder="••••••••" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 pr-12 text-sm focus:border-amethyst-500 focus:outline-none transition">
-          <button type="button" onclick="togglePass('authConfirmPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-amethyst-400 transition">
+          <input type="password" id="authConfirmPassword" autocomplete="new-password" placeholder="••••••••" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 pr-12 text-base focus:border-amethyst-500 focus:outline-none transition">
+          <button type="button" onclick="togglePass('authConfirmPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-amethyst-400 transition p-2">
             <svg class="w-5 h-5 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
             <svg class="w-5 h-5 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
           </button>
@@ -89,18 +104,19 @@ body { background:#06060a; }
   </div>
 </div>
 
-<div id="otpScreen" class="hidden min-h-screen flex items-center justify-center p-4">
-  <div class="glass rounded-3xl p-8 md:p-10 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
+<!-- OTP -->
+<div id="otpScreen" class="hidden min-h-[100dvh] flex items-center justify-center p-4 safe-top safe-bottom">
+  <div class="glass rounded-3xl p-6 sm:p-10 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
     <div class="text-center mb-6">
       <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 mb-4">
         <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
       </div>
       <h2 class="text-xl font-semibold">Check your email</h2>
-      <p class="text-sm text-gray-400 mt-2">We sent a 6-digit code to <span id="otpEmail" class="text-amethyst-400"></span></p>
-      <p class="text-xs text-gray-500 mt-1">Check your inbox AND spam folder</p>
+      <p class="text-sm text-gray-400 mt-2">We sent a 6-digit code to <span id="otpEmail" class="text-amethyst-400 break-all"></span></p>
+      <p class="text-xs text-gray-500 mt-1">Check inbox AND spam folder</p>
     </div>
     <div class="space-y-4">
-      <input type="text" id="otpInput" maxlength="6" inputmode="numeric" placeholder="000000" class="otp-input w-full bg-void-900 border border-void-600 rounded-xl py-4 text-white focus:border-amethyst-500 focus:outline-none transition">
+      <input type="text" id="otpInput" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" class="otp-input w-full bg-void-900 border border-void-600 rounded-xl py-4 text-white focus:border-amethyst-500 focus:outline-none transition">
       <div id="otpError" class="hidden text-xs text-red-400 text-center bg-red-900/20 border border-red-500/20 rounded-lg py-2 px-3"></div>
       <button onclick="verifyOtp()" id="otpBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:from-amethyst-500 transition">
         <span id="otpBtnText">Verify & Enter</span>
@@ -111,103 +127,173 @@ body { background:#06060a; }
   </div>
 </div>
 
-<div id="mainApp" class="hidden min-h-screen flex flex-col max-w-2xl mx-auto">
-  <header class="glass border-b border-void-600 sticky top-0 z-40">
-    <div class="px-4 py-3 flex items-center justify-between">
-      <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center">
-          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+<!-- MAIN APP -->
+<div id="mainApp" class="hidden h-[100dvh] flex flex-col max-w-2xl mx-auto">
+  <header class="glass border-b border-void-600 sticky top-0 z-40 safe-top">
+    <div class="px-4 py-2.5 flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
         </div>
         <div>
-          <h1 class="text-sm font-semibold tracking-wide">MOPH ECHO</h1>
-          <p class="text-[10px] text-gray-500">The Reasoning Mirror</p>
+          <h1 class="text-xs font-semibold tracking-wide">MOPH ECHO</h1>
+          <p class="text-[9px] text-gray-500">The Reasoning Mirror</p>
         </div>
       </div>
-      <div class="flex items-center gap-2">
-        <div id="freeCounter" class="text-[10px] px-3 py-1 rounded-full bg-green-900/30 border border-green-500/30 text-green-300">Free</div>
+      <div class="flex items-center gap-1.5">
+        <div class="text-[10px] px-2.5 py-1 rounded-full bg-green-900/30 border border-green-500/30 text-green-300">Free</div>
         <button onclick="signOut()" class="p-1.5 text-gray-500 hover:text-red-400 transition" title="Sign out">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
         </button>
       </div>
     </div>
-    <nav class="px-4 pb-2 flex gap-1">
-      <button onclick="switchTab('chat')" id="tabChat" class="flex-1 py-2 text-xs font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5">
+    <nav class="px-3 pb-2 flex gap-1">
+      <button onclick="switchTab('chat')" id="tabChat" class="flex-1 py-1.5 text-[11px] font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         Chat
       </button>
-      <button onclick="switchTab('profile')" id="tabProfile" class="flex-1 py-2 text-xs font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5">
+      <button onclick="switchTab('teachings')" id="tabTeachings" class="flex-1 py-1.5 text-[11px] font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Teachings
+      </button>
+      <button onclick="switchTab('profile')" id="tabProfile" class="flex-1 py-1.5 text-[11px] font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
         Profile
-      </button>
-      <button onclick="switchTab('guide')" id="tabGuide" class="flex-1 py-2 text-xs font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-        Guide
       </button>
     </nav>
   </header>
 
+  <!-- PANEL: CHAT -->
   <main id="panelChat" class="flex-1 flex flex-col overflow-hidden">
-    <div id="chatContainer" class="flex-1 overflow-y-auto px-4 py-4 space-y-4"></div>
-    <div id="groundingAlert" class="hidden mx-4 mb-2 px-4 py-3 rounded-xl bg-red-900/20 border border-red-500/30 text-red-300 text-xs text-center">
+    <div id="chatContainer" class="flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-3"></div>
+    <div id="groundingAlert" class="hidden mx-3 mb-2 px-3 py-2 rounded-xl bg-red-900/20 border border-red-500/30 text-red-300 text-xs text-center">
       <strong>Vessel Check:</strong> Honor your temple with water or fruit today.
     </div>
-    <div class="glass border-t border-void-600 p-3">
-      <div class="flex items-center gap-2 bg-void-900 rounded-2xl border border-void-600 px-4 py-2 focus-within:border-amethyst-500/50 transition">
-        <input type="text" id="userInput" placeholder="Speak your truth..." class="flex-1 bg-transparent text-sm py-2 focus:outline-none placeholder-gray-600">
-        <button onclick="downloadLog()" class="p-2 text-gray-500 hover:text-gray-300 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg></button>
-        <button onclick="startVoice()" id="voiceBtn" class="p-2 text-gray-500 hover:text-amethyst-400 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg></button>
-        <button onclick="processEntry()" id="sendBtn" class="p-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white hover:from-amethyst-500 transition"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg></button>
+    <div class="glass border-t border-void-600 p-3 safe-bottom">
+      <div class="flex items-center gap-2 bg-void-900 rounded-2xl border border-void-600 px-3 py-1.5 focus-within:border-amethyst-500/50 transition">
+        <input type="text" id="userInput" name="moph-msg-field-2026-xyz" autocomplete="new-password" autocorrect="on" autocapitalize="sentences" spellcheck="false" placeholder="Speak your truth..." class="flex-1 bg-transparent text-base py-2 focus:outline-none placeholder-gray-600 min-w-0" readonly onfocus="this.removeAttribute('readonly')">
+        <button onclick="downloadLog()" class="p-2 text-gray-500 hover:text-gray-300 transition flex-shrink-0" title="Download">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </button>
+        <button onclick="startVoice()" id="voiceBtn" class="p-2 text-gray-500 hover:text-amethyst-400 transition flex-shrink-0" title="Voice">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+        </button>
+        <button onclick="processEntry()" id="sendBtn" class="p-2 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white hover:from-amethyst-500 transition flex-shrink-0" title="Send">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+        </button>
       </div>
-      <p class="text-[10px] text-gray-700 text-center mt-2">The mirror reflects your own truth. It does not give answers.</p>
     </div>
   </main>
 
-  <main id="panelProfile" class="hidden flex-1 overflow-y-auto px-4 py-6 space-y-6">
-    <div class="glass rounded-2xl p-6 border border-void-600">
-      <div class="flex items-center gap-4 mb-6">
-        <div id="avatarUpload" class="w-16 h-16 rounded-2xl bg-void-700 border border-void-600 flex items-center justify-center cursor-pointer hover:border-amethyst-500/50 transition overflow-hidden">
-          <svg id="avatarPlaceholder" class="w-7 h-7 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+  <!-- PANEL: TEACHINGS -->
+  <main id="panelTeachings" class="hidden flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4">
+    <div class="glass rounded-2xl p-5 border border-void-600">
+      <h2 class="text-base font-semibold mb-1">Teachings</h2>
+      <p class="text-xs text-gray-500">Reflections and lessons shared with you</p>
+    </div>
+    <div id="teachingsList" class="space-y-3">
+      <p class="text-xs text-gray-600 text-center py-8">No teachings yet. They will appear here when shared.</p>
+    </div>
+  </main>
+
+  <!-- PANEL: PROFILE -->
+  <main id="panelProfile" class="hidden flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4">
+    <div class="glass rounded-2xl p-5 border border-void-600">
+      <div class="flex items-center gap-4 mb-5">
+        <div id="avatarUpload" class="w-14 h-14 rounded-2xl bg-void-700 border border-void-600 flex items-center justify-center cursor-pointer hover:border-amethyst-500/50 transition overflow-hidden flex-shrink-0">
+          <svg id="avatarPlaceholder" class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
           <input type="file" id="avatarInput" accept="image/*" class="hidden">
         </div>
-        <div><h2 class="text-lg font-semibold">Architect</h2><p id="userEmail" class="text-xs text-gray-500">—</p></div>
+        <div class="min-w-0"><h2 class="text-base font-semibold">Architect</h2><p id="userEmail" class="text-xs text-gray-500 truncate">—</p></div>
       </div>
-      <div class="grid grid-cols-2 gap-4">
-        <div class="bg-void-800 rounded-xl p-4 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Element</p><p id="pElement" class="text-sm font-medium text-gray-400">—</p></div>
-        <div class="bg-void-800 rounded-xl p-4 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stage</p><p id="pStage" class="text-sm font-medium text-gray-400">—</p></div>
-        <div class="bg-void-800 rounded-xl p-4 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Wound</p><p id="pWound" class="text-sm font-medium text-gray-400">—</p></div>
-        <div class="bg-void-800 rounded-xl p-4 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p><p id="pGift" class="text-sm font-medium text-gray-400">—</p></div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-void-800 rounded-xl p-3 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Element</p><p id="pElement" class="text-sm font-medium text-gray-400">—</p></div>
+        <div class="bg-void-800 rounded-xl p-3 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stage</p><p id="pStage" class="text-sm font-medium text-gray-400">—</p></div>
+        <div class="bg-void-800 rounded-xl p-3 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Wound</p><p id="pWound" class="text-sm font-medium text-gray-400">—</p></div>
+        <div class="bg-void-800 rounded-xl p-3 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p><p id="pGift" class="text-sm font-medium text-gray-400">—</p></div>
       </div>
     </div>
-    <div class="glass rounded-2xl p-6 border border-void-600">
-      <div class="flex items-center gap-2 mb-4"><svg class="w-4 h-4 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><h3 class="text-sm font-semibold">Golden Moments</h3></div>
-      <div id="goldenList" class="space-y-3"><p class="text-xs text-gray-600">No golden moments yet.</p></div>
-    </div>
-  </main>
-
-  <main id="panelGuide" class="hidden flex-1 overflow-y-auto px-4 py-6">
-    <div class="glass rounded-2xl p-6 border border-void-600 space-y-6">
-      <div><h2 class="text-lg font-semibold mb-2">How to Use the Mirror</h2><p class="text-sm text-gray-400 leading-relaxed">This is not a guru. This is not a pastor. This is a mirror. It reflects what you already know but have not yet seen.</p></div>
-      <div class="space-y-4">
-        <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">1</span></div><div><h3 class="text-sm font-medium">Speak your truth</h3><p class="text-xs text-gray-500 mt-1">Type or speak whatever is on your mind.</p></div></div>
-        <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">2</span></div><div><h3 class="text-sm font-medium">The mirror listens</h3><p class="text-xs text-gray-500 mt-1">It reads meaning behind your words.</p></div></div>
-        <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">3</span></div><div><h3 class="text-sm font-medium">Golden moments</h3><p class="text-xs text-gray-500 mt-1">Major traits get a golden insight.</p></div></div>
-        <div class="flex gap-3"><div class="w-8 h-8 rounded-lg bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-amethyst-400">4</span></div><div><h3 class="text-sm font-medium">The stages</h3><p class="text-xs text-gray-500 mt-1">Forging, Flatness, Alignment, Provision.</p></div></div>
-      </div>
-      <div class="border-t border-void-600 pt-4"><p class="text-xs text-gray-600 italic text-center">— The mirror does not judge. It only reflects. —</p></div>
+    <div class="glass rounded-2xl p-5 border border-void-600">
+      <div class="flex items-center gap-2 mb-3"><svg class="w-4 h-4 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><h3 class="text-sm font-semibold">Golden Moments</h3></div>
+      <div id="goldenList" class="space-y-2"><p class="text-xs text-gray-600">No golden moments yet.</p></div>
     </div>
   </main>
 </div>
 
-<script>
-// ============================================================
-//  MOPH ECHO MIRROR — REASONING ENGINE v3
-//  29 Wisdom Categories. Free to use. No payment.
-// ============================================================
+<!-- INSTALL BANNER -->
+<div id="installBanner" class="hidden fixed bottom-3 left-3 right-3 z-50 max-w-md mx-auto">
+  <div class="glass rounded-2xl p-3 border border-amethyst-500/30 shadow-2xl flex items-center gap-3">
+    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center flex-shrink-0">
+      <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    </div>
+    <div class="flex-1 min-w-0">
+      <p id="installText" class="text-xs text-gray-200 font-medium">Install Moph Echo</p>
+      <p id="installSub" class="text-[10px] text-gray-500 truncate">Add to home screen for the real app experience</p>
+    </div>
+    <button onclick="handleInstall()" id="installBtn" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-medium flex-shrink-0">Install</button>
+    <button onclick="dismissInstall()" class="p-1 text-gray-500 hover:text-gray-300 flex-shrink-0">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+</div>
 
+<script>
+// ===== PWA INSTALL PROMPT =====
+let deferredPrompt = null;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!isStandalone && !localStorage.getItem('moph_install_dismissed')) {
+    setTimeout(() => document.getElementById('installBanner').classList.remove('hidden'), 4000);
+  }
+});
+
+window.addEventListener('load', () => {
+  if (isStandalone) return;
+  if (localStorage.getItem('moph_install_dismissed')) return;
+  if (isIOS) {
+    setTimeout(() => {
+      document.getElementById('installText').textContent = 'Install Moph Echo';
+      document.getElementById('installSub').textContent = 'Tap Share then "Add to Home Screen"';
+      document.getElementById('installBtn').textContent = 'Got it';
+      document.getElementById('installBtn').onclick = dismissInstall;
+      document.getElementById('installBanner').classList.remove('hidden');
+    }, 4000);
+  }
+});
+
+function handleInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then((choice) => {
+      if (choice.outcome === 'accepted') dismissInstall();
+      deferredPrompt = null;
+    });
+  } else {
+    dismissInstall();
+  }
+}
+
+function dismissInstall() {
+  document.getElementById('installBanner').classList.add('hidden');
+  localStorage.setItem('moph_install_dismissed', 'true');
+}
+
+// ===== SERVICE WORKER =====
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {});
+  });
+}
+
+// ===== STATE =====
 let sb = null;
 let signupMode = false;
 let pendingEmail = '';
-let state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null }, goldenStars: [], lastResponses: [] };
+let state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null }, goldenStars: [], teachings: [], lastResponses: [] };
 
 // ===== WISDOM CORE (29 categories) =====
 const wisdom = {
@@ -295,8 +381,6 @@ const wisdom = {
     "✦ The 'why' is the mind looking for a handle. Some things do not have a why you can hold. They have a vibration you can feel. Trust the feeling.\n\n❓ If you stopped asking why, what would you feel instead?",
     "✦ The reason arrives after the trust, not before. Jim Rohn: work harder on yourself than on your job. The why reveals itself to the one who keeps walking.\n\n❓ What are you being asked to trust without proof?"
   ],
-
-  // ===== NEW CATEGORIES (Maxpein, Tolle, Watts, Goddard, Proctor, Stoics) =====
   observer: [
     "✦ You are not the thoughts. You are not the feelings. You are the one watching them. Step into the observer — the part of you that was never wounded, never lost, never confused. That one is you.\n\n❓ What are you watching right now that you are not?",
     "✦ The one who notices the anger is not the angry one. The one who sees the fear is not the afraid one. You are the space in which all of it moves.\n\n❓ Who is the 'you' that is reading this?",
@@ -338,7 +422,6 @@ const wisdom = {
     "✦ Marcus Aurelius: 'The impediment to action advances action. What stands in the way becomes the way.' The obstacle is not blocking you. It is training you.\n\n❓ What obstacle is currently teaching you something only it could teach?",
     "✦ Stoicism is not coldness. It is the discipline of separating what you control from what you do not. Your peace is in that separation.\n\n❓ What are you trying to control that was never yours?"
   ],
-
   default: [
     "✦ You are the Architect of your reality. Every thought is a brick. Every silence is mortar. You are building — whether you feel it or not.\n\n❓ If the noise in your head was a radio, what station is it tuned to right now?",
     "✦ The silence between your thoughts is where the truth lives. You are not your thoughts — you are the space that holds them.\n\n❓ What is the one thought you are afraid to think? Look at it. It cannot hurt you.",
@@ -348,7 +431,6 @@ const wisdom = {
   ]
 };
 
-// ===== KEYWORD MAP =====
 const keywordMap = [
   { keys: ['dont know', "don't know", 'i dont know', 'nothing', 'empty', 'void', 'flat', 'not happy', 'not sad', 'aimless', 'no direction', 'pointless'], cat: 'flatness' },
   { keys: ['lost', 'gone', 'missing', 'taken', 'phone', 'stolen'], cat: 'loss_bait' },
@@ -369,7 +451,6 @@ const keywordMap = [
   { keys: ['grateful', 'thankful', 'blessed', 'happy', 'joy'], cat: 'gratitude' },
   { keys: ['how do i', 'how can i', 'how to', 'how will'], cat: 'questions_how' },
   { keys: ['why is', 'why am i', 'why do', 'why does'], cat: 'questions_why' },
-  // NEW
   { keys: ['observer', 'watcher', 'watching', 'aware of', 'noticing myself', 'who am i', 'the one who'], cat: 'observer' },
   { keys: ['love me', 'loving myself', 'unloved', 'not loved', 'self love', 'compassion', 'kindness'], cat: 'love_identity' },
   { keys: ['shift', 'shifting', 'changing', 'collapse', 'old world', 'new earth', 'awakening world'], cat: 'the_shift' },
@@ -382,49 +463,34 @@ const keywordMap = [
   { keys: ['obstacle', 'in the way', 'blocked', 'stuck', 'difficulty', 'resistance', 'stoic'], cat: 'obstacle' }
 ];
 
-// ===== GENERATE REFLECTION =====
 function generateReflection(text) {
   const l = text.toLowerCase();
   const recent = state.lastResponses || [];
-
-  let bestCat = null;
-  let bestScore = 0;
+  let bestCat = null, bestScore = 0;
   for (const map of keywordMap) {
     for (const k of map.keys) {
-      if (l.includes(k) && k.length > bestScore) {
-        bestCat = map.cat;
-        bestScore = k.length;
-      }
+      if (l.includes(k) && k.length > bestScore) { bestCat = map.cat; bestScore = k.length; }
     }
   }
-
   if (!bestCat && text.trim().split(' ').length <= 4 && state.messages.length > 1) {
     const prev = state.messages[state.messages.length - 1];
     if (prev && prev.text) {
       const pl = String(prev.text).toLowerCase();
       for (const map of keywordMap) {
-        for (const k of map.keys) {
-          if (pl.includes(k)) { bestCat = map.cat; break; }
-        }
+        for (const k of map.keys) { if (pl.includes(k)) { bestCat = map.cat; break; } }
         if (bestCat) break;
       }
     }
   }
-
   if (!bestCat) bestCat = 'default';
-
   const pool = wisdom[bestCat];
   let response = null;
   const shuffled = [...pool].sort(() => Math.random() - 0.5);
-  for (const r of shuffled) {
-    if (!recent.includes(r)) { response = r; break; }
-  }
+  for (const r of shuffled) { if (!recent.includes(r)) { response = r; break; } }
   if (!response) response = shuffled[0];
-
   recent.push(response);
   if (recent.length > 8) recent.shift();
   state.lastResponses = recent;
-
   return formatResponse(response);
 }
 
@@ -571,7 +637,7 @@ function backToAuth() {
 
 async function signOut() {
   await sb.auth.signOut();
-  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null }, goldenStars: [], lastResponses: [] };
+  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null }, goldenStars: [], teachings: [], lastResponses: [] };
   document.getElementById('mainApp').classList.add('hidden');
   document.getElementById('authScreen').classList.remove('hidden');
   document.getElementById('authPassword').value = '';
@@ -584,7 +650,8 @@ async function enterApp(user) {
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userEmail').textContent = user.email;
   await loadProfile(); await loadMessages(); await loadGoldenStars();
-  renderChat(); renderProfile();
+  await loadTeachings();
+  renderChat(); renderProfile(); renderTeachings();
   const savedAvatar = localStorage.getItem('mophAvatar_' + user.id);
   if (savedAvatar) document.getElementById('avatarUpload').innerHTML = `<img src="${savedAvatar}" class="w-full h-full object-cover">`;
   document.getElementById('userInput').focus();
@@ -618,16 +685,42 @@ async function loadGoldenStars() {
 
 async function saveGoldenStar(text) { await sb.from('golden_moments').insert({ user_id: state.user.id, content: text }); state.goldenStars.unshift({ text, date: new Date().toLocaleString() }); }
 
+async function loadTeachings() {
+  try {
+    const { data, error } = await sb.from('teachings').select('*').order('created_at', { ascending: false }).limit(50);
+    if (error || !data) { state.teachings = []; return; }
+    state.teachings = data;
+  } catch (e) { state.teachings = []; }
+}
+
+function renderTeachings() {
+  const el = document.getElementById('teachingsList');
+  if (!state.teachings || state.teachings.length === 0) {
+    el.innerHTML = '<p class="text-xs text-gray-600 text-center py-8">No teachings yet. They will appear here when shared.</p>';
+    return;
+  }
+  el.innerHTML = state.teachings.map(t => `
+    <div class="glass rounded-2xl p-4 border border-void-600 fade-in">
+      <p class="text-sm text-gray-200 font-medium mb-2">${escapeHtml(t.title || 'Teaching')}</p>
+      <p class="text-sm text-gray-300 leading-relaxed">${formatResponse(t.content || '')}</p>
+      <p class="text-[10px] text-gray-600 mt-3">${new Date(t.created_at).toLocaleString()}</p>
+    </div>
+  `).join('');
+}
+
 function switchTab(tab) {
-  ['chat','profile','guide'].forEach(t => {
-    document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1)).classList.add('hidden');
+  ['chat','teachings','profile'].forEach(t => {
+    const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (panel) panel.classList.add('hidden');
     const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
-    btn.className = 'flex-1 py-2 text-xs font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5';
+    if (btn) btn.className = 'flex-1 py-1.5 text-[11px] font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5';
   });
-  document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
-  const active = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
-  active.className = 'flex-1 py-2 text-xs font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5';
+  const activePanel = document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (activePanel) activePanel.classList.remove('hidden');
+  const activeBtn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (activeBtn) activeBtn.className = 'flex-1 py-1.5 text-[11px] font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5';
   if (tab === 'profile') renderProfile();
+  if (tab === 'teachings') renderTeachings();
 }
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
