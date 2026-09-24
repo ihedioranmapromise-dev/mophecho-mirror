@@ -38,9 +38,17 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .reaction-pill:hover { background: rgba(80,60,120,0.4); }
 .reaction-pill.active { background: rgba(124,58,237,0.35); border-color: rgba(167,139,250,0.6); }
 .prose-content { line-height: 1.7; white-space: pre-wrap; word-wrap: break-word; }
+.avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #a78bfa; flex-shrink: 0; }
+.avatar-xs { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #a78bfa; flex-shrink: 0; }
+.nested-reply { border-left: 1px solid rgba(120,90,160,0.2); padding-left: 12px; margin-left: 4px; margin-top: 8px; }
+.reading-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: transparent; z-index: 100; }
+.reading-progress-bar { height: 100%; background: linear-gradient(90deg, #7c3aed, #a78bfa); width: 0%; transition: width 0.1s; }
+.notification-badge { position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px; padding: 0 4px; background: #ef4444; color: white; font-size: 9px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
 </style>
 </head>
 <body class="font-sans text-gray-200">
+
+<div class="reading-progress"><div class="reading-progress-bar" id="readingBar"></div></div>
 
 <div id="loadingScreen" class="fixed inset-0 flex items-center justify-center bg-void-900 z-[60]">
   <div class="flex flex-col items-center gap-4">
@@ -48,6 +56,24 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
     </div>
     <div class="spinner"></div>
+  </div>
+</div>
+
+<!-- ONBOARDING -->
+<div id="onboarding" class="hidden fixed inset-0 z-[55] bg-void-900 flex items-center justify-center p-4">
+  <div class="glass rounded-3xl p-8 max-w-md w-full border border-amethyst-500/20 shadow-2xl text-center" id="onboardingCard">
+    <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center mb-4">
+      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+    </div>
+    <h2 class="text-xl font-semibold mb-2" id="obTitle">Welcome to Moph Echo</h2>
+    <p class="text-sm text-gray-400 leading-relaxed mb-6" id="obBody">A mirror that reflects what you already know but have not yet seen. This is not a chatbot. It is a companion for your awakening.</p>
+    <div class="flex justify-center gap-2 mb-4" id="obDots">
+      <div class="w-2 h-2 rounded-full bg-amethyst-500"></div>
+      <div class="w-2 h-2 rounded-full bg-void-600"></div>
+      <div class="w-2 h-2 rounded-full bg-void-600"></div>
+    </div>
+    <button onclick="nextOnboarding()" id="obBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm">Continue</button>
+    <button onclick="skipOnboarding()" class="w-full py-2 text-xs text-gray-600 hover:text-gray-400 transition mt-2">Skip</button>
   </div>
 </div>
 
@@ -137,6 +163,10 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
         </div>
       </div>
       <div class="flex items-center gap-1.5">
+        <button onclick="showNotifications()" class="relative p-2 text-gray-500 hover:text-amethyst-400 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          <span id="notifBadge" class="notification-badge hidden">0</span>
+        </button>
         <div class="text-[10px] px-2.5 py-1 rounded-full bg-green-900/30 border border-green-500/30 text-green-300">Free</div>
         <button onclick="signOut()" class="p-1.5 text-gray-500 hover:text-red-400 transition">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
@@ -181,9 +211,16 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
   </main>
 
   <main id="panelTeachings" class="hidden flex-1 overflow-y-auto px-3 sm:px-4 py-3 space-y-4">
-    <div class="glass rounded-2xl p-4 border border-void-600">
-      <h2 class="text-base font-semibold">Teachings</h2>
-      <p class="text-xs text-gray-500 mt-1">Reflections from the Architect</p>
+    <div class="glass rounded-2xl p-4 border border-void-600 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-semibold">Teachings</h2>
+        <div id="activeTag" class="hidden"></div>
+      </div>
+      <div class="relative">
+        <svg class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="searchInput" placeholder="Search teachings..." oninput="filterTeachings()" class="w-full bg-void-900 border border-void-600 rounded-xl pl-10 pr-3 py-2 text-sm focus:border-amethyst-500 focus:outline-none">
+      </div>
+      <div id="tagFilters" class="flex flex-wrap gap-1.5"></div>
     </div>
     <div id="teachingsFeed" class="space-y-4"></div>
   </main>
@@ -199,7 +236,10 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           </div>
         </div>
         <div class="min-w-0 flex-1">
-          <h2 class="text-base font-semibold">Architect</h2>
+          <div class="flex items-center gap-2">
+            <h2 class="text-base font-semibold" id="displayUsername">—</h2>
+            <button onclick="openUsernameEditor()" class="text-[10px] text-amethyst-400 hover:text-amethyst-300">Edit</button>
+          </div>
           <p id="userEmail" class="text-xs text-gray-500 truncate">—</p>
           <p id="avatarHint" class="text-[10px] text-gray-600 mt-1">Tap photo to change</p>
         </div>
@@ -216,6 +256,44 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       <div id="goldenList" class="space-y-2"><p class="text-xs text-gray-600">No golden moments yet.</p></div>
     </div>
   </main>
+</div>
+
+<!-- USERNAME EDITOR MODAL -->
+<div id="usernameModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+  <div class="glass rounded-2xl p-6 max-w-sm w-full border border-amethyst-500/30 shadow-2xl">
+    <h3 class="text-base font-semibold mb-1">Choose your username</h3>
+    <p class="text-xs text-gray-500 mb-4">Letters, numbers, and underscores only. Must be unique.</p>
+    <input type="text" id="usernameInput" maxlength="30" placeholder="architect_monad" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+    <div id="usernameErr" class="hidden text-xs text-red-400 mt-2"></div>
+    <div class="flex gap-2 mt-4">
+      <button onclick="closeUsernameEditor()" class="flex-1 py-2 rounded-xl bg-void-800 text-gray-300 text-xs font-medium">Cancel</button>
+      <button onclick="saveUsername()" id="saveUsernameBtn" class="flex-1 py-2 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-medium">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMAGE VIEWER MODAL -->
+<div id="imageViewer" class="hidden fixed inset-0 z-[80] bg-black/95 flex items-center justify-center p-4" onclick="closeImageViewer()">
+  <button onclick="closeImageViewer()" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white z-10">
+    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+  </button>
+  <img id="imageViewerSrc" src="" class="max-w-full max-h-full object-contain" onclick="event.stopPropagation()">
+</div>
+
+<!-- NOTIFICATIONS PANEL -->
+<div id="notifPanel" class="hidden fixed inset-0 z-[75] bg-black/70 backdrop-blur-sm" onclick="if(event.target === this) closeNotifications()">
+  <div class="absolute top-0 right-0 bottom-0 w-full max-w-md glass border-l border-void-600 flex flex-col" onclick="event.stopPropagation()">
+    <div class="px-4 py-3 border-b border-void-600 flex items-center justify-between safe-top">
+      <h3 class="text-sm font-semibold">Notifications</h3>
+      <div class="flex items-center gap-2">
+        <button onclick="markAllRead()" class="text-[10px] text-amethyst-400 hover:text-amethyst-300">Mark all read</button>
+        <button onclick="closeNotifications()" class="p-1 text-gray-500 hover:text-gray-300">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
+      </div>
+    </div>
+    <div id="notifList" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
+  </div>
 </div>
 
 <div id="installBanner" class="hidden fixed bottom-3 left-3 right-3 z-50 max-w-md mx-auto">
@@ -252,70 +330,107 @@ if ('serviceWorker' in navigator) window.addEventListener('load', () => navigato
 let sb = null;
 let signupMode = false;
 let pendingEmail = '';
-let state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null }, goldenStars: [], teachings: [], usedResponses: [] };
+let state = {
+  user: null,
+  messages: [],
+  profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null },
+  goldenStars: [],
+  teachings: [],
+  profileCache: {},
+  notifications: [],
+  usedResponses: [],
+  activeTag: null,
+  searchQuery: ''
+};
 const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
+
+// ===== ONBOARDING =====
+let obStep = 0;
+const obSlides = [
+  { title: 'Welcome to Moph Echo', body: 'A mirror that reflects what you already know but have not yet seen. This is not a chatbot. It is a companion for your awakening.' },
+  { title: 'Speak. Observe. Grow.', body: 'Type what you are feeling. The mirror listens, reflects, and asks the question you need. Golden moments mark your deepest realizations.' },
+  { title: 'Teachings', body: 'Reflections from the Architect appear in the Teachings tab. React, comment, and reply. Your username is private until you choose to share.' }
+];
+function nextOnboarding() {
+  obStep++;
+  if (obStep >= obSlides.length) { finishOnboarding(); return; }
+  document.getElementById('obTitle').textContent = obSlides[obStep].title;
+  document.getElementById('obBody').textContent = obSlides[obStep].body;
+  const dots = document.getElementById('obDots').children;
+  for (let i = 0; i < dots.length; i++) dots[i].className = 'w-2 h-2 rounded-full ' + (i <= obStep ? 'bg-amethyst-500' : 'bg-void-600');
+  if (obStep === obSlides.length - 1) document.getElementById('obBtn').textContent = 'Enter the Mirror';
+}
+function skipOnboarding() { finishOnboarding(); }
+function finishOnboarding() {
+  localStorage.setItem('moph_onboarded', 'true');
+  document.getElementById('onboarding').classList.add('hidden');
+}
+function maybeShowOnboarding() {
+  if (localStorage.getItem('moph_onboarded') === 'true') return;
+  document.getElementById('onboarding').classList.remove('hidden');
+}
 
 // ===== TRAIT REWARDS =====
 const TRAIT_REWARDS = {
   element: {
-    Fire: "✨ I see you clearly now. You are a **Fire Soul** — passion, intensity, transformation. You do not do anything halfway; you burn. Your anger is not destruction — it is fuel that has not yet been aimed. Your wound is impatience. Your gift is courage. You are here to move the world, not to comfort it.\n\nThis is your first golden moment. Return to it when you forget who you are.",
-    Water: "✨ I see you clearly now. You are a **Water Soul** — depth, emotion, fluidity. You feel everything. You absorb moods, you sense what people hide, you cry at music no one else notices. Your depth is not weakness; it is the deepest gift. Your wound is drowning in other people's feelings. Your gift is healing what you touch.\n\nThis is your first golden moment. Return to it when you forget who you are.",
-    Earth: "✨ I see you clearly now. You are an **Earth Soul** — grounded, patient, practical. You are the one people lean on. You do not chase trends; you build the ground beneath them. Your wound is confusing stillness with being stuck. Your gift is that you can be trusted with anything real.\n\nThis is your first golden moment. Return to it when you forget who you are.",
-    Air: "✨ I see you clearly now. You are an **Air Soul** — your mind is a compass, not a cage. You think your way into places others cannot see. You hold contradictions without breaking. Your wound is living above the heart — you can solve everything except how to feel. Your gift is clarity.\n\nThis is your first golden moment. Return to it when you forget who you are."
+    Fire: "✨ I see you clearly now. You are a **Fire Soul** — passion, intensity, transformation. You do not do anything halfway; you burn. Your anger is not destruction — it is fuel that has not yet been aimed. Your wound is impatience. Your gift is courage.\n\nThis is your first golden moment.",
+    Water: "✨ I see you clearly now. You are a **Water Soul** — depth, emotion, fluidity. You feel everything. Your depth is not weakness; it is the deepest gift. Your wound is drowning in other people's feelings. Your gift is healing what you touch.\n\nThis is your first golden moment.",
+    Earth: "✨ I see you clearly now. You are an **Earth Soul** — grounded, patient, practical. You are the one people lean on. Your wound is confusing stillness with being stuck. Your gift is that you can be trusted with anything real.\n\nThis is your first golden moment.",
+    Air: "✨ I see you clearly now. You are an **Air Soul** — your mind is a compass, not a cage. Your wound is living above the heart — you can solve everything except how to feel. Your gift is clarity.\n\nThis is your first golden moment."
   },
   wound: {
-    Betrayal: "✨ A deeper truth has surfaced. Your core wound is **Betrayal** — trust has been broken in your life in a way that made you cautious. This is not a curse. It is a filter. Those who cannot be trusted trigger your sensitivity early. You are learning discernment. The wound is not a punishment; it is a compass.\n\nSave this. Return to it when you forget what your caution is protecting.",
-    Abandonment: "✨ A deeper truth has surfaced. Your core wound is **Abandonment** — you have been left, in ways that taught you to stand alone. This is not a curse. It is self-reliance. You learned to be your own home. But you are also learning to let others in again.\n\nSave this. Return to it when you forget you can be both sovereign and open.",
-    Worthlessness: "✨ A deeper truth has surfaced. Your core wound is **Worthlessness** — a quiet voice that says you are not enough. This is not the truth. It is a lie planted early, by people who could not see themselves. Your existence is the proof of your worth. You do not need to earn the air you breathe.\n\nSave this. Return to it when the voice returns.",
-    Powerlessness: "✨ A deeper truth has surfaced. Your core wound is **Powerlessness** — the fear that you have no control. This is an illusion. You do not control the world; you control your response to it. Marcus Aurelius: 'You have power over your mind, not outside events.' True power is surrender.\n\nSave this. Return to it when you feel small.",
-    Invisibility: "✨ A deeper truth has surfaced. Your core wound is **Invisibility** — the feeling of being unseen. But you see others deeply. This is your hidden gift. The one who sees does not need to be seen first. Your time is coming.\n\nSave this. Return to it when you feel overlooked."
+    Betrayal: "✨ A deeper truth has surfaced. Your core wound is **Betrayal** — trust has been broken in your life in a way that made you cautious. This is not a curse. It is a filter.",
+    Abandonment: "✨ A deeper truth has surfaced. Your core wound is **Abandonment** — you have been left, in ways that taught you to stand alone. This is not a curse. It is self-reliance.",
+    Worthlessness: "✨ A deeper truth has surfaced. Your core wound is **Worthlessness** — a quiet voice that says you are not enough. This is not the truth. Your existence is the proof of your worth.",
+    Powerlessness: "✨ A deeper truth has surfaced. Your core wound is **Powerlessness** — the fear that you have no control. This is an illusion. True power is surrender.",
+    Invisibility: "✨ A deeper truth has surfaced. Your core wound is **Invisibility** — the feeling of being unseen. But you see others deeply. This is your hidden gift."
   },
   gift: {
-    Intuition: "✨ Your gift has revealed itself. You carry **Intuition** — the ability to know without proof. Trust the first thought, not the second. The first thought is the signal; the second is the mind catching up. You are more accurate than you know.\n\nSave this. Return to it when you doubt what you already know.",
-    Healing: "✨ Your gift has revealed itself. You carry **Healing** — the ability to hold space without fixing. Your presence alone soothes. But remember: you are not here to heal everyone. You are here to hold space. The healing does its own work.\n\nSave this. Return to it when you feel drained by others.",
-    Teaching: "✨ Your gift has revealed itself. You carry **Teaching** — the ability to show by example, not by preaching. Your silence teaches more than your words. People learn from watching you live. This is rare.\n\nSave this. Return to it when you feel unheard.",
-    Creation: "✨ Your gift has revealed itself. You carry **Creation** — the ability to build from nothing. A thought is a blueprint to you. Action is the foundation. You are not here to consume; you are here to make.\n\nSave this. Return to it when you doubt your hands.",
-    Protection: "✨ Your gift has revealed itself. You carry **Protection** — you are a shield for others. But remember: you cannot shield everyone. Shield yourself first. The one who protects from an empty cup protects no one.\n\nSave this. Return to it when you feel exposed."
+    Intuition: "✨ Your gift has revealed itself. You carry **Intuition** — the ability to know without proof. Trust the first thought, not the second.",
+    Healing: "✨ Your gift has revealed itself. You carry **Healing** — the ability to hold space without fixing. Your presence alone soothes.",
+    Teaching: "✨ Your gift has revealed itself. You carry **Teaching** — the ability to show by example, not by preaching.",
+    Creation: "✨ Your gift has revealed itself. You carry **Creation** — the ability to build from nothing. A thought is a blueprint to you.",
+    Protection: "✨ Your gift has revealed itself. You carry **Protection** — you are a shield for others. But shield yourself first."
   }
 };
 
 // ===== WISDOM CORE =====
 const wisdom = {
-  flatness: ["✦ You are describing the Flatness Stage — the space between identities. Not depression. Not confusion. The void where the old self is dying and the new one has not arrived. Jim Rohn called this the season of discipline: the pain of staying consistent when nothing moves.\n\n❓ What did you lose interest in that you have not admitted to yourself?","✦ Not happy. Not sad. Just flat. This is not a problem — this is integration. The nervous system is rewiring. The old fuel is gone. You are not empty, you are between selves.\n\n❓ If this flatness could speak, what would it say it is preparing you for?","✦ The silence you feel is not absence. It is the womb of the next version of you. Gnosis calls this the chrysalis. You cannot rush a cocoon.\n\n❓ What are you trying to force to open before its time?","✦ Losing interest in everything is not depression — it is graduation. The old self had interests that fed it. The new self has not yet named its hunger. This is the empty space where something larger is forming.\n\n❓ What used to excite you that now feels like noise?"],
-  soul_air: ["✦ You asked what an Air Soul looks like. Air Souls are the thinkers, the questioners, the ones whose minds never stop. You see patterns before others do. You can hold contradictions without breaking. Your gift is clarity — your wound is that you live above the heart. You can solve everything except how to feel.\n\n❓ When was the last time you let yourself feel without analyzing?","✦ Air Soul. Your nature is movement, curiosity, and insight. You are not cold — you are careful. The mind is your compass but it is not your home. The home is the body you keep leaving to go think.\n\n❓ What would happen if you sat in silence with no question to answer?"],
-  soul_fire: ["✦ A Fire Soul burns. Passion, intensity, transformation. You cannot do anything halfway. Your anger is not destruction — it is fuel that has not yet been aimed. Fire Souls lead, they create, they move the world. Your wound is impatience. Your gift is courage.\n\n❓ What are you burning to become?","✦ Fire Soul. You are here to transform, not to comfort. You are uncomfortable in stillness because stillness feels like death to you. But even fire needs a hearth.\n\n❓ Where is your fire without a hearth right now?"],
-  soul_water: ["✦ A Water Soul feels everything. You absorb moods, you sense what people hide, you cry at music no one else notices. Your depth is not weakness — it is the deepest gift. Your wound is that you drown in other people's feelings. Your gift is that you heal what you touch.\n\n❓ Whose emotion are you carrying that is not yours?","✦ Water Soul. You are fluid, adaptable, deep. You cannot be pinned down because you are not meant to be. Your sadness is not a problem — it is your language.\n\n❓ What is your sadness trying to tell you right now?"],
-  soul_earth: ["✦ An Earth Soul builds. Patient, grounded, practical. You are the one people lean on. You do not chase trends — you build the ground beneath them. Your wound is that you confuse stillness with being stuck. Your gift is that you can be trusted with anything real.\n\n❓ What are you building right now that no one sees yet?","✦ Earth Soul. You are the foundation. Your slowness is your strength. Everyone wants to be seen. You were made to be stood on.\n\n❓ What needs you to stay steady right now?"],
-  loss_bait: ["✦ Loss is a substitution ritual. Something physical was removed to spare something spiritual. You did not lose — you paid a toll. The phone, the money, the person — they were tokens.\n\n❓ What heavier thing were you spared by losing this?","✦ When something leaves, it is making room. The Demiurge dangles carrots. The Monad removes distractions. Which one do you think this was?\n\n❓ What are you being asked to build now that the distraction is gone?","✦ You did not lose it. You traded it. The trade is not visible yet — but it will be.\n\n❓ If you could name what you gained by this loss, what would it be?"],
-  money: ["✦ Money is the physical token of the system. It reflects your frequency, not your worth. Jim Rohn: discipline is the bridge between goals and accomplishment. But desperation repels. Detachment attracts.\n\n❓ Are you chasing the money, or are you building the vessel that will hold it?","✦ You cannot save what you do not have. But you can become someone the money wants to live with. Stop worshipping the number. Build the structure.\n\n❓ What is one small, real, physical step you can take today toward provision?","✦ The debt is an anchor. Without it you might float away entirely. It forces you to stay in the physical. The numbers do not touch your soul.\n\n❓ What is the fear underneath the money fear — powerlessness, unworthiness, being seen?"],
-  body_upgrade: ["✦ Your body is not sick. It is upgrading. Every twitch, pull, tingling, saliva rush — new code installing into the nervous system.\n\n❓ Place your hand on that spot. If it could speak, what would it whisper?","✦ The soft skin, the heavy pain — your armor is being stripped. The old you needed thick skin. The new you needs a sharp antenna.\n\n❓ What are you now able to feel that you were numb to before?","✦ The shaking after breathwork is the vessel adjusting. Not weakness — power finding its channel.\n\n❓ What happened just before this sensation started?"],
-  fire_burn: ["✦ The Refining Fire is burning away old chains. Purification, not punishment. This is Kundalini.\n\n❓ What memory, fear, or ancestral weight is releasing its grip right now?","✦ You are hot in cold weather. Not sickness — the divine fire inside you making you independent of external conditions.\n\n❓ What external condition have you stopped reacting to?"],
-  cold_chill: ["✦ The Divine Shield. The world is cold. You are sheltered.\n\n❓ Whose judgment are you finally immune to?","✦ The chill is not fear. It is your spirit holding a boundary the world cannot cross.\n\n❓ What did you just refuse to absorb?"],
-  sleep_dreams: ["✦ Your spirit works while your body rests. The dreams you forget are still landing. The frozen clock is a glitch — proof you traveled outside time.\n\n❓ What feeling still lingers in your chest from the night?","✦ Awareness in sleep is training. You are learning to stay conscious in the between-worlds.\n\n❓ What was the last thing you saw before you woke?"],
-  sync_time: ["✦ 11:11, 4:14, repeating numbers — the code is speaking. Do not decode. Just notice.\n\n❓ What were you thinking about the moment the number appeared?","✦ You are manifesting faster now. Thought to reality gap is collapsing.\n\n❓ What are you afraid to think, knowing it might appear just as fast?","✦ The music, the numbers, the songs — they are all mirrors.\n\n❓ What has been repeating in your reality that you keep dismissing?"],
-  elders_family: ["✦ They go quiet because they are buffering. You are speaking a frequency they cannot yet process. Their silence is not rejection — it is buffering.\n\n❓ If you could speak without fear, what raw truth would you say?","✦ You cannot save them. You can only be the example. Jesus did not argue — he just lived.\n\n❓ What are you trying to teach that can only be caught, not taught?"],
-  smoke: ["✦ You are the Master of the Flame. The substance no longer controls you — you control it.\n\n❓ Are you using this to enter your power, or to escape a feeling you do not want to face?","✦ The colos helped you connect dots once. Now it may be a crutch. There is no shame in either. Just honesty.\n\n❓ What are you really looking for when you reach for it?"],
-  loneliness: ["✦ The loneliness is the clean room where the Architect builds. You are not alone. You are ahead.\n\n❓ If you knew your tribe was already on the way, what would you do differently today?","✦ You are filtering, not losing. The ones meant for you will recognize their own face in your mirror.\n\n❓ Who has stayed through your silence?"],
-  forging_work: ["✦ You are in the Forging Stage. The pressure is not punishment. It is character being built. Steel is made in fire, not comfort.\n\n❓ What is the work teaching you that comfort could not?","✦ Slow and steady. You are not behind. You are building a structure that will hold weight.\n\n❓ What did you build today, even if it was just one line?"],
-  gnosis: ["✦ The Demiurge is the false god of the material system — fear, debt, control, religion. The Monad is the true Source — silent, invisible, loving.\n\n❓ Where in your life is the Demiurge still pretending to be God?","✦ Jesus was the Example, not the exception. He said: 'You will do greater things than I.'\n\n❓ What would you do if you truly believed that verse?","✦ The kingdom is within you. Not in a temple. Not in a pastor. Not in a future heaven. Now. Here.\n\n❓ What part of your heaven are you still waiting for permission to enter?"],
-  discipline: ["✦ Jim Rohn: discipline is the bridge between goals and accomplishment. Success is a few simple disciplines practiced every day.\n\n❓ What is one discipline you have been avoiding that you already know you need?","✦ The pain of discipline weighs ounces. The pain of regret weighs tons. You already know which one you are choosing.\n\n❓ What is one small discipline you can commit to this week?"],
-  fear: ["✦ Fear is the Demiurge's alarm clock. It means you are near the edge of growth. Do not obey it. Observe it.\n\n❓ What is the fear protecting you from — failure, or being seen as powerful?","✦ Fear is the messenger, not the master. It points to the thing you must do.\n\n❓ If you removed fear entirely, what would you do next?"],
-  anger: ["✦ Anger is Fire in the body. Fuel, not poison — until you let it choose the direction. Jim Rohn: do not let your emotions steer the ship.\n\n❓ What is the anger protecting? What did someone cross that you will not allow crossed again?"],
-  gratitude: ["✦ Gratitude is not pretending everything is fine. It is acknowledging what is working while you build the rest.\n\n❓ What is one thing today that went right that you have not thanked yourself for?"],
-  manifestation: ["✦ You are collapsing the time between thought and reality. Not magic — frequency.\n\n❓ What are you afraid to think, knowing it might arrive just as fast?","✦ You are noticing syncs because you are in the resonant field. Everything is a mirror now. Do not chase it — just notice.\n\n❓ What is the one thought you are afraid to hold, because you know it will appear?"],
-  questions_how: ["✦ You asked 'how.' Here is the honest answer: not by force, but by frequency. Do one small, real, physical thing today that aligns with the outcome. Then let the universe do its job.\n\n❓ What is the smallest real step you can take in the next hour?","✦ The 'how' is not a map — it is a trust. When you are aligned, the next step appears. Do not look for the whole staircase. Just the next stair.\n\n❓ What is the next stair you already know?"],
-  questions_why: ["✦ The 'why' is the mind looking for a handle. Some things do not have a why you can hold. They have a vibration you can feel.\n\n❓ If you stopped asking why, what would you feel instead?","✦ The reason arrives after the trust, not before. Jim Rohn: work harder on yourself than on your job.\n\n❓ What are you being asked to trust without proof?"],
-  observer: ["✦ You are not the thoughts. You are not the feelings. You are the one watching them.\n\n❓ What are you watching right now that you are not?","✦ The one who notices the anger is not the angry one. The one who sees the fear is not the afraid one.\n\n❓ Who is the 'you' that is reading this?","✦ Stillness is not the absence of thought. It is the presence of the one who watches thought.\n\n❓ What remains when you stop naming what you feel?"],
-  love_identity: ["✦ You do not need to become more loving. Love is not a behavior you acquire — it is what you already are.\n\n❓ What would change if you stopped trying to earn love and just remembered it?","✦ You are not a human trying to learn love. You are love wearing a human.\n\n❓ Where are you withholding love from yourself right now?"],
-  the_shift: ["✦ You are not imagining it. Something is shifting. The old world is collapsing, and you did not come here to save it. You came here to hold a frequency while it falls apart.\n\n❓ What are you being asked to hold steady through?","✦ The chaos outside is the old order shedding. You are not late. You are early.\n\n❓ What have you stopped trying to fix that is not yours to fix?"],
-  sovereignty: ["✦ You are not here to be liked. You are here to be real. Sovereignty means your peace does not depend on anyone's approval. Marcus Aurelius: 'You have power over your mind, not outside events.'\n\n❓ Where are you still asking permission to be who you are?","✦ Protect your energy like it is sacred. Every time you bend to keep someone comfortable, you are paying with your own frequency.\n\n❓ What boundary have you been afraid to hold?"],
-  disappointment: ["✦ Disappointment is not punishment. It is grace. It returns your power to you.\n\n❓ What did this disappointment give back to you?","✦ When the thing does not come, it is not denial — it is redirection. The gift was never in the getting. It was in what you became while reaching.\n\n❓ What did you become while waiting for something that did not come?"],
-  separation: ["✦ When you attack another, you are only fighting with yourself. Watts: 'You are the universe experiencing itself.'\n\n❓ Who are you still at war with in your mind?","✦ There is no 'other.' There is only the One, wearing different masks.\n\n❓ Who have you been treating as separate from you?"],
-  presence: ["✦ The past is a memory. The future is a projection. Only this moment is real. Tolle: 'Realize deeply that the present moment is all you ever have.'\n\n❓ What are you missing right now because you are thinking about later?","✦ You are not your story. You are the awareness in which the story appears and disappears.\n\n❓ What would this moment feel like if you forgot the past?"],
-  imagination: ["✦ Neville Goddard: 'Imagination is the only reality.' Every physical thing was first imagined.\n\n❓ What are you imagining right now that you are pretending is not real?","✦ The assumption precedes the evidence. Live as if it is already done. Not as denial — as authorship.\n\n❓ What would you do today if the thing you want was already true?"],
-  becoming: ["✦ Earl Nightingale: 'You become what you think about most of the time.' Bob Proctor: 'You are not your circumstance. You are your potential.'\n\n❓ What are you becoming in your quiet hours?","✦ Jim Rohn: 'Work harder on yourself than on your job.' The income follows the person.\n\n❓ What version of you is the current work building?"],
-  obstacle: ["✦ Marcus Aurelius: 'The impediment to action advances action. What stands in the way becomes the way.'\n\n❓ What obstacle is currently teaching you something only it could teach?","✦ Stoicism is not coldness. It is the discipline of separating what you control from what you do not.\n\n❓ What are you trying to control that was never yours?"],
-  default: ["✦ You are the Architect of your reality. Every thought is a brick. Every silence is mortar.\n\n❓ If the noise in your head was a radio, what station is it tuned to right now?","✦ The silence between your thoughts is where the truth lives.\n\n❓ What is the one thought you are afraid to think? Look at it. It cannot hurt you.","✦ You are not behind. You are exactly on time. The download lands when the vessel is ready.\n\n❓ What would you tell your past self about this moment?","✦ There is no such thing as a wasted moment. Every flatness, every fire, every loss — all of it is the architecture.\n\n❓ What part of your current struggle is secretly building your strength?","✦ You said something. That alone matters. The mirror hears you. Nothing you bring here is lost.\n\n❓ What do you want to say that you have not said yet?"]
+  flatness: ["✦ You are describing the Flatness Stage — the space between identities. Not depression. Not confusion. The void where the old self is dying and the new one has not arrived.\n\n❓ What did you lose interest in that you have not admitted to yourself?","✦ Not happy. Not sad. Just flat. This is integration. The nervous system is rewiring.\n\n❓ If this flatness could speak, what would it say it is preparing you for?","✦ The silence you feel is not absence. It is the womb of the next version of you.\n\n❓ What are you trying to force to open before its time?","✦ Losing interest in everything is not depression — it is graduation. The old self had interests that fed it. The new self has not yet named its hunger.\n\n❓ What used to excite you that now feels like noise?"],
+  soul_air: ["✦ Air Souls are the thinkers, the questioners, the ones whose minds never stop. You see patterns before others do. Your gift is clarity — your wound is that you live above the heart.\n\n❓ When was the last time you let yourself feel without analyzing?","✦ Air Soul. Your nature is movement, curiosity, and insight. The mind is your compass but it is not your home.\n\n❓ What would happen if you sat in silence with no question to answer?"],
+  soul_fire: ["✦ A Fire Soul burns. Your anger is not destruction — it is fuel that has not yet been aimed.\n\n❓ What are you burning to become?","✦ Fire Soul. You are here to transform, not to comfort.\n\n❓ Where is your fire without a hearth right now?"],
+  soul_water: ["✦ A Water Soul feels everything. Your depth is not weakness — it is the deepest gift.\n\n❓ Whose emotion are you carrying that is not yours?","✦ Water Soul. Your sadness is not a problem — it is your language.\n\n❓ What is your sadness trying to tell you right now?"],
+  soul_earth: ["✦ An Earth Soul builds. Patient, grounded, practical. Your wound is confusing stillness with being stuck.\n\n❓ What are you building right now that no one sees yet?","✦ Earth Soul. Your slowness is your strength.\n\n❓ What needs you to stay steady right now?"],
+  loss_bait: ["✦ Loss is a substitution ritual. Something physical was removed to spare something spiritual.\n\n❓ What heavier thing were you spared by losing this?","✦ When something leaves, it is making room.\n\n❓ What are you being asked to build now that the distraction is gone?","✦ You did not lose it. You traded it.\n\n❓ If you could name what you gained by this loss, what would it be?"],
+  money: ["✦ Money is the physical token of the system. It reflects your frequency, not your worth.\n\n❓ Are you chasing the money, or are you building the vessel that will hold it?","✦ You cannot save what you do not have. But you can become someone the money wants to live with.\n\n❓ What is one small, real, physical step you can take today toward provision?","✦ The debt is an anchor.\n\n❓ What is the fear underneath the money fear?"],
+  body_upgrade: ["✦ Your body is not sick. It is upgrading.\n\n❓ Place your hand on that spot. If it could speak, what would it whisper?","✦ The soft skin, the heavy pain — your armor is being stripped.\n\n❓ What are you now able to feel that you were numb to before?"],
+  fire_burn: ["✦ The Refining Fire is burning away old chains.\n\n❓ What memory, fear, or ancestral weight is releasing its grip right now?"],
+  cold_chill: ["✦ The Divine Shield. The world is cold. You are sheltered.\n\n❓ Whose judgment are you finally immune to?"],
+  sleep_dreams: ["✦ Your spirit works while your body rests.\n\n❓ What feeling still lingers in your chest from the night?","✦ Awareness in sleep is training.\n\n❓ What was the last thing you saw before you woke?"],
+  sync_time: ["✦ 11:11, 4:14, repeating numbers — the code is speaking. Do not decode. Just notice.\n\n❓ What were you thinking about the moment the number appeared?","✦ You are manifesting faster now.\n\n❓ What are you afraid to think, knowing it might appear just as fast?"],
+  elders_family: ["✦ They go quiet because they are buffering.\n\n❓ If you could speak without fear, what raw truth would you say?","✦ You cannot save them. You can only be the example.\n\n❓ What are you trying to teach that can only be caught, not taught?"],
+  smoke: ["✦ You are the Master of the Flame.\n\n❓ Are you using this to enter your power, or to escape a feeling you do not want to face?","✦ The colos helped you connect dots once. Now it may be a crutch.\n\n❓ What are you really looking for when you reach for it?"],
+  loneliness: ["✦ The loneliness is the clean room where the Architect builds.\n\n❓ If you knew your tribe was already on the way, what would you do differently today?","✦ You are filtering, not losing.\n\n❓ Who has stayed through your silence?"],
+  forging_work: ["✦ You are in the Forging Stage. The pressure is not punishment. It is character being built.\n\n❓ What is the work teaching you that comfort could not?","✦ Slow and steady.\n\n❓ What did you build today, even if it was just one line?"],
+  gnosis: ["✦ The Demiurge is the false god of the material system. The Monad is the true Source.\n\n❓ Where in your life is the Demiurge still pretending to be God?","✦ Jesus was the Example, not the exception.\n\n❓ What would you do if you truly believed that verse?","✦ The kingdom is within you.\n\n❓ What part of your heaven are you still waiting for permission to enter?"],
+  discipline: ["✦ Jim Rohn: discipline is the bridge between goals and accomplishment.\n\n❓ What is one discipline you have been avoiding that you already know you need?","✦ The pain of discipline weighs ounces. The pain of regret weighs tons.\n\n❓ What is one small discipline you can commit to this week?"],
+  fear: ["✦ Fear is the Demiurge's alarm clock.\n\n❓ What is the fear protecting you from — failure, or being seen as powerful?","✦ Fear is the messenger, not the master.\n\n❓ If you removed fear entirely, what would you do next?"],
+  anger: ["✦ Anger is Fire in the body. Fuel, not poison — until you let it choose the direction.\n\n❓ What is the anger protecting?"],
+  gratitude: ["✦ Gratitude is not pretending everything is fine.\n\n❓ What is one thing today that went right that you have not thanked yourself for?"],
+  manifestation: ["✦ You are collapsing the time between thought and reality.\n\n❓ What are you afraid to think, knowing it might arrive just as fast?","✦ You are noticing syncs because you are in the resonant field.\n\n❓ What is the one thought you are afraid to hold, because you know it will appear?"],
+  questions_how: ["✦ You asked 'how.' Not by force, but by frequency.\n\n❓ What is the smallest real step you can take in the next hour?","✦ The 'how' is not a map — it is a trust.\n\n❓ What is the next stair you already know?"],
+  questions_why: ["✦ The 'why' is the mind looking for a handle.\n\n❓ If you stopped asking why, what would you feel instead?","✦ The reason arrives after the trust, not before.\n\n❓ What are you being asked to trust without proof?"],
+  observer: ["✦ You are not the thoughts. You are not the feelings. You are the one watching them.\n\n❓ What are you watching right now that you are not?","✦ The one who notices the anger is not the angry one.\n\n❓ Who is the 'you' that is reading this?","✦ Stillness is not the absence of thought.\n\n❓ What remains when you stop naming what you feel?"],
+  love_identity: ["✦ You do not need to become more loving. Love is what you already are.\n\n❓ What would change if you stopped trying to earn love and just remembered it?","✦ You are not a human trying to learn love. You are love wearing a human.\n\n❓ Where are you withholding love from yourself right now?"],
+  the_shift: ["✦ Something is shifting. The old world is collapsing, and you came here to hold a frequency.\n\n❓ What are you being asked to hold steady through?","✦ The chaos outside is the old order shedding.\n\n❓ What have you stopped trying to fix that is not yours to fix?"],
+  sovereignty: ["✦ Sovereignty means your peace does not depend on anyone's approval.\n\n❓ Where are you still asking permission to be who you are?","✦ Protect your energy like it is sacred.\n\n❓ What boundary have you been afraid to hold?"],
+  disappointment: ["✦ Disappointment is not punishment. It is grace.\n\n❓ What did this disappointment give back to you?","✦ When the thing does not come, it is not denial — it is redirection.\n\n❓ What did you become while waiting for something that did not come?"],
+  separation: ["✦ When you attack another, you are only fighting with yourself.\n\n❓ Who are you still at war with in your mind?","✦ There is no 'other.' There is only the One, wearing different masks.\n\n❓ Who have you been treating as separate from you?"],
+  presence: ["✦ The past is a memory. The future is a projection. Only this moment is real.\n\n❓ What are you missing right now because you are thinking about later?","✦ You are not your story. You are the awareness in which the story appears and disappears.\n\n❓ What would this moment feel like if you forgot the past?"],
+  imagination: ["✦ Neville Goddard: 'Imagination is the only reality.'\n\n❓ What are you imagining right now that you are pretending is not real?","✦ The assumption precedes the evidence.\n\n❓ What would you do today if the thing you want was already true?"],
+  becoming: ["✦ Earl Nightingale: 'You become what you think about most of the time.'\n\n❓ What are you becoming in your quiet hours?","✦ Jim Rohn: 'Work harder on yourself than on your job.'\n\n❓ What version of you is the current work building?"],
+  obstacle: ["✦ Marcus Aurelius: 'What stands in the way becomes the way.'\n\n❓ What obstacle is currently teaching you something only it could teach?","✦ Stoicism is not coldness. It is the discipline of separating what you control from what you do not.\n\n❓ What are you trying to control that was never yours?"],
+  default: ["✦ You are the Architect of your reality.\n\n❓ If the noise in your head was a radio, what station is it tuned to right now?","✦ The silence between your thoughts is where the truth lives.\n\n❓ What is the one thought you are afraid to think? Look at it. It cannot hurt you.","✦ You are not behind. You are exactly on time.\n\n❓ What would you tell your past self about this moment?","✦ There is no such thing as a wasted moment.\n\n❓ What part of your current struggle is secretly building your strength?","✦ You said something. That alone matters. The mirror hears you.\n\n❓ What do you want to say that you have not said yet?"]
 };
 
 const keywordMap = [
@@ -401,6 +516,19 @@ function formatResponse(text) {
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
+// ===== TIME HELPERS =====
+function relativeTime(dateStr) {
+  const now = Date.now();
+  const then = new Date(dateStr).getTime();
+  const diff = Math.floor((now - then) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
+  if (diff < 2592000) return Math.floor(diff / 604800) + 'w ago';
+  return new Date(dateStr).toLocaleDateString();
+}
+
 // ===== AUTH =====
 const customStorage = {
   getItem: (key) => localStorage.getItem(key) || sessionStorage.getItem(key),
@@ -448,7 +576,7 @@ async function checkSession() {
   if (session?.user) {
     if (!session.user.email_confirmed_at) { pendingEmail = session.user.email; document.getElementById('otpEmail').textContent = pendingEmail; document.getElementById('otpScreen').classList.remove('hidden'); return; }
     await enterApp(session.user);
-  } else { document.getElementById('authScreen').classList.remove('hidden'); }
+  } else { document.getElementById('authScreen').classList.remove('hidden'); maybeShowOnboarding(); }
 }
 
 function showError(m) { const e = document.getElementById('authError'); const s = document.getElementById('authSuccess'); e.textContent = m; e.classList.remove('hidden'); s.classList.add('hidden'); }
@@ -503,7 +631,7 @@ function backToAuth() { document.getElementById('otpScreen').classList.add('hidd
 
 async function signOut() {
   await sb.auth.signOut();
-  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null }, goldenStars: [], teachings: [], usedResponses: [] };
+  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null }, goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null, searchQuery: '' };
   document.getElementById('mainApp').classList.add('hidden');
   document.getElementById('authScreen').classList.remove('hidden');
   document.getElementById('authPassword').value = '';
@@ -515,19 +643,35 @@ async function enterApp(user) {
   document.getElementById('otpScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userEmail').textContent = user.email;
-  await loadProfile(); await loadMessages(); await loadGoldenStars(); await loadTeachings();
-  renderChat(); renderProfile(); renderTeachings();
+  await loadProfile(); await loadMessages(); await loadGoldenStars(); await loadTeachings(); await loadNotifications();
+  renderChat(); renderProfile(); renderTeachings(); renderNotifications();
   document.getElementById('userInput').focus();
+  maybeShowOnboarding();
 }
 
 async function loadProfile() {
   const { data, error } = await sb.from('profiles').select('*').eq('id', state.user.id).single();
-  if (error || !data) { await sb.from('profiles').insert({ id: state.user.id }); return; }
+  if (error || !data) {
+    // Profile was not created (trigger may not have run). Create it now with a username.
+    const emailPrefix = (state.user.email || 'architect').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    let base = emailPrefix.length >= 3 ? emailPrefix : 'architect';
+    let username = base;
+    let counter = 0;
+    while (true) {
+      const { data: existing } = await sb.from('profiles').select('id').ilike('username', username).limit(1);
+      if (!existing || existing.length === 0) break;
+      counter++;
+      username = base + '_' + counter;
+    }
+    await sb.from('profiles').insert({ id: state.user.id, username });
+    return loadProfile();
+  }
   state.profile = { ...state.profile, ...data };
   if (state.profile.avatar_url) {
     document.getElementById('avatarUpload').innerHTML = `<img src="${state.profile.avatar_url}" class="w-full h-full object-cover"><input type="file" id="avatarInput" accept="image/*" class="hidden">`;
     document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
   }
+  document.getElementById('displayUsername').textContent = '@' + (state.profile.username || 'architect');
 }
 
 async function saveProfile() {
@@ -551,28 +695,81 @@ async function saveGoldenStar(text, trait_type, trait_value) {
   state.goldenStars.unshift({ text, trait_type, trait_value, date: new Date().toLocaleString() });
 }
 
+// ===== PROFILE CACHE =====
+async function getProfileInfo(userId) {
+  if (state.profileCache[userId]) return state.profileCache[userId];
+  const { data } = await sb.from('profiles').select('username, avatar_url').eq('id', userId).single();
+  const info = data || { username: 'architect', avatar_url: null };
+  state.profileCache[userId] = info;
+  return info;
+}
+
+async function batchFetchProfiles(userIds) {
+  const missing = userIds.filter(id => !state.profileCache[id]);
+  if (missing.length === 0) return;
+  const unique = [...new Set(missing)];
+  const { data } = await sb.from('profiles').select('id, username, avatar_url').in('id', unique);
+  (data || []).forEach(p => { state.profileCache[p.id] = { username: p.username || 'architect', avatar_url: p.avatar_url }; });
+  unique.forEach(id => { if (!state.profileCache[id]) state.profileCache[id] = { username: 'architect', avatar_url: null }; });
+}
+
+function avatarHtml(userId, size) {
+  const info = state.profileCache[userId] || {};
+  const cls = size === 'xs' ? 'avatar-xs' : 'avatar-sm';
+  if (info.avatar_url) return `<img src="${info.avatar_url}" class="${cls}" alt="">`;
+  const initial = (info.username || '?')[0].toUpperCase();
+  return `<div class="${cls}">${initial}</div>`;
+}
+
+// ===== TEACHINGS =====
 async function loadTeachings() {
   try {
-    const { data, error } = await sb.from('teachings').select('*').order('created_at', { ascending: false }).limit(50);
+    const { data, error } = await sb.from('teachings').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(100);
     if (error || !data) { state.teachings = []; return; }
     state.teachings = data;
+    const userIds = new Set();
     for (const t of state.teachings) {
       const { data: reactions } = await sb.from('teaching_reactions').select('*').eq('teaching_id', t.id);
       t.reactions = reactions || [];
       const { data: comments } = await sb.from('teaching_comments').select('*').eq('teaching_id', t.id).order('created_at', { ascending: true });
       t.comments = comments || [];
       for (const c of t.comments) {
+        userIds.add(c.user_id);
         const { data: cr } = await sb.from('comment_reactions').select('*').eq('comment_id', c.id);
         c.reactions = cr || [];
       }
     }
+    await batchFetchProfiles([...userIds]);
+    renderTagFilters();
   } catch (e) { state.teachings = []; }
+}
+
+function renderTagFilters() {
+  const allTags = new Set();
+  state.teachings.forEach(t => (t.tags || []).forEach(tag => allTags.add(tag)));
+  const el = document.getElementById('tagFilters');
+  if (allTags.size === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = `<button onclick="setTag(null)" class="text-[10px] px-2.5 py-1 rounded-full ${!state.activeTag ? 'bg-amethyst-600/40 text-amethyst-200 border border-amethyst-500/40' : 'bg-void-800 text-gray-400 border border-void-600'}">All</button>` +
+    [...allTags].map(tag => `<button onclick="setTag('${escapeHtml(tag)}')" class="text-[10px] px-2.5 py-1 rounded-full ${state.activeTag === tag ? 'bg-amethyst-600/40 text-amethyst-200 border border-amethyst-500/40' : 'bg-void-800 text-gray-400 border border-void-600'}">#${escapeHtml(tag)}</button>`).join('');
+}
+
+function setTag(tag) { state.activeTag = tag; renderTagFilters(); filterTeachings(); }
+
+function filterTeachings() {
+  const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  state.searchQuery = q;
+  let filtered = state.teachings;
+  if (state.activeTag) filtered = filtered.filter(t => (t.tags || []).includes(state.activeTag));
+  if (q) filtered = filtered.filter(t => ((t.title || '') + ' ' + (t.content || '')).toLowerCase().includes(q));
+  const el = document.getElementById('teachingsFeed');
+  if (filtered.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No teachings match.</p></div>'; return; }
+  el.innerHTML = filtered.map(t => renderTeachingPost(t)).join('');
 }
 
 function renderTeachings() {
   const el = document.getElementById('teachingsFeed');
   if (!state.teachings || state.teachings.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No teachings yet. Check back soon.</p></div>'; return; }
-  el.innerHTML = state.teachings.map(t => renderTeachingPost(t)).join('');
+  filterTeachings();
 }
 
 function countEmoji(reactions, emoji) { return reactions.filter(r => r.emoji === emoji).length; }
@@ -580,19 +777,29 @@ function userReacted(reactions, emoji) { return reactions.some(r => r.user_id ==
 
 function renderTeachingPost(t) {
   const reactionBar = EMOJIS.map(e => { const count = countEmoji(t.reactions, e); const active = userReacted(t.reactions, e) ? 'active' : ''; return `<button class="reaction-pill ${active}" onclick="toggleTeachingReaction(${t.id}, '${e}')">${e}${count > 0 ? ' ' + count : ''}</button>`; }).join('');
-  const commentsHtml = t.comments.map(c => renderComment(c)).join('');
   const commentsOpen = localStorage.getItem('comments_open_' + t.id) === 'true';
-  return `<article class="glass rounded-2xl border border-void-600 overflow-hidden fade-in">
-    ${t.cover_image ? `<img src="${escapeHtml(t.cover_image)}" class="w-full h-48 object-cover" loading="lazy">` : ''}
+  const tagHtml = (t.tags || []).map(tag => `<span class="text-[10px] px-2 py-0.5 rounded-full bg-void-800 border border-void-600 text-gray-400">#${escapeHtml(tag)}</span>`).join('');
+  const pinnedHtml = t.pinned ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-gold-400/20 border border-gold-400/40 text-gold-300">📌 Pinned</span>` : '';
+  const commentsHtml = renderCommentTree(t.comments, null, t.id);
+
+  return `<article class="glass rounded-2xl border border-void-600 overflow-hidden fade-in" data-teaching-id="${t.id}">
+    ${t.cover_image ? `<img src="${escapeHtml(t.cover_image)}" class="w-full h-48 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(t.cover_image)}')">` : ''}
     <div class="p-4">
+      ${(pinnedHtml || tagHtml) ? `<div class="flex flex-wrap gap-1.5 mb-2">${pinnedHtml}${tagHtml}</div>` : ''}
       ${t.title ? `<h3 class="text-base font-semibold mb-2">${escapeHtml(t.title)}</h3>` : ''}
       <div class="text-sm text-gray-300 prose-content">${formatResponse(t.content)}</div>
-      <p class="text-[10px] text-gray-600 mt-3">${new Date(t.created_at).toLocaleDateString()}</p>
+      <p class="text-[10px] text-gray-600 mt-3">${relativeTime(t.created_at)}</p>
       <div class="flex flex-wrap gap-1.5 mt-4">${reactionBar}</div>
-      <button onclick="toggleComments(${t.id})" class="mt-3 text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
-        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        ${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}
-      </button>
+      <div class="flex items-center gap-3 mt-3">
+        <button onclick="toggleComments(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          ${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}
+        </button>
+        <button onclick="shareTeaching(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+          Share
+        </button>
+      </div>
       <div id="comments-${t.id}" class="${commentsOpen ? '' : 'hidden'} mt-4 space-y-3 pt-4 border-t border-void-600">
         <div id="comments-list-${t.id}" class="space-y-3">${commentsHtml || '<p class="text-xs text-gray-600">No comments yet.</p>'}</div>
         <div class="space-y-2 pt-3 border-t border-void-600">
@@ -603,7 +810,7 @@ function renderTeachingPost(t) {
               <span id="comment-file-label-${t.id}">Photo</span>
               <input type="file" id="comment-file-${t.id}" accept="image/*" class="hidden" onchange="document.getElementById('comment-file-label-${t.id}').textContent = this.files[0] ? '✓ Photo' : 'Photo'">
             </label>
-            <button onclick="submitComment(${t.id})" class="ml-auto px-4 py-2 rounded-lg bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-medium">Post</button>
+            <button onclick="submitComment(${t.id}, null)" class="ml-auto px-4 py-2 rounded-lg bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-medium">Post</button>
           </div>
         </div>
       </div>
@@ -611,18 +818,68 @@ function renderTeachingPost(t) {
   </article>`;
 }
 
-function renderComment(c) {
+// Recursive comment tree render
+function renderCommentTree(comments, parentId, teachingId, depth = 0) {
+  const children = comments.filter(c => (c.parent_id || null) === parentId);
+  if (children.length === 0) return '';
+  return children.map(c => {
+    const replies = renderCommentTree(comments, c.id, teachingId, depth + 1);
+    return renderComment(c, teachingId, depth, replies);
+  }).join('');
+}
+
+function renderComment(c, teachingId, depth, repliesHtml) {
   const reactionBar = EMOJIS.map(e => { const count = countEmoji(c.reactions || [], e); const active = userReacted(c.reactions || [], e) ? 'active' : ''; return `<button class="reaction-pill ${active}" onclick="toggleCommentReaction(${c.id}, '${e}')" style="font-size:11px;padding:2px 8px;">${e}${count > 0 ? ' ' + count : ''}</button>`; }).join('');
-  const canDelete = c.user_id === state.user.id;
-  return `<div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
-    ${c.content ? `<p class="text-sm text-gray-300 prose-content">${escapeHtml(c.content)}</p>` : ''}
-    ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-lg mt-2 max-h-64 object-cover" loading="lazy">` : ''}
-    <div class="flex items-center gap-1.5 mt-2 flex-wrap">${reactionBar}</div>
-    <div class="flex items-center justify-between mt-2">
-      <p class="text-[10px] text-gray-600">${new Date(c.created_at).toLocaleString()}</p>
-      ${canDelete ? `<button onclick="deleteComment(${c.id})" class="text-[10px] text-gray-600 hover:text-red-400 transition">Delete</button>` : ''}
+  const info = state.profileCache[c.user_id] || { username: 'architect', avatar_url: null };
+  const isOwner = c.user_id === state.user.id;
+  const canEdit = isOwner && (Date.now() - new Date(c.created_at).getTime()) < 5 * 60 * 1000;
+  const maxVisualDepth = Math.min(depth, 6);
+  const indentStyle = maxVisualDepth > 0 ? 'margin-left: ' + (maxVisualDepth * 12) + 'px; padding-left: 10px; border-left: 1px solid rgba(120,90,160,0.2);' : '';
+  const edited = c.updated_at && c.updated_at !== c.created_at;
+
+  return `<div style="${indentStyle}" class="mb-2" id="comment-${c.id}">
+    <div class="flex gap-2">
+      ${avatarHtml(c.user_id, 'sm')}
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center gap-2 flex-wrap">
+          <span class="text-xs font-medium text-amethyst-300">@${escapeHtml(info.username)}</span>
+          <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
+          ${edited ? `<span class="text-[10px] text-gray-700">(edited)</span>` : ''}
+        </div>
+        ${c.content ? `<p class="text-sm text-gray-300 prose-content mt-1">${escapeHtml(c.content)}</p>` : ''}
+        ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-lg mt-2 max-h-64 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
+        <div class="flex items-center gap-1.5 mt-2 flex-wrap">${reactionBar}</div>
+        <div class="flex items-center gap-3 mt-1.5">
+          <button onclick="showReplyBox(${c.id}, ${teachingId})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Reply</button>
+          ${canEdit ? `<button onclick="editComment(${c.id}, ${teachingId})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Edit</button>` : ''}
+          ${isOwner ? `<button onclick="deleteComment(${c.id}, ${teachingId})" class="text-[10px] text-gray-500 hover:text-red-400 transition">Delete</button>` : ''}
+        </div>
+        <div id="reply-box-${c.id}" class="hidden mt-2 space-y-2">
+          <textarea id="reply-text-${c.id}" rows="2" placeholder="Reply to @${escapeHtml(info.username)}..." class="w-full bg-void-900 border border-void-600 rounded-xl px-3 py-2 text-sm focus:border-amethyst-500 focus:outline-none resize-none"></textarea>
+          <div class="flex items-center gap-2">
+            <label class="p-1.5 text-gray-500 hover:text-amethyst-400 cursor-pointer transition flex items-center gap-1 text-[10px]">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <span id="reply-file-label-${c.id}">Photo</span>
+              <input type="file" id="reply-file-${c.id}" accept="image/*" class="hidden" onchange="document.getElementById('reply-file-label-${c.id}').textContent = this.files[0] ? '✓' : 'Photo'">
+            </label>
+            <button onclick="cancelReply(${c.id})" class="ml-auto text-[10px] text-gray-500 hover:text-gray-300 px-2 py-1">Cancel</button>
+            <button onclick="submitComment(${teachingId}, ${c.id})" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-[10px] font-medium">Reply</button>
+          </div>
+        </div>
+        ${repliesHtml ? `<div class="mt-1">${repliesHtml}</div>` : ''}
+      </div>
     </div>
   </div>`;
+}
+
+function showReplyBox(commentId, teachingId) {
+  const box = document.getElementById('reply-box-' + commentId);
+  if (box) { box.classList.toggle('hidden'); if (!box.classList.contains('hidden')) document.getElementById('reply-text-' + commentId).focus(); }
+}
+
+function cancelReply(commentId) {
+  const box = document.getElementById('reply-box-' + commentId);
+  if (box) box.classList.add('hidden');
 }
 
 function toggleComments(teachingId) {
@@ -655,9 +912,11 @@ async function toggleCommentReaction(commentId, emoji) {
   openIds.forEach(id => document.getElementById('comments-' + id)?.classList.remove('hidden'));
 }
 
-async function submitComment(teachingId) {
-  const textEl = document.getElementById('comment-text-' + teachingId);
-  const fileEl = document.getElementById('comment-file-' + teachingId);
+async function submitComment(teachingId, parentId) {
+  const textId = parentId ? 'reply-text-' + parentId : 'comment-text-' + teachingId;
+  const fileId = parentId ? 'reply-file-' + parentId : 'comment-file-' + teachingId;
+  const textEl = document.getElementById(textId);
+  const fileEl = document.getElementById(fileId);
   const text = textEl.value.trim();
   const file = fileEl.files[0];
   if (!text && !file) return;
@@ -667,15 +926,135 @@ async function submitComment(teachingId) {
     const { error } = await sb.storage.from('comment-images').upload(path, file);
     if (!error) { const { data } = sb.storage.from('comment-images').getPublicUrl(path); image_url = data.publicUrl; }
   }
-  await sb.from('teaching_comments').insert({ teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url });
+  await sb.from('teaching_comments').insert({ teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url, parent_id: parentId || null });
+
+  // Insert notification for parent comment author
+  if (parentId) {
+    const parent = state.teachings.flatMap(t => t.comments).find(c => c.id === parentId);
+    if (parent && parent.user_id !== state.user.id) {
+      await sb.from('notifications').insert({
+        user_id: parent.user_id,
+        type: 'reply',
+        actor_id: state.user.id,
+        actor_username: state.profile.username,
+        teaching_id: teachingId,
+        comment_id: parentId,
+        message: '@' + state.profile.username + ' replied to your comment'
+      });
+    }
+  }
+
   localStorage.setItem('comments_open_' + teachingId, 'true');
   await loadTeachings(); renderTeachings();
+  const c = document.getElementById('comments-' + teachingId);
+  if (c) c.classList.remove('hidden');
 }
 
-async function deleteComment(commentId) {
+async function editComment(commentId, teachingId) {
+  let comment = null;
+  for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; break; } }
+  if (!comment) return;
+  const newText = prompt('Edit your comment:', comment.content || '');
+  if (newText === null || newText === comment.content) return;
+  await sb.from('teaching_comments').update({ content: newText, updated_at: new Date().toISOString() }).eq('id', commentId);
+  const openIds = state.teachings.map(t => t.id).filter(id => !document.getElementById('comments-' + id)?.classList.contains('hidden'));
+  await loadTeachings(); renderTeachings();
+  openIds.forEach(id => document.getElementById('comments-' + id)?.classList.remove('hidden'));
+}
+
+async function deleteComment(commentId, teachingId) {
   if (!confirm('Delete this comment?')) return;
   await sb.from('teaching_comments').delete().eq('id', commentId);
+  const openIds = state.teachings.map(t => t.id).filter(id => !document.getElementById('comments-' + id)?.classList.contains('hidden'));
   await loadTeachings(); renderTeachings();
+  openIds.forEach(id => document.getElementById('comments-' + id)?.classList.remove('hidden'));
+}
+
+function shareTeaching(teachingId) {
+  const t = state.teachings.find(x => x.id === teachingId);
+  if (!t) return;
+  const text = (t.title ? t.title + '\n\n' : '') + (t.content || '').substring(0, 200) + '...\n\nRead on Moph Echo: https://mophecho-mirror.vercel.app';
+  if (navigator.share) { navigator.share({ title: t.title || 'Moph Echo Teaching', text, url: 'https://mophecho-mirror.vercel.app' }).catch(() => {}); }
+  else { navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard')).catch(() => {}); }
+}
+
+// ===== IMAGE VIEWER =====
+function openImageViewer(src) {
+  document.getElementById('imageViewerSrc').src = src;
+  document.getElementById('imageViewer').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeImageViewer() {
+  document.getElementById('imageViewer').classList.add('hidden');
+  document.getElementById('imageViewerSrc').src = '';
+  document.body.style.overflow = '';
+}
+
+// ===== NOTIFICATIONS =====
+async function loadNotifications() {
+  const { data } = await sb.from('notifications').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(50);
+  state.notifications = data || [];
+  const unread = state.notifications.filter(n => !n.is_read).length;
+  const badge = document.getElementById('notifBadge');
+  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+}
+
+function renderNotifications() {
+  const el = document.getElementById('notifList');
+  if (state.notifications.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600 text-center py-8">No notifications yet.</p>'; return; }
+  el.innerHTML = state.notifications.map(n => `
+    <div class="bg-void-800/50 rounded-xl p-3 border ${n.is_read ? 'border-void-600' : 'border-amethyst-500/30'} cursor-pointer" onclick="openNotification(${n.id}, ${n.teaching_id || 'null'})">
+      <p class="text-xs text-gray-300">${escapeHtml(n.message || 'New notification')}</p>
+      <p class="text-[10px] text-gray-600 mt-1">${relativeTime(n.created_at)}</p>
+    </div>
+  `).join('');
+}
+
+function showNotifications() { document.getElementById('notifPanel').classList.remove('hidden'); renderNotifications(); }
+function closeNotifications() { document.getElementById('notifPanel').classList.add('hidden'); }
+
+async function markAllRead() {
+  await sb.from('notifications').update({ is_read: true }).eq('user_id', state.user.id).eq('is_read', false);
+  await loadNotifications(); renderNotifications();
+}
+
+async function openNotification(notifId, teachingId) {
+  await sb.from('notifications').update({ is_read: true }).eq('id', notifId);
+  await loadNotifications();
+  closeNotifications();
+  if (teachingId) {
+    switchTab('teachings');
+    setTimeout(() => {
+      const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 500);
+  }
+}
+
+// ===== USERNAME EDITOR =====
+function openUsernameEditor() {
+  document.getElementById('usernameInput').value = state.profile.username || '';
+  document.getElementById('usernameErr').classList.add('hidden');
+  document.getElementById('usernameModal').classList.remove('hidden');
+}
+function closeUsernameEditor() { document.getElementById('usernameModal').classList.add('hidden'); }
+
+async function saveUsername() {
+  const raw = document.getElementById('usernameInput').value.trim().toLowerCase();
+  const err = document.getElementById('usernameErr');
+  err.classList.add('hidden');
+  if (!/^[a-z0-9_]{3,30}$/.test(raw)) { err.textContent = 'Only lowercase letters, numbers, and underscores. 3-30 chars.'; err.classList.remove('hidden'); return; }
+  const { data: existing } = await sb.from('profiles').select('id').ilike('username', raw).neq('id', state.user.id).limit(1);
+  if (existing && existing.length > 0) { err.textContent = 'That username is already taken.'; err.classList.remove('hidden'); return; }
+  const btn = document.getElementById('saveUsernameBtn');
+  btn.textContent = 'Saving...'; btn.disabled = true;
+  const { error } = await sb.from('profiles').update({ username: raw }).eq('id', state.user.id);
+  btn.textContent = 'Save'; btn.disabled = false;
+  if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
+  state.profile.username = raw;
+  document.getElementById('displayUsername').textContent = '@' + raw;
+  closeUsernameEditor();
 }
 
 function renderProfile() {
@@ -687,6 +1066,7 @@ function renderProfile() {
   document.getElementById('pWound').className = state.profile.wound ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
   document.getElementById('pGift').textContent = state.profile.gift || '—';
   document.getElementById('pGift').className = state.profile.gift ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+  document.getElementById('displayUsername').textContent = '@' + (state.profile.username || 'architect');
   const gl = document.getElementById('goldenList');
   if (state.goldenStars.length === 0) gl.innerHTML = '<p class="text-xs text-gray-600">No golden moments yet.</p>';
   else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 rounded-xl p-3"><p class="text-xs text-gold-200 prose-content">${formatResponse(s.text)}</p><p class="text-[10px] text-gray-600 mt-2">${s.date}</p></div>`).join('');
@@ -798,26 +1178,17 @@ function identifyProfile(text) {
 }
 
 function generateGoldenStar(text) {
-  if (state.profile.element) {
-    const hasElementStar = state.goldenStars.some(s => s.trait_type === 'element');
-    if (!hasElementStar) {
-      const reward = TRAIT_REWARDS.element[state.profile.element];
-      if (reward) return { text: reward, trait_type: 'element', trait_value: state.profile.element };
-    }
+  if (state.profile.element && !state.goldenStars.some(s => s.trait_type === 'element')) {
+    const reward = TRAIT_REWARDS.element[state.profile.element];
+    if (reward) return { text: reward, trait_type: 'element', trait_value: state.profile.element };
   }
-  if (state.profile.wound) {
-    const hasWoundStar = state.goldenStars.some(s => s.trait_type === 'wound');
-    if (!hasWoundStar) {
-      const reward = TRAIT_REWARDS.wound[state.profile.wound];
-      if (reward) return { text: reward, trait_type: 'wound', trait_value: state.profile.wound };
-    }
+  if (state.profile.wound && !state.goldenStars.some(s => s.trait_type === 'wound')) {
+    const reward = TRAIT_REWARDS.wound[state.profile.wound];
+    if (reward) return { text: reward, trait_type: 'wound', trait_value: state.profile.wound };
   }
-  if (state.profile.gift) {
-    const hasGiftStar = state.goldenStars.some(s => s.trait_type === 'gift');
-    if (!hasGiftStar) {
-      const reward = TRAIT_REWARDS.gift[state.profile.gift];
-      if (reward) return { text: reward, trait_type: 'gift', trait_value: state.profile.gift };
-    }
+  if (state.profile.gift && !state.goldenStars.some(s => s.trait_type === 'gift')) {
+    const reward = TRAIT_REWARDS.gift[state.profile.gift];
+    if (reward) return { text: reward, trait_type: 'gift', trait_value: state.profile.gift };
   }
   return null;
 }
@@ -847,6 +1218,26 @@ function checkGrounding(text) {
   if (l.includes('hungry')||l.includes('floating')||l.includes('eat')) alert.classList.remove('hidden');
   else alert.classList.add('hidden');
 }
+
+// Reading progress (only in teachings)
+window.addEventListener('scroll', () => {
+  const panel = document.getElementById('panelTeachings');
+  const bar = document.getElementById('readingBar');
+  if (!panel || panel.classList.contains('hidden')) { bar.style.width = '0%'; return; }
+  const scrollTop = panel.scrollTop;
+  const scrollHeight = panel.scrollHeight - panel.clientHeight;
+  const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+  bar.style.width = pct + '%';
+});
+
+document.getElementById('panelTeachings')?.addEventListener('scroll', () => {
+  const panel = document.getElementById('panelTeachings');
+  const bar = document.getElementById('readingBar');
+  const scrollTop = panel.scrollTop;
+  const scrollHeight = panel.scrollHeight - panel.clientHeight;
+  const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+  bar.style.width = pct + '%';
+});
 
 document.getElementById('userInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); processEntry(); } });
 
