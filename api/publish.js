@@ -2,7 +2,6 @@
 // Admin: publish a teaching + email all users
 
 export default async function handler(req, res) {
-  // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -42,38 +41,59 @@ export default async function handler(req, res) {
   const inserted = await insertRes.json();
   const teaching = inserted[0];
 
-  // 2. Send email to all users (if requested)
-  let emailResult = { sent: false };
+  // 2. Send email if requested
+  let emailResult = { sent: false, method: 'none' };
+
   if (sendEmail) {
     const resendKey = process.env.RESEND_API_KEY;
-    const audienceId = process.env.RESEND_AUDIENCE_ID;
+    const segmentId = process.env.RESEND_SEGMENT_ID;
 
-    if (resendKey && audienceId) {
-      const html = buildEmailHtml(title, content, cover_image);
+    if (!resendKey) {
+      emailResult.error = 'RESEND_API_KEY not set';
+    } else if (segmentId) {
+      // FAST PATH: use broadcasts with segment ID
+      try {
+        const html = buildEmailHtml(title, content, cover_image);
+        const subject = title ? `New Teaching: ${title}` : 'New Teaching from Moph Echo';
 
-      const createRes = await fetch('https://api.resend.com/broadcasts', {
-        method: 'POST',
-        headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          audience_id: audienceId,
-          from: 'Moph Echo <onboarding@resend.dev>',
-          subject: title ? `New Teaching: ${title}` : 'New Teaching from Moph Echo',
-          html: html
-        })
-      });
-
-      const broadcast = await createRes.json();
-      if (createRes.ok) {
-        const sendRes = await fetch(`https://api.resend.com/broadcasts/${broadcast.id}/send`, {
+        const createRes = await fetch('https://api.resend.com/broadcasts', {
           method: 'POST',
-          headers: { 'Authorization': `Bearer ${resendKey}` }
+          headers: {
+            'Authorization': `Bearer ${resendKey}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            audience_id: segmentId,   // API still uses audience_id internally
+            from: 'Moph Echo <onboarding@resend.dev>',
+            subject: subject,
+            html: html
+          })
         });
-        emailResult = { sent: sendRes.ok, broadcastId: broadcast.id };
-      } else {
-        emailResult = { sent: false, error: broadcast.message };
+
+        const broadcast = await createRes.json();
+
+        if (!createRes.ok) {
+          emailResult.error = broadcast.message || 'Broadcast create failed';
+          emailResult.detail = broadcast;
+        } else {
+          const sendRes = await fetch(`https://api.resend.com/broadcasts/${broadcast.id}/send`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${resendKey}` }
+          });
+          if (sendRes.ok) {
+            emailResult.sent = true;
+            emailResult.method = 'broadcast';
+            emailResult.broadcastId = broadcast.id;
+          } else {
+            const err = await sendRes.json();
+            emailResult.error = err.message || 'Broadcast send failed';
+          }
+        }
+      } catch (e) {
+        emailResult.error = 'Broadcast exception: ' + e.message;
       }
     } else {
-      emailResult = { sent: false, error: 'Resend not configured' };
+      emailResult.error = 'No segment ID set. Add RESEND_SEGMENT_ID to Vercel.';
     }
   }
 
