@@ -7,15 +7,18 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script>
-tailwind.config = { darkMode:'class', theme:{ extend:{ fontFamily:{ sans:['Inter','system-ui','sans-serif'] }, colors:{ void:{900:'#06060a',800:'#0a0a12',700:'#10101c',600:'#161624'}, amethyst:{400:'#a78bfa',500:'#8b5cf6',600:'#7c3aed',700:'#6d28d9'} } } } }
+tailwind.config = { darkMode:'class', theme:{ extend:{ fontFamily:{ sans:['Inter','system-ui','sans-serif'] }, colors:{ void:{900:'#06060a',800:'#0a0a12',700:'#10101c',600:'#161624'}, amethyst:{400:'#a78bfa',500:'#8b5cf6',600:'#7c3aed',700:'#6d28d9'}, gold:{400:'#facc15',500:'#eab308'} } } } }
 </script>
 <style>
 body { background:#06060a; }
 .glass { background:rgba(16,16,28,0.75); backdrop-filter:blur(24px); }
+.spinner { border:2px solid rgba(139,92,246,.2); border-top-color:#a78bfa; border-radius:50%; width:16px; height:16px; animation:spin .8s linear infinite; display:inline-block; }
+@keyframes spin { to{transform:rotate(360deg);} }
 </style>
 </head>
 <body class="font-sans text-gray-200 min-h-screen">
 
+<!-- LOCK SCREEN -->
 <div id="lockScreen" class="min-h-screen flex items-center justify-center p-4">
   <div class="glass rounded-3xl p-8 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
     <div class="text-center mb-6">
@@ -25,12 +28,13 @@ body { background:#06060a; }
       <h1 class="text-xl font-semibold">Admin Panel</h1>
       <p class="text-xs text-gray-500 mt-1">Enter your admin key to continue</p>
     </div>
-    <input type="password" id="adminKeyInput" placeholder="Admin key" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition mb-3">
-    <button onclick="unlock()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm">Unlock</button>
+    <input type="password" id="adminKeyInput" placeholder="Admin key" autocomplete="off" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition mb-3">
+    <button onclick="unlock()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:opacity-90 transition">Unlock</button>
     <p id="lockError" class="hidden text-xs text-red-400 text-center mt-3"></p>
   </div>
 </div>
 
+<!-- ADMIN APP -->
 <div id="adminApp" class="hidden max-w-2xl mx-auto p-4">
   <header class="glass rounded-2xl p-4 border border-void-600 mb-4 flex items-center justify-between">
     <div class="flex items-center gap-3">
@@ -42,7 +46,10 @@ body { background:#06060a; }
         <p class="text-[10px] text-gray-500">Publish teachings</p>
       </div>
     </div>
-    <button onclick="lock()" class="text-xs text-gray-500 hover:text-red-400 transition">Lock</button>
+    <div class="flex items-center gap-2">
+      <a href="/" class="text-xs text-gray-500 hover:text-amethyst-400 transition">View App</a>
+      <button onclick="lock()" class="text-xs text-gray-500 hover:text-red-400 transition">Lock</button>
+    </div>
   </header>
 
   <div class="glass rounded-2xl p-5 border border-void-600 space-y-4">
@@ -58,27 +65,50 @@ body { background:#06060a; }
         <p id="coverLabel" class="text-xs text-gray-500">Tap to upload cover image</p>
         <img id="coverPreview" class="hidden max-h-48 mx-auto rounded-lg mt-2">
       </div>
+      <button onclick="clearCover()" id="clearCoverBtn" class="hidden mt-2 text-[10px] text-red-400 hover:text-red-300">Remove cover</button>
+    </div>
+
+    <div>
+      <label class="text-xs text-gray-500 uppercase tracking-wider">Tags (comma separated)</label>
+      <input type="text" id="tTags" placeholder="e.g., Gnosis, Discipline, Wounds" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+      <p class="text-[10px] text-gray-600 mt-1">Type tags you want. They become filters in the app.</p>
     </div>
 
     <div>
       <label class="text-xs text-gray-500 uppercase tracking-wider">Content</label>
-      <textarea id="tContent" rows="12" placeholder="Write your teaching here...&#10;&#10;Use ✦ for insight markers and ❓ for the closing question.&#10;&#10;Line breaks are preserved." class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition resize-y font-mono"></textarea>
+      <textarea id="tContent" rows="14" placeholder="Write your teaching here...&#10;&#10;Use ✦ for insight markers and ❓ for the closing question.&#10;Use **word** for bold.&#10;&#10;Line breaks are preserved." class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition resize-y font-mono"></textarea>
     </div>
+
+    <label class="flex items-center gap-2 cursor-pointer select-none">
+      <input type="checkbox" id="pinChk" class="w-4 h-4 rounded border-void-600 bg-void-900 accent-amethyst-600">
+      <span class="text-xs text-gray-400">📌 Pin this teaching to top of feed</span>
+    </label>
 
     <label class="flex items-center gap-2 cursor-pointer select-none">
       <input type="checkbox" id="sendEmailChk" class="w-4 h-4 rounded border-void-600 bg-void-900 accent-amethyst-600" checked>
       <span class="text-xs text-gray-400">Send email to all users after publishing</span>
     </label>
 
-    <button onclick="publish()" id="publishBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm flex items-center justify-center gap-2">
+    <button onclick="publish()" id="publishBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition">
       <span id="publishText">Publish Teaching</span>
     </button>
     <p id="pubStatus" class="hidden text-xs text-center"></p>
   </div>
 
   <div class="glass rounded-2xl p-5 border border-void-600 mt-4">
-    <h3 class="text-sm font-semibold mb-3">Recent Teachings</h3>
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold">Recent Teachings</h3>
+      <button onclick="loadRecent()" class="text-[10px] text-amethyst-400 hover:text-amethyst-300">Refresh</button>
+    </div>
     <div id="recentTeachings" class="space-y-2 text-xs text-gray-500">Loading...</div>
+  </div>
+
+  <div class="glass rounded-2xl p-5 border border-void-600 mt-4 mb-8">
+    <h3 class="text-sm font-semibold mb-3">Email Status</h3>
+    <div id="emailStatus" class="text-xs text-gray-500">
+      <p>Emails need a verified domain. Until then, publishing works but emails fail.</p>
+      <p class="mt-2 text-gray-600">Buy a domain (~$10/year), verify it in Resend, then emails will send automatically.</p>
+    </div>
   </div>
 </div>
 
@@ -86,31 +116,38 @@ body { background:#06060a; }
 let adminKey = sessionStorage.getItem('moph_admin_key') || '';
 let coverImageUrl = null;
 
+// ===== COVER UPLOAD =====
 document.getElementById('coverDrop').addEventListener('click', () => document.getElementById('coverInput').click());
 document.getElementById('coverInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  document.getElementById('coverLabel').textContent = 'Uploading...';
-
-  // Upload via public Supabase storage (comment-images bucket reused for covers)
-  const cfgRes = await fetch('/api/config');
-  const cfg = await cfgRes.json();
-  const supabase = window.supabase ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey) : null;
-  if (!supabase) { document.getElementById('coverLabel').textContent = 'Supabase client missing'; return; }
-
-  // Use service-role-less upload requires auth, so we do it via admin endpoint instead
-  // Simpler: encode as base64 and let /api/publish upload
+  if (file.size > 3 * 1024 * 1024) {
+    alert('Image too large. Please use an image under 3MB.');
+    return;
+  }
+  document.getElementById('coverLabel').textContent = 'Reading image...';
   const reader = new FileReader();
   reader.onload = () => {
-    coverImageUrl = reader.result; // data URL
+    coverImageUrl = reader.result;
     const preview = document.getElementById('coverPreview');
     preview.src = coverImageUrl;
     preview.classList.remove('hidden');
     document.getElementById('coverLabel').textContent = '✓ Cover selected';
+    document.getElementById('clearCoverBtn').classList.remove('hidden');
   };
   reader.readAsDataURL(file);
 });
 
+function clearCover() {
+  coverImageUrl = null;
+  document.getElementById('coverPreview').classList.add('hidden');
+  document.getElementById('coverPreview').src = '';
+  document.getElementById('coverLabel').textContent = 'Tap to upload cover image';
+  document.getElementById('coverInput').value = '';
+  document.getElementById('clearCoverBtn').classList.add('hidden');
+}
+
+// ===== AUTH =====
 function unlock() {
   const key = document.getElementById('adminKeyInput').value.trim();
   if (!key) { showLockError('Enter the key'); return; }
@@ -124,9 +161,14 @@ function lock() {
   adminKey = '';
   document.getElementById('adminApp').classList.add('hidden');
   document.getElementById('lockScreen').classList.remove('hidden');
+  document.getElementById('adminKeyInput').value = '';
 }
 
-function showLockError(m) { const e = document.getElementById('lockError'); e.textContent = m; e.classList.remove('hidden'); }
+function showLockError(m) {
+  const e = document.getElementById('lockError');
+  e.textContent = m;
+  e.classList.remove('hidden');
+}
 
 function showAdmin() {
   document.getElementById('lockScreen').classList.add('hidden');
@@ -134,16 +176,21 @@ function showAdmin() {
   loadRecent();
 }
 
+// ===== PUBLISH =====
 async function publish() {
   const title = document.getElementById('tTitle').value.trim();
   const content = document.getElementById('tContent').value.trim();
+  const tagsInput = document.getElementById('tTags').value.trim();
+  const tags = tagsInput ? tagsInput.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
+  const pinned = document.getElementById('pinChk').checked;
   const sendEmail = document.getElementById('sendEmailChk').checked;
 
   if (!content) { showStatus('Content is required.', 'error'); return; }
 
   const btn = document.getElementById('publishBtn');
   const txt = document.getElementById('publishText');
-  btn.disabled = true; txt.textContent = 'Publishing...';
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spinner"></span> Publishing...';
   showStatus('Sending...', 'info');
 
   try {
@@ -155,32 +202,40 @@ async function publish() {
         title,
         content,
         cover_image: coverImageUrl,
-        sendEmail
+        sendEmail,
+        tags,
+        pinned
       })
     });
     const data = await res.json();
 
     if (!res.ok) {
       showStatus('Error: ' + (data.error || 'Unknown'), 'error');
-      btn.disabled = false; txt.textContent = 'Publish Teaching';
+      btn.disabled = false;
+      txt.textContent = 'Publish Teaching';
       return;
     }
 
     let msg = '✓ Published';
-    if (data.emailResult?.sent) msg += ' · Emails sent';
+    if (data.emailResult?.sent) msg += ' · Emails sent (' + (data.emailResult.sentCount || 'broadcast') + ')';
     else if (data.emailResult?.error) msg += ' · Email failed: ' + data.emailResult.error;
+    else if (!sendEmail) msg += ' · Email skipped';
 
     showStatus(msg, 'success');
+
+    // Reset form
     document.getElementById('tTitle').value = '';
     document.getElementById('tContent').value = '';
-    coverImageUrl = null;
-    document.getElementById('coverPreview').classList.add('hidden');
-    document.getElementById('coverLabel').textContent = 'Tap to upload cover image';
+    document.getElementById('tTags').value = '';
+    document.getElementById('pinChk').checked = false;
+    clearCover();
     loadRecent();
   } catch (e) {
-    showStatus('Network error.', 'error');
+    showStatus('Network error: ' + e.message, 'error');
   }
-  btn.disabled = false; txt.textContent = 'Publish Teaching';
+
+  btn.disabled = false;
+  txt.textContent = 'Publish Teaching';
 }
 
 function showStatus(msg, type) {
@@ -190,33 +245,48 @@ function showStatus(msg, type) {
   el.classList.remove('hidden');
 }
 
+// ===== RECENT TEACHINGS =====
 async function loadRecent() {
   const el = document.getElementById('recentTeachings');
+  el.innerHTML = '<div class="text-center py-4"><span class="spinner"></span></div>';
   try {
     const res = await fetch('/api/config');
     const cfg = await res.json();
-    const r = await fetch(`${cfg.supabaseUrl}/rest/v1/teachings?select=id,title,content,created_at&order=created_at.desc&limit=10`, {
+    const r = await fetch(`${cfg.supabaseUrl}/rest/v1/teachings?select=id,title,content,tags,pinned,created_at&order=created_at.desc&limit=10`, {
       headers: { 'apikey': cfg.supabaseAnonKey, 'Authorization': `Bearer ${cfg.supabaseAnonKey}` }
     });
     const data = await r.json();
-    if (!data || data.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600">No teachings yet.</p>'; return; }
+    if (!data || data.length === 0) {
+      el.innerHTML = '<p class="text-xs text-gray-600">No teachings yet.</p>';
+      return;
+    }
     el.innerHTML = data.map(t => `
       <div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
-        <p class="text-xs text-gray-300 font-medium">${escapeHtml(t.title || 'Untitled')}</p>
+        <div class="flex items-center justify-between gap-2">
+          <p class="text-xs text-gray-300 font-medium truncate">${escapeHtml(t.title || 'Untitled')}</p>
+          ${t.pinned ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gold-400/20 text-gold-300">📌</span>' : ''}
+        </div>
+        ${(t.tags && t.tags.length > 0) ? `<div class="flex flex-wrap gap-1 mt-1">${t.tags.map(tag => `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-void-700 text-gray-500">#${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
         <p class="text-[10px] text-gray-600 mt-1">${new Date(t.created_at).toLocaleString()}</p>
       </div>
     `).join('');
-  } catch (e) { el.innerHTML = '<p class="text-xs text-red-400">Failed to load.</p>'; }
+  } catch (e) {
+    el.innerHTML = '<p class="text-xs text-red-400">Failed to load.</p>';
+  }
 }
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-// Auto-unlock if key in session
+// Auto-unlock if key exists in session
 if (adminKey) {
   document.getElementById('adminKeyInput').value = adminKey;
   showAdmin();
 }
+
+// Enter key on lock screen
+document.getElementById('adminKeyInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') unlock();
+});
 </script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </body>
 </html>
