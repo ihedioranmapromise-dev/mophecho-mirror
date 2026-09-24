@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moph Echo Admin</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = { darkMode:'class', theme:{ extend:{ fontFamily:{ sans:['Inter','system-ui','sans-serif'] }, colors:{ void:{900:'#06060a',800:'#0a0a12',700:'#10101c',600:'#161624'}, amethyst:{400:'#a78bfa',500:'#8b5cf6',600:'#7c3aed',700:'#6d28d9'} } } } }
+</script>
+<style>
+body { background:#06060a; }
+.glass { background:rgba(16,16,28,0.75); backdrop-filter:blur(24px); }
+</style>
+</head>
+<body class="font-sans text-gray-200 min-h-screen">
+
+<div id="lockScreen" class="min-h-screen flex items-center justify-center p-4">
+  <div class="glass rounded-3xl p-8 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
+    <div class="text-center mb-6">
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 mb-3">
+        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
+      </div>
+      <h1 class="text-xl font-semibold">Admin Panel</h1>
+      <p class="text-xs text-gray-500 mt-1">Enter your admin key to continue</p>
+    </div>
+    <input type="password" id="adminKeyInput" placeholder="Admin key" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition mb-3">
+    <button onclick="unlock()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm">Unlock</button>
+    <p id="lockError" class="hidden text-xs text-red-400 text-center mt-3"></p>
+  </div>
+</div>
+
+<div id="adminApp" class="hidden max-w-2xl mx-auto p-4">
+  <header class="glass rounded-2xl p-4 border border-void-600 mb-4 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center">
+        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+      </div>
+      <div>
+        <h1 class="text-sm font-semibold">Moph Echo Admin</h1>
+        <p class="text-[10px] text-gray-500">Publish teachings</p>
+      </div>
+    </div>
+    <button onclick="lock()" class="text-xs text-gray-500 hover:text-red-400 transition">Lock</button>
+  </header>
+
+  <div class="glass rounded-2xl p-5 border border-void-600 space-y-4">
+    <div>
+      <label class="text-xs text-gray-500 uppercase tracking-wider">Title (optional)</label>
+      <input type="text" id="tTitle" placeholder="e.g., On Stillness" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+    </div>
+
+    <div>
+      <label class="text-xs text-gray-500 uppercase tracking-wider">Cover Image (optional)</label>
+      <div id="coverDrop" class="mt-1 border-2 border-dashed border-void-600 rounded-xl p-6 text-center cursor-pointer hover:border-amethyst-500/50 transition">
+        <input type="file" id="coverInput" accept="image/*" class="hidden">
+        <p id="coverLabel" class="text-xs text-gray-500">Tap to upload cover image</p>
+        <img id="coverPreview" class="hidden max-h-48 mx-auto rounded-lg mt-2">
+      </div>
+    </div>
+
+    <div>
+      <label class="text-xs text-gray-500 uppercase tracking-wider">Content</label>
+      <textarea id="tContent" rows="12" placeholder="Write your teaching here...&#10;&#10;Use ✦ for insight markers and ❓ for the closing question.&#10;&#10;Line breaks are preserved." class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition resize-y font-mono"></textarea>
+    </div>
+
+    <label class="flex items-center gap-2 cursor-pointer select-none">
+      <input type="checkbox" id="sendEmailChk" class="w-4 h-4 rounded border-void-600 bg-void-900 accent-amethyst-600" checked>
+      <span class="text-xs text-gray-400">Send email to all users after publishing</span>
+    </label>
+
+    <button onclick="publish()" id="publishBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm flex items-center justify-center gap-2">
+      <span id="publishText">Publish Teaching</span>
+    </button>
+    <p id="pubStatus" class="hidden text-xs text-center"></p>
+  </div>
+
+  <div class="glass rounded-2xl p-5 border border-void-600 mt-4">
+    <h3 class="text-sm font-semibold mb-3">Recent Teachings</h3>
+    <div id="recentTeachings" class="space-y-2 text-xs text-gray-500">Loading...</div>
+  </div>
+</div>
+
+<script>
+let adminKey = sessionStorage.getItem('moph_admin_key') || '';
+let coverImageUrl = null;
+
+document.getElementById('coverDrop').addEventListener('click', () => document.getElementById('coverInput').click());
+document.getElementById('coverInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('coverLabel').textContent = 'Uploading...';
+
+  // Upload via public Supabase storage (comment-images bucket reused for covers)
+  const cfgRes = await fetch('/api/config');
+  const cfg = await cfgRes.json();
+  const supabase = window.supabase ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey) : null;
+  if (!supabase) { document.getElementById('coverLabel').textContent = 'Supabase client missing'; return; }
+
+  // Use service-role-less upload requires auth, so we do it via admin endpoint instead
+  // Simpler: encode as base64 and let /api/publish upload
+  const reader = new FileReader();
+  reader.onload = () => {
+    coverImageUrl = reader.result; // data URL
+    const preview = document.getElementById('coverPreview');
+    preview.src = coverImageUrl;
+    preview.classList.remove('hidden');
+    document.getElementById('coverLabel').textContent = '✓ Cover selected';
+  };
+  reader.readAsDataURL(file);
+});
+
+function unlock() {
+  const key = document.getElementById('adminKeyInput').value.trim();
+  if (!key) { showLockError('Enter the key'); return; }
+  adminKey = key;
+  sessionStorage.setItem('moph_admin_key', key);
+  showAdmin();
+}
+
+function lock() {
+  sessionStorage.removeItem('moph_admin_key');
+  adminKey = '';
+  document.getElementById('adminApp').classList.add('hidden');
+  document.getElementById('lockScreen').classList.remove('hidden');
+}
+
+function showLockError(m) { const e = document.getElementById('lockError'); e.textContent = m; e.classList.remove('hidden'); }
+
+function showAdmin() {
+  document.getElementById('lockScreen').classList.add('hidden');
+  document.getElementById('adminApp').classList.remove('hidden');
+  loadRecent();
+}
+
+async function publish() {
+  const title = document.getElementById('tTitle').value.trim();
+  const content = document.getElementById('tContent').value.trim();
+  const sendEmail = document.getElementById('sendEmailChk').checked;
+
+  if (!content) { showStatus('Content is required.', 'error'); return; }
+
+  const btn = document.getElementById('publishBtn');
+  const txt = document.getElementById('publishText');
+  btn.disabled = true; txt.textContent = 'Publishing...';
+  showStatus('Sending...', 'info');
+
+  try {
+    const res = await fetch('/api/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        adminKey,
+        title,
+        content,
+        cover_image: coverImageUrl,
+        sendEmail
+      })
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showStatus('Error: ' + (data.error || 'Unknown'), 'error');
+      btn.disabled = false; txt.textContent = 'Publish Teaching';
+      return;
+    }
+
+    let msg = '✓ Published';
+    if (data.emailResult?.sent) msg += ' · Emails sent';
+    else if (data.emailResult?.error) msg += ' · Email failed: ' + data.emailResult.error;
+
+    showStatus(msg, 'success');
+    document.getElementById('tTitle').value = '';
+    document.getElementById('tContent').value = '';
+    coverImageUrl = null;
+    document.getElementById('coverPreview').classList.add('hidden');
+    document.getElementById('coverLabel').textContent = 'Tap to upload cover image';
+    loadRecent();
+  } catch (e) {
+    showStatus('Network error.', 'error');
+  }
+  btn.disabled = false; txt.textContent = 'Publish Teaching';
+}
+
+function showStatus(msg, type) {
+  const el = document.getElementById('pubStatus');
+  el.textContent = msg;
+  el.className = 'text-xs text-center ' + (type === 'success' ? 'text-green-400' : type === 'error' ? 'text-red-400' : 'text-gray-400');
+  el.classList.remove('hidden');
+}
+
+async function loadRecent() {
+  const el = document.getElementById('recentTeachings');
+  try {
+    const res = await fetch('/api/config');
+    const cfg = await res.json();
+    const r = await fetch(`${cfg.supabaseUrl}/rest/v1/teachings?select=id,title,content,created_at&order=created_at.desc&limit=10`, {
+      headers: { 'apikey': cfg.supabaseAnonKey, 'Authorization': `Bearer ${cfg.supabaseAnonKey}` }
+    });
+    const data = await r.json();
+    if (!data || data.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600">No teachings yet.</p>'; return; }
+    el.innerHTML = data.map(t => `
+      <div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
+        <p class="text-xs text-gray-300 font-medium">${escapeHtml(t.title || 'Untitled')}</p>
+        <p class="text-[10px] text-gray-600 mt-1">${new Date(t.created_at).toLocaleString()}</p>
+      </div>
+    `).join('');
+  } catch (e) { el.innerHTML = '<p class="text-xs text-red-400">Failed to load.</p>'; }
+}
+
+function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+
+// Auto-unlock if key in session
+if (adminKey) {
+  document.getElementById('adminKeyInput').value = adminKey;
+  showAdmin();
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</body>
+</html>
