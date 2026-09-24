@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { adminKey, title, content, cover_image, sendEmail } = req.body || {};
+  const { adminKey, title, content, cover_image, sendEmail, tags, pinned } = req.body || {};
 
   if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -30,7 +30,13 @@ export default async function handler(req, res) {
       'Content-Type': 'application/json',
       'Prefer': 'return=representation'
     },
-    body: JSON.stringify({ title: title || null, content, cover_image: cover_image || null })
+    body: JSON.stringify({
+      title: title || null,
+      content,
+      cover_image: cover_image || null,
+      tags: tags || [],
+      pinned: pinned || false
+    })
   });
 
   if (!insertRes.ok) {
@@ -63,7 +69,7 @@ export default async function handler(req, res) {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            audience_id: segmentId,   // API still uses audience_id internally
+            audience_id: segmentId,
             from: 'Moph Echo <onboarding@resend.dev>',
             subject: subject,
             html: html
@@ -93,7 +99,49 @@ export default async function handler(req, res) {
         emailResult.error = 'Broadcast exception: ' + e.message;
       }
     } else {
-      emailResult.error = 'No segment ID set. Add RESEND_SEGMENT_ID to Vercel.';
+      // FALLBACK: send one-by-one from Supabase users
+      try {
+        const usersRes = await fetch(`${supabaseUrl}/auth/v1/admin/users?per_page=1000`, {
+          headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
+        });
+        if (!usersRes.ok) {
+          emailResult.error = 'Could not fetch users';
+        } else {
+          const usersData = await usersRes.json();
+          const users = (usersData.users || []).filter(u => u.email);
+          emailResult.total = users.length;
+
+          const html = buildEmailHtml(title, content, cover_image);
+          const subject = title ? `New Teaching: ${title}` : 'New Teaching from Moph Echo';
+          let sent = 0, failed = 0;
+
+          for (const user of users) {
+            try {
+              const sendRes = await fetch('https://api.resend.com/emails', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${resendKey}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  from: 'Moph Echo <onboarding@resend.dev>',
+                  to: user.email,
+                  subject: subject,
+                  html: html
+                })
+              });
+              if (sendRes.ok) sent++; else failed++;
+            } catch (e) { failed++; }
+            if (users.length > 1) await new Promise(r => setTimeout(r, 1100));
+          }
+          emailResult.sent = sent > 0;
+          emailResult.method = 'direct';
+          emailResult.sentCount = sent;
+          emailResult.failedCount = failed;
+        }
+      } catch (e) {
+        emailResult.error = 'Direct email exception: ' + e.message;
+      }
     }
   }
 
