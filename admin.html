@@ -18,7 +18,6 @@ body { background:#06060a; }
 </head>
 <body class="font-sans text-gray-200 min-h-screen">
 
-<!-- LOCK SCREEN -->
 <div id="lockScreen" class="min-h-screen flex items-center justify-center p-4">
   <div class="glass rounded-3xl p-8 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
     <div class="text-center mb-6">
@@ -29,12 +28,11 @@ body { background:#06060a; }
       <p class="text-xs text-gray-500 mt-1">Enter your admin key to continue</p>
     </div>
     <input type="password" id="adminKeyInput" placeholder="Admin key" autocomplete="off" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition mb-3">
-    <button onclick="unlock()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:opacity-90 transition">Unlock</button>
+    <button onclick="unlock()" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm">Unlock</button>
     <p id="lockError" class="hidden text-xs text-red-400 text-center mt-3"></p>
   </div>
 </div>
 
-<!-- ADMIN APP -->
 <div id="adminApp" class="hidden max-w-2xl mx-auto p-4">
   <header class="glass rounded-2xl p-4 border border-void-600 mb-4 flex items-center justify-between">
     <div class="flex items-center gap-3">
@@ -62,16 +60,26 @@ body { background:#06060a; }
       <label class="text-xs text-gray-500 uppercase tracking-wider">Cover Image (optional)</label>
       <div id="coverDrop" class="mt-1 border-2 border-dashed border-void-600 rounded-xl p-6 text-center cursor-pointer hover:border-amethyst-500/50 transition">
         <input type="file" id="coverInput" accept="image/*" class="hidden">
-        <p id="coverLabel" class="text-xs text-gray-500">Tap to upload cover image</p>
+        <p id="coverLabel" class="text-xs text-gray-500">Tap to upload cover image (max 3MB)</p>
         <img id="coverPreview" class="hidden max-h-48 mx-auto rounded-lg mt-2">
       </div>
       <button onclick="clearCover()" id="clearCoverBtn" class="hidden mt-2 text-[10px] text-red-400 hover:text-red-300">Remove cover</button>
     </div>
 
     <div>
+      <label class="text-xs text-gray-500 uppercase tracking-wider">Video (optional)</label>
+      <div id="videoDrop" class="mt-1 border-2 border-dashed border-void-600 rounded-xl p-6 text-center cursor-pointer hover:border-amethyst-500/50 transition">
+        <input type="file" id="videoInput" accept="video/*" class="hidden">
+        <p id="videoLabel" class="text-xs text-gray-500">Tap to upload video (max 3MB) or paste a link below</p>
+        <video id="videoPreview" class="hidden max-h-48 mx-auto rounded-lg mt-2" controls></video>
+      </div>
+      <input type="text" id="videoUrlInput" placeholder="Or paste YouTube / Vimeo / MP4 link" class="w-full mt-2 bg-void-900 border border-void-600 rounded-xl px-4 py-2 text-xs focus:border-amethyst-500 focus:outline-none transition">
+      <button onclick="clearVideo()" id="clearVideoBtn" class="hidden mt-2 text-[10px] text-red-400 hover:text-red-300">Remove video</button>
+    </div>
+
+    <div>
       <label class="text-xs text-gray-500 uppercase tracking-wider">Tags (comma separated)</label>
       <input type="text" id="tTags" placeholder="e.g., Gnosis, Discipline, Wounds" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
-      <p class="text-[10px] text-gray-600 mt-1">Type tags you want. They become filters in the app.</p>
     </div>
 
     <div>
@@ -89,7 +97,7 @@ body { background:#06060a; }
       <span class="text-xs text-gray-400">Send email to all users after publishing</span>
     </label>
 
-    <button onclick="publish()" id="publishBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm flex items-center justify-center gap-2 hover:opacity-90 transition">
+    <button onclick="publish()" id="publishBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm flex items-center justify-center gap-2">
       <span id="publishText">Publish Teaching</span>
     </button>
     <p id="pubStatus" class="hidden text-xs text-center"></p>
@@ -102,36 +110,25 @@ body { background:#06060a; }
     </div>
     <div id="recentTeachings" class="space-y-2 text-xs text-gray-500">Loading...</div>
   </div>
-
-  <div class="glass rounded-2xl p-5 border border-void-600 mt-4 mb-8">
-    <h3 class="text-sm font-semibold mb-3">Email Status</h3>
-    <div id="emailStatus" class="text-xs text-gray-500">
-      <p>Emails need a verified domain. Until then, publishing works but emails fail.</p>
-      <p class="mt-2 text-gray-600">Buy a domain (~$10/year), verify it in Resend, then emails will send automatically.</p>
-    </div>
-  </div>
 </div>
 
 <script>
 let adminKey = sessionStorage.getItem('moph_admin_key') || '';
 let coverImageUrl = null;
+let videoFileBase64 = null;
+let videoUrlExternal = null;
 
 // ===== COVER UPLOAD =====
 document.getElementById('coverDrop').addEventListener('click', () => document.getElementById('coverInput').click());
 document.getElementById('coverInput').addEventListener('change', async (e) => {
   const file = e.target.files[0];
   if (!file) return;
-  if (file.size > 3 * 1024 * 1024) {
-    alert('Image too large. Please use an image under 3MB.');
-    return;
-  }
-  document.getElementById('coverLabel').textContent = 'Reading image...';
+  if (file.size > 3 * 1024 * 1024) { alert('Image too large. Max 3MB.'); return; }
   const reader = new FileReader();
   reader.onload = () => {
     coverImageUrl = reader.result;
-    const preview = document.getElementById('coverPreview');
-    preview.src = coverImageUrl;
-    preview.classList.remove('hidden');
+    document.getElementById('coverPreview').src = coverImageUrl;
+    document.getElementById('coverPreview').classList.remove('hidden');
     document.getElementById('coverLabel').textContent = '✓ Cover selected';
     document.getElementById('clearCoverBtn').classList.remove('hidden');
   };
@@ -142,9 +139,58 @@ function clearCover() {
   coverImageUrl = null;
   document.getElementById('coverPreview').classList.add('hidden');
   document.getElementById('coverPreview').src = '';
-  document.getElementById('coverLabel').textContent = 'Tap to upload cover image';
+  document.getElementById('coverLabel').textContent = 'Tap to upload cover image (max 3MB)';
   document.getElementById('coverInput').value = '';
   document.getElementById('clearCoverBtn').classList.add('hidden');
+}
+
+// ===== VIDEO UPLOAD =====
+document.getElementById('videoDrop').addEventListener('click', (e) => {
+  if (e.target.id !== 'videoPreview') document.getElementById('videoInput').click();
+});
+
+document.getElementById('videoInput').addEventListener('change', async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > 3 * 1024 * 1024) {
+    alert('Video too large. Max 3MB. Please compress or use a link instead.');
+    document.getElementById('videoInput').value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    videoFileBase64 = reader.result;
+    const preview = document.getElementById('videoPreview');
+    preview.src = videoFileBase64;
+    preview.classList.remove('hidden');
+    document.getElementById('videoLabel').textContent = '✓ Video selected';
+    document.getElementById('clearVideoBtn').classList.remove('hidden');
+    document.getElementById('videoUrlInput').value = '';
+    videoUrlExternal = null;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById('videoUrlInput').addEventListener('input', (e) => {
+  const url = e.target.value.trim();
+  if (url) {
+    videoUrlExternal = url;
+    videoFileBase64 = null;
+    document.getElementById('videoPreview').classList.add('hidden');
+    document.getElementById('videoLabel').textContent = '✓ Video link pasted';
+    document.getElementById('clearVideoBtn').classList.remove('hidden');
+  }
+});
+
+function clearVideo() {
+  videoFileBase64 = null;
+  videoUrlExternal = null;
+  document.getElementById('videoPreview').classList.add('hidden');
+  document.getElementById('videoPreview').src = '';
+  document.getElementById('videoInput').value = '';
+  document.getElementById('videoUrlInput').value = '';
+  document.getElementById('videoLabel').textContent = 'Tap to upload video (max 3MB) or paste a link below';
+  document.getElementById('clearVideoBtn').classList.add('hidden');
 }
 
 // ===== AUTH =====
@@ -155,7 +201,6 @@ function unlock() {
   sessionStorage.setItem('moph_admin_key', key);
   showAdmin();
 }
-
 function lock() {
   sessionStorage.removeItem('moph_admin_key');
   adminKey = '';
@@ -163,13 +208,7 @@ function lock() {
   document.getElementById('lockScreen').classList.remove('hidden');
   document.getElementById('adminKeyInput').value = '';
 }
-
-function showLockError(m) {
-  const e = document.getElementById('lockError');
-  e.textContent = m;
-  e.classList.remove('hidden');
-}
-
+function showLockError(m) { const e = document.getElementById('lockError'); e.textContent = m; e.classList.remove('hidden'); }
 function showAdmin() {
   document.getElementById('lockScreen').classList.add('hidden');
   document.getElementById('adminApp').classList.remove('hidden');
@@ -202,6 +241,8 @@ async function publish() {
         title,
         content,
         cover_image: coverImageUrl,
+        video_file: videoFileBase64,
+        video_url: videoUrlExternal,
         sendEmail,
         tags,
         pinned
@@ -217,18 +258,17 @@ async function publish() {
     }
 
     let msg = '✓ Published';
-    if (data.emailResult?.sent) msg += ' · Emails sent (' + (data.emailResult.sentCount || 'broadcast') + ')';
+    if (data.emailResult?.sent) msg += ' · Emails sent';
     else if (data.emailResult?.error) msg += ' · Email failed: ' + data.emailResult.error;
     else if (!sendEmail) msg += ' · Email skipped';
 
     showStatus(msg, 'success');
-
-    // Reset form
     document.getElementById('tTitle').value = '';
     document.getElementById('tContent').value = '';
     document.getElementById('tTags').value = '';
     document.getElementById('pinChk').checked = false;
     clearCover();
+    clearVideo();
     loadRecent();
   } catch (e) {
     showStatus('Network error: ' + e.message, 'error');
@@ -245,21 +285,17 @@ function showStatus(msg, type) {
   el.classList.remove('hidden');
 }
 
-// ===== RECENT TEACHINGS =====
 async function loadRecent() {
   const el = document.getElementById('recentTeachings');
   el.innerHTML = '<div class="text-center py-4"><span class="spinner"></span></div>';
   try {
     const res = await fetch('/api/config');
     const cfg = await res.json();
-    const r = await fetch(`${cfg.supabaseUrl}/rest/v1/teachings?select=id,title,content,tags,pinned,created_at&order=created_at.desc&limit=10`, {
+    const r = await fetch(`${cfg.supabaseUrl}/rest/v1/teachings?select=id,title,tags,pinned,created_at&order=created_at.desc&limit=10`, {
       headers: { 'apikey': cfg.supabaseAnonKey, 'Authorization': `Bearer ${cfg.supabaseAnonKey}` }
     });
     const data = await r.json();
-    if (!data || data.length === 0) {
-      el.innerHTML = '<p class="text-xs text-gray-600">No teachings yet.</p>';
-      return;
-    }
+    if (!data || data.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600">No teachings yet.</p>'; return; }
     el.innerHTML = data.map(t => `
       <div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
         <div class="flex items-center justify-between gap-2">
@@ -270,23 +306,13 @@ async function loadRecent() {
         <p class="text-[10px] text-gray-600 mt-1">${new Date(t.created_at).toLocaleString()}</p>
       </div>
     `).join('');
-  } catch (e) {
-    el.innerHTML = '<p class="text-xs text-red-400">Failed to load.</p>';
-  }
+  } catch (e) { el.innerHTML = '<p class="text-xs text-red-400">Failed to load.</p>'; }
 }
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-// Auto-unlock if key exists in session
-if (adminKey) {
-  document.getElementById('adminKeyInput').value = adminKey;
-  showAdmin();
-}
-
-// Enter key on lock screen
-document.getElementById('adminKeyInput').addEventListener('keydown', (e) => {
-  if (e.key === 'Enter') unlock();
-});
+if (adminKey) { document.getElementById('adminKeyInput').value = adminKey; showAdmin(); }
+document.getElementById('adminKeyInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
 </script>
 </body>
 </html>
