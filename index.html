@@ -15,41 +15,47 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script>
-tailwind.config = { darkMode:'class', theme:{ extend:{ fontFamily:{ sans:['Inter','system-ui','sans-serif'] }, colors:{ void:{900:'#06060a',800:'#0a0a12',700:'#10101c',600:'#161624'}, amethyst:{400:'#a78bfa',500:'#8b5cf6',600:'#7c3aed',700:'#6d28d9'}, gold:{400:'#facc15',500:'#eab308'} }, borderRadius:{'4xl':'2rem'} } } }
+tailwind.config = { darkMode:'class', theme:{ extend:{ fontFamily:{ sans:['Inter','system-ui','sans-serif'] }, colors:{ void:{900:'#06060a',800:'#0a0a12',700:'#10101c',600:'#161624'}, amethyst:{400:'var(--accent-400)',500:'var(--accent-500)',600:'var(--accent-600)',700:'var(--accent-700)'}, gold:{400:'#facc15',500:'#eab308'} } } } }
 </script>
 <style>
+:root { --accent-400: #a78bfa; --accent-500: #8b5cf6; --accent-600: #7c3aed; --accent-700: #6d28d9; --accent-rgb: 124,58,237; }
+body[data-theme="emerald"] { --accent-400: #34d399; --accent-500: #10b981; --accent-600: #059669; --accent-700: #047857; --accent-rgb: 5,150,105; }
+body[data-theme="crimson"] { --accent-400: #fb7185; --accent-500: #f43f5e; --accent-600: #e11d48; --accent-700: #be123c; --accent-rgb: 225,29,72; }
+body[data-theme="gold"] { --accent-400: #fcd34d; --accent-500: #f59e0b; --accent-600: #d97706; --accent-700: #b45309; --accent-rgb: 217,119,6; }
 * { -webkit-tap-highlight-color: transparent; }
 html, body { height: 100%; overscroll-behavior: none; }
-body { background:#06060a; min-height: 100dvh; }
+body { background:#06060a; min-height: 100dvh; transition: background-color .3s; }
 .glass { background:rgba(16,16,28,0.78); backdrop-filter:blur(28px) saturate(140%); -webkit-backdrop-filter:blur(28px) saturate(140%); }
-.glass-soft { background:rgba(16,16,28,0.55); backdrop-filter:blur(20px); -webkit-backdrop-filter:blur(20px); }
 ::-webkit-scrollbar { width:3px; }
 ::-webkit-scrollbar-thumb { background:#3a2a5a; border-radius:10px; }
 .fade-in { animation:fadeIn .3s cubic-bezier(0.2,0.8,0.3,1); }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
+.slide-up { animation:slideUp .3s cubic-bezier(0.2,0.8,0.3,1); }
+@keyframes slideUp { from{opacity:0;transform:translateY(24px);} to{opacity:1;transform:translateY(0);} }
 .pulse-glow { animation:pulseGlow 2.4s ease-in-out infinite; }
-@keyframes pulseGlow { 0%,100%{box-shadow:0 0 22px -6px rgba(139,92,246,.35);} 50%{box-shadow:0 0 34px -6px rgba(139,92,246,.65);} }
-.spinner { border:2px solid rgba(139,92,246,.2); border-top-color:#a78bfa; border-radius:50%; width:16px; height:16px; animation:spin .8s linear infinite; }
+@keyframes pulseGlow { 0%,100%{box-shadow:0 0 22px -6px rgba(var(--accent-rgb),.35);} 50%{box-shadow:0 0 34px -6px rgba(var(--accent-rgb),.65);} }
+.spinner { border:2px solid rgba(var(--accent-rgb),.2); border-top-color:var(--accent-400); border-radius:50%; width:16px; height:16px; animation:spin .8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg);} }
 .otp-input { letter-spacing:1rem; font-size:1.5rem; text-align:center; padding-left:1rem; }
 .safe-bottom { padding-bottom: calc(0.85rem + env(safe-area-inset-bottom)); }
 .safe-top { padding-top: env(safe-area-inset-top); }
 input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0 1000px #0a0a12 inset !important; -webkit-text-fill-color: #d0d0e8 !important; transition: background-color 5000s ease-in-out 0s; }
-.reaction-pill { background: rgba(40,40,60,0.55); border: 1px solid rgba(120,90,160,0.18); padding: 5px 11px; border-radius: 22px; font-size: 13px; cursor: pointer; transition: all 0.18s cubic-bezier(0.2,0.8,0.3,1); display: inline-flex; align-items: center; gap: 5px; }
+.reaction-pill { background: rgba(40,40,60,0.55); border: 1px solid rgba(120,90,160,0.18); padding: 5px 11px; border-radius: 22px; font-size: 13px; cursor: pointer; transition: all 0.18s; display: inline-flex; align-items: center; gap: 5px; }
 .reaction-pill:hover { background: rgba(80,60,120,0.42); transform: translateY(-1px); }
-.reaction-pill.active { background: rgba(124,58,237,0.38); border-color: rgba(167,139,250,0.55); box-shadow: 0 0 0 1px rgba(167,139,250,0.15); }
+.reaction-pill.active { background: rgba(var(--accent-rgb),0.38); border-color: rgba(var(--accent-rgb),0.55); box-shadow: 0 0 0 1px rgba(var(--accent-rgb),0.15); }
 .prose-content { line-height: 1.72; white-space: pre-wrap; word-wrap: break-word; }
-.avatar-sm { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #a78bfa; flex-shrink: 0; }
-.avatar-xs { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #a78bfa; flex-shrink: 0; }
+.avatar-sm { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--accent-400); flex-shrink: 0; }
+.avatar-xs { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--accent-400); flex-shrink: 0; }
+.avatar-lg { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 600; color: var(--accent-400); flex-shrink: 0; }
 .reading-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 100; pointer-events: none; }
-.reading-progress-bar { height: 100%; background: linear-gradient(90deg, #7c3aed, #a78bfa); width: 0%; transition: width 0.1s; }
+.reading-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent-600), var(--accent-400)); width: 0%; transition: width 0.1s; }
 .notification-badge { position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px; padding: 0 4px; background: #ef4444; color: white; font-size: 9px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
 .skeleton { background: linear-gradient(90deg, rgba(40,40,60,0.4) 25%, rgba(60,60,80,0.4) 50%, rgba(40,40,60,0.4) 75%); background-size: 200% 100%; animation: shimmer 1.6s infinite; border-radius: 12px; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 .pending-opacity { opacity: 0.6; }
 .mention-dropdown { position: absolute; background: #161624; border: 1px solid #3a3a5a; border-radius: 14px; max-height: 180px; overflow-y: auto; z-index: 60; box-shadow: 0 12px 32px rgba(0,0,0,0.6); }
 .mention-item { padding: 9px 13px; cursor: pointer; font-size: 13px; color: #d0d0e8; }
-.mention-item:hover, .mention-item.active { background: #2a1a4a; }
+.mention-item:hover, .mention-item.active { background: rgba(var(--accent-rgb),0.15); }
 .video-wrapper { position: relative; background: #000; border-radius: 16px; overflow: hidden; max-height: 70vh; display: flex; align-items: center; justify-content: center; }
 .video-wrapper video { max-width: 100%; max-height: 70vh; width: 100%; display: block; }
 .undo-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(26,26,46,0.95); backdrop-filter: blur(12px); border: 1px solid #3a3a5a; border-radius: 14px; padding: 12px 18px; z-index: 90; display: flex; align-items: center; gap: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); animation: fadeIn 0.25s ease; }
@@ -58,9 +64,25 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .btn { transition: all 0.18s cubic-bezier(0.2,0.8,0.3,1); }
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(0) scale(0.98); }
+.tab-btn { transition: all 0.2s; }
+.private-badge { display: inline-flex; align-items: center; gap: 4px; color: #6a6a8a; font-style: italic; font-size: 12px; }
+.toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; }
+.toggle-switch input { opacity: 0; width: 0; height: 0; }
+.toggle-slider { position: absolute; cursor: pointer; inset: 0; background-color: #2a2a3a; transition: .3s; border-radius: 22px; }
+.toggle-slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 3px; bottom: 3px; background-color: #6a6a8a; transition: .3s; border-radius: 50%; }
+.toggle-switch input:checked + .toggle-slider { background-color: var(--accent-600); }
+.toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); background-color: white; }
+.theme-swatch { width: 36px; height: 36px; border-radius: 50%; border: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+.theme-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.2); }
+.social-icon { width: 40px; height: 40px; border-radius: 12px; background: #1a1a2e; border: 1px solid #2a2a3a; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+.social-icon:hover { background: rgba(var(--accent-rgb),0.15); border-color: rgba(var(--accent-rgb),0.4); transform: translateY(-2px); }
+.profile-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 500; color: #6a6a8a; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+.profile-tab.active { color: var(--accent-400); border-bottom-color: var(--accent-500); }
+.post-card { background: rgba(16,16,28,0.55); border: 1px solid #2a2a3a; border-radius: 1.25rem; padding: 16px; transition: all 0.2s; }
+.post-card:hover { border-color: rgba(var(--accent-rgb),0.3); }
 </style>
 </head>
-<body class="font-sans text-gray-200">
+<body class="font-sans text-gray-200" data-theme="amethyst">
 
 <div class="reading-progress"><div class="reading-progress-bar" id="readingBar"></div></div>
 
@@ -126,7 +148,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       </label>
       <div id="authError" class="hidden text-xs text-red-400 text-center bg-red-900/20 border border-red-500/20 rounded-xl py-2.5 px-3"></div>
       <div id="authSuccess" class="hidden text-xs text-green-400 text-center bg-green-900/20 border border-green-500/20 rounded-xl py-2.5 px-3"></div>
-      <button onclick="signIn()" id="signInBtn" class="btn w-full py-3.5 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:from-amethyst-500 hover:to-amethyst-600 shadow-lg shadow-amethyst-600/20">
+      <button onclick="signIn()" id="signInBtn" class="btn w-full py-3.5 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:from-amethyst-500 hover:to-amethyst-600 shadow-lg">
         <span id="signInText">Enter the Mirror</span>
       </button>
       <button onclick="toggleSignupMode()" id="toggleBtn" class="w-full py-2 text-xs text-gray-500 hover:text-amethyst-400 transition">
@@ -230,46 +252,164 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
     <div id="teachingsFeed" class="space-y-4"></div>
   </main>
 
-  <main id="panelProfile" class="hidden flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4">
-    <div class="glass card p-6 border border-void-600">
-      <div class="flex items-center gap-4 mb-5">
-        <div id="avatarUpload" class="w-16 h-16 rounded-3xl bg-void-700 border border-void-600 flex items-center justify-center cursor-pointer hover:border-amethyst-500/50 transition overflow-hidden flex-shrink-0 relative">
-          <svg id="avatarPlaceholder" class="w-7 h-7 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+  <main id="panelProfile" class="hidden flex-1 overflow-y-auto px-3 sm:px-4 pb-4">
+    <!-- Profile Header (avatar + username + settings gear) -->
+    <div class="glass card p-5 border border-void-600 mb-3">
+      <div class="flex items-start gap-4">
+        <div id="avatarUpload" class="w-20 h-20 rounded-full bg-void-700 border-2 border-void-600 flex items-center justify-center cursor-pointer hover:border-amethyst-500/50 transition overflow-hidden flex-shrink-0 relative">
+          <svg id="avatarPlaceholder" class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
           <input type="file" id="avatarInput" accept="image/*" class="hidden">
           <div id="avatarLoading" class="hidden absolute inset-0 bg-void-900/80 flex items-center justify-center">
             <div class="spinner"></div>
           </div>
         </div>
-        <div class="min-w-0 flex-1">
-          <div class="flex items-center gap-2">
-            <h2 class="text-base font-semibold" id="displayUsername">—</h2>
-            <button onclick="openUsernameEditor()" class="text-[10px] text-amethyst-400 hover:text-amethyst-300 transition">Edit</button>
-          </div>
-          <p id="userEmail" class="text-xs text-gray-500 truncate">—</p>
-          <p id="avatarHint" class="text-[10px] text-gray-600 mt-1">Tap photo to change</p>
+        <div class="flex-1 min-w-0">
+          <h2 class="text-lg font-semibold truncate" id="displayUsername">—</h2>
+          <p id="userEmail" class="text-xs text-gray-500 truncate mt-0.5">—</p>
+          <p id="profileBio" class="text-sm text-gray-400 mt-2 line-clamp-3">Tap to add a bio...</p>
+          <p id="profileJoined" class="text-[10px] text-gray-600 mt-2"></p>
+        </div>
+        <button onclick="openSettings()" class="btn p-2.5 text-gray-500 hover:text-amethyst-400 rounded-xl transition flex-shrink-0" title="Settings">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        </button>
+      </div>
+      <!-- Social icons row -->
+      <div id="profileSocials" class="flex flex-wrap gap-2 mt-4"></div>
+    </div>
+
+    <!-- Profile Tabs -->
+    <div class="flex border-b border-void-600 mb-3">
+      <div class="profile-tab active" id="pTabPosts" onclick="switchProfileTab('posts')">Posts</div>
+      <div class="profile-tab" id="pTabAbout" onclick="switchProfileTab('about')">About</div>
+    </div>
+
+    <!-- Posts tab -->
+    <div id="profilePosts" class="space-y-3"></div>
+
+    <!-- About tab -->
+    <div id="profileAbout" class="hidden space-y-3">
+      <div class="glass card p-5 border border-void-600">
+        <h3 class="text-sm font-semibold mb-3">Spiritual Stats</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Element</p><p id="pElement" class="text-sm font-medium text-gray-400">—</p></div>
+          <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stage</p><p id="pStage" class="text-sm font-medium text-gray-400">—</p></div>
+          <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Wound</p><p id="pWound" class="text-sm font-medium text-gray-400">—</p></div>
+          <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p><p id="pGift" class="text-sm font-medium text-gray-400">—</p></div>
         </div>
       </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Element</p><p id="pElement" class="text-sm font-medium text-gray-400">—</p></div>
-        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stage</p><p id="pStage" class="text-sm font-medium text-gray-400">—</p></div>
-        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Wound</p><p id="pWound" class="text-sm font-medium text-gray-400">—</p></div>
-        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p><p id="pGift" class="text-sm font-medium text-gray-400">—</p></div>
+      <div class="glass card p-5 border border-void-600">
+        <div class="flex items-center gap-2 mb-3.5"><svg class="w-4 h-4 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><h3 class="text-sm font-semibold">Golden Moments</h3></div>
+        <div id="goldenList" class="space-y-2.5"><p class="text-xs text-gray-600">No golden moments yet.</p></div>
       </div>
-    </div>
-
-    <div class="glass card p-6 border border-void-600">
-      <div class="flex items-center gap-2 mb-3.5"><svg class="w-4 h-4 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><h3 class="text-sm font-semibold">Golden Moments</h3></div>
-      <div id="goldenList" class="space-y-2.5"><p class="text-xs text-gray-600">No golden moments yet.</p></div>
-    </div>
-
-    <div class="glass card p-6 border border-void-600">
-      <div class="flex items-center justify-between mb-3.5">
-        <h3 class="text-sm font-semibold">My Comments</h3>
-        <button onclick="loadMyComments()" class="text-[10px] text-amethyst-400 hover:text-amethyst-300 transition">Refresh</button>
-      </div>
-      <div id="myCommentsList" class="space-y-2.5"><p class="text-xs text-gray-600">Loading...</p></div>
     </div>
   </main>
+</div>
+
+<!-- SETTINGS MODAL -->
+<div id="settingsModal" class="hidden fixed inset-0 z-[70] bg-void-900 overflow-y-auto">
+  <div class="max-w-2xl mx-auto p-4 safe-top">
+    <div class="flex items-center justify-between mb-4">
+      <button onclick="closeSettings()" class="btn p-2 text-gray-400 hover:text-white rounded-xl transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <h2 class="text-base font-semibold">Settings</h2>
+      <button onclick="saveSettings()" id="saveSettingsBtn" class="btn px-4 py-2 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-semibold">Save</button>
+    </div>
+
+    <div class="space-y-4 pb-8">
+      <!-- Username -->
+      <div class="glass card p-5 border border-void-600">
+        <h3 class="text-sm font-semibold mb-3">Identity</h3>
+        <label class="text-xs text-gray-500 uppercase tracking-wider">Username</label>
+        <input type="text" id="setUsername" maxlength="30" class="w-full mt-1.5 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <div id="setUsernameErr" class="hidden text-xs text-red-400 mt-2"></div>
+        <label class="text-xs text-gray-500 uppercase tracking-wider mt-4 block">Bio</label>
+        <textarea id="setBio" rows="3" maxlength="200" placeholder="A short line about you..." class="w-full mt-1.5 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition resize-none"></textarea>
+        <p class="text-[10px] text-gray-600 mt-1 text-right"><span id="bioCount">0</span>/200</p>
+      </div>
+
+      <!-- Website + Socials -->
+      <div class="glass card p-5 border border-void-600">
+        <h3 class="text-sm font-semibold mb-3">Links</h3>
+        <label class="text-xs text-gray-500 uppercase tracking-wider">Website</label>
+        <input type="url" id="setWebsite" placeholder="https://yourwebsite.com" class="w-full mt-1.5 mb-3 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <label class="text-xs text-gray-500 uppercase tracking-wider">X (Twitter)</label>
+        <input type="url" id="setSocialX" placeholder="https://x.com/yourhandle" class="w-full mt-1.5 mb-3 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <label class="text-xs text-gray-500 uppercase tracking-wider">Instagram</label>
+        <input type="url" id="setSocialInstagram" placeholder="https://instagram.com/yourhandle" class="w-full mt-1.5 mb-3 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <label class="text-xs text-gray-500 uppercase tracking-wider">YouTube</label>
+        <input type="url" id="setSocialYoutube" placeholder="https://youtube.com/@yourchannel" class="w-full mt-1.5 mb-3 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <label class="text-xs text-gray-500 uppercase tracking-wider">TikTok</label>
+        <input type="url" id="setSocialTiktok" placeholder="https://tiktok.com/@yourhandle" class="w-full mt-1.5 mb-3 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <label class="text-xs text-gray-500 uppercase tracking-wider">WhatsApp</label>
+        <input type="url" id="setSocialWhatsapp" placeholder="https://wa.me/234..." class="w-full mt-1.5 mb-3 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <label class="text-xs text-gray-500 uppercase tracking-wider">LinkedIn</label>
+        <input type="url" id="setSocialLinkedin" placeholder="https://linkedin.com/in/yourname" class="w-full mt-1.5 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <p class="text-[10px] text-gray-600 mt-2">Paste the full link. Leave blank to hide.</p>
+      </div>
+
+      <!-- Privacy -->
+      <div class="glass card p-5 border border-void-600">
+        <h3 class="text-sm font-semibold mb-1">Privacy</h3>
+        <p class="text-[10px] text-gray-500 mb-4">When off, others see "Private" on your profile.</p>
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-300">Show Element publicly</span>
+            <label class="toggle-switch"><input type="checkbox" id="privElement"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-300">Show Stage publicly</span>
+            <label class="toggle-switch"><input type="checkbox" id="privStage"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-300">Show Core Wound publicly</span>
+            <label class="toggle-switch"><input type="checkbox" id="privWound"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="flex items-center justify-between">
+            <span class="text-sm text-gray-300">Show Core Gift publicly</span>
+            <label class="toggle-switch"><input type="checkbox" id="privGift"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Theme -->
+      <div class="glass card p-5 border border-void-600">
+        <h3 class="text-sm font-semibold mb-3">Theme</h3>
+        <div class="flex gap-3 flex-wrap">
+          <div class="flex flex-col items-center gap-1.5">
+            <div class="theme-swatch active" data-theme="amethyst" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)" onclick="selectTheme('amethyst')"></div>
+            <span class="text-[10px] text-gray-500">Amethyst</span>
+          </div>
+          <div class="flex flex-col items-center gap-1.5">
+            <div class="theme-swatch" data-theme="emerald" style="background:linear-gradient(135deg,#34d399,#059669)" onclick="selectTheme('emerald')"></div>
+            <span class="text-[10px] text-gray-500">Emerald</span>
+          </div>
+          <div class="flex flex-col items-center gap-1.5">
+            <div class="theme-swatch" data-theme="crimson" style="background:linear-gradient(135deg,#fb7185,#e11d48)" onclick="selectTheme('crimson')"></div>
+            <span class="text-[10px] text-gray-500">Crimson</span>
+          </div>
+          <div class="flex flex-col items-center gap-1.5">
+            <div class="theme-swatch" data-theme="gold" style="background:linear-gradient(135deg,#fcd34d,#d97706)" onclick="selectTheme('gold')"></div>
+            <span class="text-[10px] text-gray-500">Gold</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PUBLIC PROFILE MODAL -->
+<div id="publicProfileModal" class="hidden fixed inset-0 z-[72] bg-void-900 overflow-y-auto">
+  <div class="max-w-2xl mx-auto p-4 safe-top">
+    <div class="flex items-center justify-between mb-4">
+      <button onclick="closePublicProfile()" class="btn p-2 text-gray-400 hover:text-white rounded-xl transition">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </button>
+      <h2 class="text-base font-semibold">Profile</h2>
+      <div class="w-9"></div>
+    </div>
+    <div id="publicProfileContent" class="pb-8"></div>
+  </div>
 </div>
 
 <div id="usernameModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
@@ -369,16 +509,27 @@ let pendingEmail = '';
 let state = {
   user: null,
   messages: [],
-  profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null },
+  profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null, bio:null, website:null, social_x:null, social_instagram:null, social_youtube:null, social_tiktok:null, social_whatsapp:null, social_linkedin:null, privacy_element:true, privacy_stage:true, privacy_wound:true, privacy_gift:true, theme:'amethyst', joined_at:null },
   goldenStars: [],
   teachings: [],
   profileCache: {},
   notifications: [],
   usedResponses: [],
   activeTag: null,
-  myComments: []
+  myComments: [],
+  selectedTheme: 'amethyst',
+  viewingUserId: null
 };
 const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
+
+const SOCIAL_ICONS = {
+  social_x: { name: 'X', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' },
+  social_instagram: { name: 'Instagram', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>' },
+  social_youtube: { name: 'YouTube', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>' },
+  social_tiktok: { name: 'TikTok', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>' },
+  social_whatsapp: { name: 'WhatsApp', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>' },
+  social_linkedin: { name: 'LinkedIn', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>' }
+};
 
 // ===== ONBOARDING =====
 let obStep = 0;
@@ -399,6 +550,18 @@ function nextOnboarding() {
 function skipOnboarding() { finishOnboarding(); }
 function finishOnboarding() { localStorage.setItem('moph_onboarded', 'true'); document.getElementById('onboarding').classList.add('hidden'); }
 function maybeShowOnboarding() { if (localStorage.getItem('moph_onboarded') !== 'true') document.getElementById('onboarding').classList.remove('hidden'); }
+
+// ===== THEME =====
+function applyTheme(theme) {
+  document.body.setAttribute('data-theme', theme || 'amethyst');
+  state.selectedTheme = theme || 'amethyst';
+}
+function selectTheme(theme) {
+  applyTheme(theme);
+  document.querySelectorAll('.theme-swatch').forEach(s => {
+    s.classList.toggle('active', s.dataset.theme === theme);
+  });
+}
 
 // ===== TRAIT REWARDS =====
 const TRAIT_REWARDS = {
@@ -546,7 +709,6 @@ function formatResponse(text) {
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-// ===== TIME =====
 function relativeTime(dateStr) {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
@@ -589,7 +751,6 @@ function toggleSignupMode() {
 }
 
 async function initConfig() {
-  // FIX: Ensure remember flag is set so sessionStorage is not used on first visit
   if (localStorage.getItem('moph_remember') === null) localStorage.setItem('moph_remember', 'true');
   try {
     const res = await fetch('/api/config');
@@ -663,7 +824,8 @@ function backToAuth() { document.getElementById('otpScreen').classList.add('hidd
 
 async function signOut() {
   await sb.auth.signOut();
-  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null }, goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null, myComments: [] };
+  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null, bio:null, website:null, social_x:null, social_instagram:null, social_youtube:null, social_tiktok:null, social_whatsapp:null, social_linkedin:null, privacy_element:true, privacy_stage:true, privacy_wound:true, privacy_gift:true, theme:'amethyst', joined_at:null }, goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null, myComments: [], selectedTheme: 'amethyst', viewingUserId: null };
+  applyTheme('amethyst');
   document.getElementById('mainApp').classList.add('hidden');
   document.getElementById('authScreen').classList.remove('hidden');
   document.getElementById('authPassword').value = '';
@@ -679,6 +841,7 @@ async function enterApp(user) {
   showTeachingsSkeleton();
 
   await loadProfile();
+  applyTheme(state.profile.theme || 'amethyst');
   renderProfile();
 
   await loadMessages();
@@ -904,7 +1067,6 @@ function renderTeachingPost(t) {
 function autoGrow(el) {
   el.style.height = 'auto';
   el.style.height = Math.min(el.scrollHeight, 200) + 'px';
-
   let btn, preview;
   if (el.id.startsWith('comment-text-')) {
     const tid = el.id.replace('comment-text-', '');
@@ -915,7 +1077,6 @@ function autoGrow(el) {
     btn = document.getElementById('reply-btn-' + cid);
     preview = document.getElementById('reply-preview-' + cid);
   }
-
   if (btn) {
     const hasImage = preview && !preview.classList.contains('hidden') && preview.querySelector('img');
     btn.disabled = !el.value.trim() && !hasImage;
@@ -981,17 +1142,17 @@ function renderComment(c, teachingId, depth, repliesHtml) {
   const info = state.profileCache[c.user_id] || { username: 'architect', avatar_url: null };
   const isOwner = c.user_id === state.user.id;
   const maxVisualDepth = Math.min(depth, 6);
-  const indentStyle = maxVisualDepth > 0 ? `margin-left:${maxVisualDepth * 12}px;padding-left:11px;border-left:1px solid rgba(120,90,160,0.22);` : '';
+  const indentStyle = maxVisualDepth > 0 ? `margin-left:${maxVisualDepth * 12}px;padding-left:11px;border-left:1px solid rgba(var(--accent-rgb),0.22);` : '';
   const edited = c.updated_at && c.updated_at !== c.created_at;
   const pendingClass = c._pending ? 'pending-opacity' : '';
-  const contentWithMentions = (c.content || '').replace(/@([a-z0-9_]+)/gi, '<span class="text-amethyst-300 font-medium">@$1</span>');
+  const contentWithMentions = (c.content || '').replace(/@([a-z0-9_]+)/gi, '<button onclick="openPublicProfileByUsername(\'$1\')" class="text-amethyst-300 font-medium hover:underline">@$1</button>');
 
   return `<div style="${indentStyle}" class="mb-2.5 ${pendingClass}" id="comment-${c.id}">
     <div class="flex gap-2.5">
-      ${avatarHtml(c.user_id, 'sm')}
+      <button onclick="openPublicProfile('${c.user_id}')">${avatarHtml(c.user_id, 'sm')}</button>
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 flex-wrap">
-          <span class="text-xs font-medium text-amethyst-300">@${escapeHtml(info.username)}</span>
+          <button onclick="openPublicProfile('${c.user_id}')" class="text-xs font-medium text-amethyst-300 hover:underline">@${escapeHtml(info.username)}</button>
           <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
           ${edited ? `<span class="text-[10px] text-gray-700">· edited</span>` : ''}
           ${isOwner ? `<button onclick="openCommentMenu(${c.id}, ${teachingId})" class="ml-auto p-1 text-gray-600 hover:text-gray-300 transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg></button>` : ''}
@@ -1030,7 +1191,7 @@ function renderComment(c, teachingId, depth, repliesHtml) {
 
 function avatarHtml(userId, size) {
   const info = state.profileCache[userId] || {};
-  const cls = size === 'xs' ? 'avatar-xs' : 'avatar-sm';
+  const cls = size === 'xs' ? 'avatar-xs' : size === 'lg' ? 'avatar-lg' : 'avatar-sm';
   if (info.avatar_url) return `<img src="${info.avatar_url}" class="${cls}" alt="">`;
   const initial = (info.username || '?')[0].toUpperCase();
   return `<div class="${cls}">${initial}</div>`;
@@ -1052,6 +1213,7 @@ function openCommentMenu(commentId, teachingId) {
   menu.innerHTML = `
     <div class="glass card w-full max-w-sm border border-void-600 overflow-hidden">
       <button onclick="this.closest('.fixed').remove(); editComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Edit comment</button>
+      <button onclick="this.closest('.fixed').remove(); shareComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Share as post</button>
       <button onclick="this.closest('.fixed').remove(); askDeleteComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-red-400 hover:bg-void-800 transition border-b border-void-600">Delete comment</button>
       <button onclick="this.closest('.fixed').remove()" class="btn w-full py-4 text-center px-5 text-sm text-gray-400 hover:bg-void-800 transition">Cancel</button>
     </div>
@@ -1068,6 +1230,16 @@ async function editComment(commentId, teachingId) {
   if (newText === null || newText === comment.content) return;
   await sb.from('teaching_comments').update({ content: newText, updated_at: new Date().toISOString() }).eq('id', commentId);
   await loadTeachings(); renderTeachings();
+}
+
+function shareComment(commentId, teachingId) {
+  let comment = null;
+  for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; break; } }
+  if (!comment) return;
+  const info = state.profileCache[comment.user_id] || { username: 'someone' };
+  const text = `"${comment.content || '[image]'}"\n\n— @${info.username} on Moph Echo\n\nhttps://mophecho-mirror.vercel.app`;
+  if (navigator.share) navigator.share({ title: 'A reflection from Moph Echo', text }).catch(() => {});
+  else navigator.clipboard.writeText(text).then(() => alert('Copied. Paste anywhere to share.')).catch(() => {});
 }
 
 let pendingDeletes = {};
@@ -1373,26 +1545,232 @@ async function openNotification(notifId, teachingId) {
   }
 }
 
-function openUsernameEditor() { document.getElementById('usernameInput').value = state.profile.username || ''; document.getElementById('usernameErr').classList.add('hidden'); document.getElementById('usernameModal').classList.remove('hidden'); }
-function closeUsernameEditor() { document.getElementById('usernameModal').classList.add('hidden'); }
-async function saveUsername() {
-  const raw = document.getElementById('usernameInput').value.trim().toLowerCase();
-  const err = document.getElementById('usernameErr');
+// ===== SETTINGS =====
+function openSettings() {
+  document.getElementById('setUsername').value = state.profile.username || '';
+  document.getElementById('setBio').value = state.profile.bio || '';
+  document.getElementById('bioCount').textContent = (state.profile.bio || '').length;
+  document.getElementById('setWebsite').value = state.profile.website || '';
+  document.getElementById('setSocialX').value = state.profile.social_x || '';
+  document.getElementById('setSocialInstagram').value = state.profile.social_instagram || '';
+  document.getElementById('setSocialYoutube').value = state.profile.social_youtube || '';
+  document.getElementById('setSocialTiktok').value = state.profile.social_tiktok || '';
+  document.getElementById('setSocialWhatsapp').value = state.profile.social_whatsapp || '';
+  document.getElementById('setSocialLinkedin').value = state.profile.social_linkedin || '';
+  document.getElementById('privElement').checked = state.profile.privacy_element !== false;
+  document.getElementById('privStage').checked = state.profile.privacy_stage !== false;
+  document.getElementById('privWound').checked = state.profile.privacy_wound !== false;
+  document.getElementById('privGift').checked = state.profile.privacy_gift !== false;
+  document.getElementById('setUsernameErr').classList.add('hidden');
+  selectTheme(state.profile.theme || 'amethyst');
+  document.getElementById('settingsModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeSettings() {
+  document.getElementById('settingsModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  applyTheme(state.profile.theme || 'amethyst');
+}
+document.getElementById('setBio').addEventListener('input', (e) => { document.getElementById('bioCount').textContent = e.target.value.length; });
+
+async function saveSettings() {
+  const btn = document.getElementById('saveSettingsBtn');
+  const err = document.getElementById('setUsernameErr');
   err.classList.add('hidden');
-  if (!/^[a-z0-9_]{3,30}$/.test(raw)) { err.textContent = 'Only lowercase letters, numbers, underscores. 3-30 chars.'; err.classList.remove('hidden'); return; }
-  const { data: existing } = await sb.from('profiles').select('id').ilike('username', raw).neq('id', state.user.id).limit(1);
-  if (existing && existing.length > 0) { err.textContent = 'That username is already taken.'; err.classList.remove('hidden'); return; }
-  const btn = document.getElementById('saveUsernameBtn');
   btn.textContent = 'Saving...'; btn.disabled = true;
-  const { error } = await sb.from('profiles').update({ username: raw }).eq('id', state.user.id);
+
+  const newUsername = document.getElementById('setUsername').value.trim().toLowerCase();
+  if (!/^[a-z0-9_]{3,30}$/.test(newUsername)) {
+    err.textContent = 'Username: lowercase letters, numbers, underscores. 3-30 chars.';
+    err.classList.remove('hidden'); btn.textContent = 'Save'; btn.disabled = false; return;
+  }
+  if (newUsername !== state.profile.username) {
+    const { data: existing } = await sb.from('profiles').select('id').ilike('username', newUsername).neq('id', state.user.id).limit(1);
+    if (existing && existing.length > 0) { err.textContent = 'That username is already taken.'; err.classList.remove('hidden'); btn.textContent = 'Save'; btn.disabled = false; return; }
+  }
+
+  const updates = {
+    username: newUsername,
+    bio: document.getElementById('setBio').value.trim() || null,
+    website: document.getElementById('setWebsite').value.trim() || null,
+    social_x: document.getElementById('setSocialX').value.trim() || null,
+    social_instagram: document.getElementById('setSocialInstagram').value.trim() || null,
+    social_youtube: document.getElementById('setSocialYoutube').value.trim() || null,
+    social_tiktok: document.getElementById('setSocialTiktok').value.trim() || null,
+    social_whatsapp: document.getElementById('setSocialWhatsapp').value.trim() || null,
+    social_linkedin: document.getElementById('setSocialLinkedin').value.trim() || null,
+    privacy_element: document.getElementById('privElement').checked,
+    privacy_stage: document.getElementById('privStage').checked,
+    privacy_wound: document.getElementById('privWound').checked,
+    privacy_gift: document.getElementById('privGift').checked,
+    theme: state.selectedTheme
+  };
+
+  const { error } = await sb.from('profiles').update(updates).eq('id', state.user.id);
   btn.textContent = 'Save'; btn.disabled = false;
   if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
-  state.profile.username = raw;
-  state.profileCache[state.user.id] = { username: raw, avatar_url: state.profile.avatar_url };
-  document.getElementById('displayUsername').textContent = '@' + raw;
-  closeUsernameEditor();
+
+  Object.assign(state.profile, updates);
+  state.profileCache[state.user.id] = { username: newUsername, avatar_url: state.profile.avatar_url };
+  applyTheme(state.selectedTheme);
+  renderProfile();
+  closeSettings();
 }
 
+// ===== PROFILE TABS =====
+function switchProfileTab(tab) {
+  const postsTab = document.getElementById('pTabPosts');
+  const aboutTab = document.getElementById('pTabAbout');
+  const postsEl = document.getElementById('profilePosts');
+  const aboutEl = document.getElementById('profileAbout');
+  if (tab === 'posts') {
+    postsTab.classList.add('active'); aboutTab.classList.remove('active');
+    postsEl.classList.remove('hidden'); aboutEl.classList.add('hidden');
+  } else {
+    aboutTab.classList.add('active'); postsTab.classList.remove('active');
+    aboutEl.classList.remove('hidden'); postsEl.classList.add('hidden');
+  }
+}
+
+// ===== PUBLIC PROFILE =====
+async function openPublicProfile(userId) {
+  if (userId === state.user.id) { switchTab('profile'); return; }
+  const { data } = await sb.from('profiles').select('*').eq('id', userId).single();
+  if (!data) { alert('Profile not found.'); return; }
+  state.viewingUserId = userId;
+  renderPublicProfile(data);
+  document.getElementById('publicProfileModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+async function openPublicProfileByUsername(username) {
+  const { data } = await sb.from('profiles').select('id').ilike('username', username).limit(1).maybeSingle();
+  if (data) openPublicProfile(data.id);
+}
+
+function closePublicProfile() {
+  document.getElementById('publicProfileModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  state.viewingUserId = null;
+}
+
+function renderPublicProfile(p) {
+  const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin']
+    .filter(k => p[k])
+    .map(k => `<a href="${escapeHtml(p[k])}" target="_blank" rel="noopener" class="social-icon">${SOCIAL_ICONS[k].svg}</a>`).join('');
+
+  const websiteHtml = p.website ? `<a href="${escapeHtml(p.website)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs text-amethyst-400 hover:underline mt-2"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>${escapeHtml(p.website)}</a>` : '';
+
+  const elementHtml = p.privacy_element !== false ? `<p class="text-sm font-medium ${p.element ? 'text-amethyst-400' : 'text-gray-400'}">${p.element || '—'}</p>` : `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
+  const stageHtml = p.privacy_stage !== false ? `<p class="text-sm font-medium ${p.stage ? 'text-amethyst-400' : 'text-gray-400'}">${p.stage || '—'}</p>` : `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
+  const woundHtml = p.privacy_wound !== false ? `<p class="text-sm font-medium ${p.wound ? 'text-amethyst-400' : 'text-gray-400'}">${p.wound || '—'}</p>` : `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
+  const giftHtml = p.privacy_gift !== false ? `<p class="text-sm font-medium ${p.gift ? 'text-amethyst-400' : 'text-gray-400'}">${p.gift || '—'}</p>` : `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
+
+  const avatarBig = p.avatar_url ? `<img src="${escapeHtml(p.avatar_url)}" class="avatar-lg mx-auto">` : `<div class="avatar-lg mx-auto">${(p.username || '?')[0].toUpperCase()}</div>`;
+
+  document.getElementById('publicProfileContent').innerHTML = `
+    <div class="glass card p-6 border border-void-600 mb-3 text-center">
+      ${avatarBig}
+      <h2 class="text-lg font-semibold mt-4">@${escapeHtml(p.username || 'architect')}</h2>
+      ${p.bio ? `<p class="text-sm text-gray-400 mt-2">${escapeHtml(p.bio)}</p>` : ''}
+      ${websiteHtml}
+      ${socials ? `<div class="flex flex-wrap justify-center gap-2 mt-4">${socials}</div>` : ''}
+    </div>
+    <div class="glass card p-5 border border-void-600">
+      <h3 class="text-sm font-semibold mb-3">Spiritual Stats</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Element</p>${elementHtml}</div>
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stage</p>${stageHtml}</div>
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Wound</p>${woundHtml}</div>
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p>${giftHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ===== PROFILE RENDER =====
+function renderProfile() {
+  document.getElementById('displayUsername').textContent = '@' + (state.profile.username || 'architect');
+  document.getElementById('profileBio').textContent = state.profile.bio || 'Tap the settings icon to add a bio...';
+  document.getElementById('profileBio').className = state.profile.bio ? 'text-sm text-gray-400 mt-2 line-clamp-3' : 'text-sm text-gray-600 mt-2 italic';
+
+  if (state.profile.joined_at) {
+    document.getElementById('profileJoined').textContent = 'Joined ' + new Date(state.profile.joined_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+  } else {
+    document.getElementById('profileJoined').textContent = '';
+  }
+
+  // Socials
+  const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin']
+    .filter(k => state.profile[k])
+    .map(k => `<a href="${escapeHtml(state.profile[k])}" target="_blank" rel="noopener" class="social-icon" title="${SOCIAL_ICONS[k].name}">${SOCIAL_ICONS[k].svg}</a>`).join('');
+  const websiteBtn = state.profile.website ? `<a href="${escapeHtml(state.profile.website)}" target="_blank" rel="noopener" class="social-icon" title="Website"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></a>` : '';
+  document.getElementById('profileSocials').innerHTML = websiteBtn + socials;
+
+  // About tab stats (own profile shows real values regardless of privacy)
+  document.getElementById('pElement').textContent = state.profile.element || '—';
+  document.getElementById('pElement').className = state.profile.element ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+  document.getElementById('pStage').textContent = state.profile.stage || '—';
+  document.getElementById('pStage').className = state.profile.stage ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+  document.getElementById('pWound').textContent = state.profile.wound || '—';
+  document.getElementById('pWound').className = state.profile.wound ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+  document.getElementById('pGift').textContent = state.profile.gift || '—';
+  document.getElementById('pGift').className = state.profile.gift ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+
+  const gl = document.getElementById('goldenList');
+  if (state.goldenStars.length === 0) gl.innerHTML = '<p class="text-xs text-gray-600">No golden moments yet.</p>';
+  else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 card p-3.5"><p class="text-xs text-gold-200 prose-content">${formatResponse(s.text)}</p><p class="text-[10px] text-gray-600 mt-2">${s.date}</p></div>`).join('');
+
+  loadMyPosts();
+}
+
+async function loadMyPosts() {
+  const el = document.getElementById('profilePosts');
+  el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading your posts...</p>';
+  const { data } = await sb.from('teaching_comments').select('id, content, image_url, teaching_id, created_at').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(50);
+  if (!data || data.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">You have not posted yet. Join a teaching and reply to start your journey.</p></div>';
+    return;
+  }
+  el.innerHTML = data.map(c => {
+    const t = state.teachings.find(x => x.id === c.teaching_id);
+    const title = t ? (t.title || 'Untitled teaching') : 'Teaching';
+    return `
+      <div class="post-card">
+        <div class="flex items-center gap-2 mb-3 text-xs text-gray-500">
+          <span class="text-amethyst-400">Replying to</span>
+          <span class="text-gray-400 truncate">${escapeHtml(title)}</span>
+        </div>
+        ${c.content ? `<p class="text-sm text-gray-200 prose-content">${escapeHtml(c.content)}</p>` : ''}
+        ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
+        <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
+          <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
+          <div class="flex items-center gap-3">
+            <button onclick="jumpToComment(${c.teaching_id}, ${c.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">View thread</button>
+            <button onclick="shareComment(${c.id}, ${c.teaching_id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition flex items-center gap-1">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+              Share
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function jumpToComment(teachingId, commentId) {
+  switchTab('teachings');
+  setTimeout(() => {
+    const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
+}
+
+// ===== USERNAME (legacy - kept for compatibility) =====
+function openUsernameEditor() { openSettings(); }
+function closeUsernameEditor() { document.getElementById('usernameModal').classList.add('hidden'); }
+
+// ===== AVATAR =====
 async function handleAvatarUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -1408,14 +1786,13 @@ async function handleAvatarUpload(e) {
   state.profileCache[state.user.id] = { username: state.profile.username, avatar_url };
   document.getElementById('avatarUpload').innerHTML = `<img src="${avatar_url}" class="w-full h-full object-cover"><input type="file" id="avatarInput" accept="image/*" class="hidden">`;
   document.getElementById('avatarLoading').classList.add('hidden');
-  document.getElementById('avatarHint').textContent = '✓ Photo saved';
-  setTimeout(() => { document.getElementById('avatarHint').textContent = 'Tap photo to change'; }, 2000);
   document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
 }
 
 document.getElementById('avatarUpload').addEventListener('click', () => document.getElementById('avatarInput').click());
 document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
 
+// ===== TABS =====
 function switchTab(tab) {
   ['chat','teachings','profile'].forEach(t => {
     const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1));
@@ -1427,52 +1804,11 @@ function switchTab(tab) {
   if (activePanel) activePanel.classList.remove('hidden');
   const activeBtn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
   if (activeBtn) activeBtn.className = 'flex-1 py-2 text-[11px] font-medium rounded-xl bg-amethyst-600/25 text-amethyst-300 border border-amethyst-500/25 flex items-center justify-center gap-1.5 transition';
-  if (tab === 'profile') { renderProfile(); loadMyComments(); }
+  if (tab === 'profile') { renderProfile(); }
   if (tab === 'teachings') { renderTeachings(); }
 }
 
-async function loadMyComments() {
-  const el = document.getElementById('myCommentsList');
-  el.innerHTML = '<p class="text-xs text-gray-600">Loading...</p>';
-  const { data } = await sb.from('teaching_comments').select('id, content, teaching_id, created_at').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(30);
-  if (!data || data.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600">You have not commented yet.</p>'; return; }
-  state.myComments = data;
-  el.innerHTML = data.map(c => {
-    const t = state.teachings.find(x => x.id === c.teaching_id);
-    const title = t ? (t.title || 'Untitled teaching') : 'Teaching';
-    return `
-      <div class="bg-void-800/50 card p-3.5 border border-void-600 cursor-pointer hover:border-amethyst-500/40 transition" onclick="jumpToComment(${c.teaching_id}, ${c.id})">
-        <p class="text-xs text-amethyst-300 mb-1.5">${escapeHtml(title)}</p>
-        <p class="text-xs text-gray-300">${escapeHtml(c.content || '[image]')}</p>
-        <p class="text-[10px] text-gray-600 mt-1.5">${relativeTime(c.created_at)}</p>
-      </div>
-    `;
-  }).join('');
-}
-
-function jumpToComment(teachingId, commentId) {
-  switchTab('teachings');
-  setTimeout(() => {
-    const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 300);
-}
-
-function renderProfile() {
-  document.getElementById('pElement').textContent = state.profile.element || '—';
-  document.getElementById('pElement').className = state.profile.element ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
-  document.getElementById('pStage').textContent = state.profile.stage || '—';
-  document.getElementById('pStage').className = state.profile.stage ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
-  document.getElementById('pWound').textContent = state.profile.wound || '—';
-  document.getElementById('pWound').className = state.profile.wound ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
-  document.getElementById('pGift').textContent = state.profile.gift || '—';
-  document.getElementById('pGift').className = state.profile.gift ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
-  document.getElementById('displayUsername').textContent = '@' + (state.profile.username || 'architect');
-  const gl = document.getElementById('goldenList');
-  if (state.goldenStars.length === 0) gl.innerHTML = '<p class="text-xs text-gray-600">No golden moments yet.</p>';
-  else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 card p-3.5"><p class="text-xs text-gold-200 prose-content">${formatResponse(s.text)}</p><p class="text-[10px] text-gray-600 mt-2">${s.date}</p></div>`).join('');
-}
-
+// ===== CHAT =====
 function renderChat() {
   const c = document.getElementById('chatContainer');
   if (state.messages.length === 0) {
@@ -1637,6 +1973,7 @@ document.addEventListener('click', (e) => {
 
 document.getElementById('userInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); processEntry(); } });
 
+// Init
 initConfig();
 </script>
 </body>
