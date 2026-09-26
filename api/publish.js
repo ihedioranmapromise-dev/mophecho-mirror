@@ -1,5 +1,5 @@
 // /api/publish.js
-// Admin: publish a teaching + email all users + handle video upload
+// Admin: create / update / delete teachings + email all users
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -8,37 +8,42 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const {
-    adminKey, title, content, cover_image, video_file, video_url,
-    sendEmail, tags, pinned
-  } = req.body || {};
+  const body = req.body || {};
+  const { adminKey, action = 'create' } = body;
 
   if (!adminKey || adminKey !== process.env.ADMIN_KEY) {
     return res.status(401).json({ error: 'Unauthorized' });
-  }
-  if (!content || !content.trim()) {
-    return res.status(400).json({ error: 'Content is required' });
   }
 
   const supabaseUrl = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseUrl || !serviceKey) return res.status(500).json({ error: 'Server not configured' });
 
-  // --- Upload cover image if base64 ---
+  if (action === 'create') return createTeaching(body, supabaseUrl, serviceKey, res);
+  if (action === 'update') return updateTeaching(body, supabaseUrl, serviceKey, res);
+  if (action === 'delete') return deleteTeaching(body, supabaseUrl, serviceKey, res);
+
+  return res.status(400).json({ error: 'Invalid action' });
+}
+
+// ============ CREATE ============
+async function createTeaching(body, supabaseUrl, serviceKey, res) {
+  const { title, content, cover_image, video_file, video_url, sendEmail, tags, pinned } = body;
+
+  if (!content || !content.trim()) return res.status(400).json({ error: 'Content is required' });
+
   let finalCoverUrl = cover_image || null;
   if (cover_image && cover_image.startsWith('data:')) {
     finalCoverUrl = await uploadBase64ToStorage(cover_image, 'covers', supabaseUrl, serviceKey);
-    if (!finalCoverUrl) return res.status(500).json({ error: 'Cover image upload failed' });
+    if (!finalCoverUrl) return res.status(500).json({ error: 'Cover upload failed' });
   }
 
-  // --- Upload video if base64 ---
   let finalVideoUrl = video_url || null;
   if (video_file && video_file.startsWith('data:')) {
     finalVideoUrl = await uploadBase64ToStorage(video_file, 'videos', supabaseUrl, serviceKey);
-    if (!finalVideoUrl) return res.status(500).json({ error: 'Video upload failed (maybe too large)' });
+    if (!finalVideoUrl) return res.status(500).json({ error: 'Video upload failed' });
   }
 
-  // --- Insert teaching ---
   const insertRes = await fetch(`${supabaseUrl}/rest/v1/teachings`, {
     method: 'POST',
     headers: {
@@ -61,51 +66,86 @@ export default async function handler(req, res) {
     const err = await insertRes.text();
     return res.status(500).json({ error: 'Insert failed', detail: err });
   }
-
   const inserted = await insertRes.json();
-  const teaching = inserted[0];
 
-  // --- Email (same as before) ---
-  let emailResult = { sent: false, method: 'none' };
-  if (sendEmail) {
-    const resendKey = process.env.RESEND_API_KEY;
-    const segmentId = process.env.RESEND_SEGMENT_ID;
+  let emailResult = { sent: false };
+  if (sendEmail) emailResult = await sendEmailBlast(title, content, finalCoverUrl);
 
-    if (!resendKey) {
-      emailResult.error = 'RESEND_API_KEY not set';
-    } else if (segmentId) {
-      try {
-        const html = buildEmailHtml(title, content, finalCoverUrl);
-        const subject = title ? `New Teaching: ${title}` : 'New Teaching from Moph Echo';
-
-        const createRes = await fetch('https://api.resend.com/broadcasts', {
-          method: 'POST',
-          headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            audience_id: segmentId,
-            from: 'Moph Echo <onboarding@resend.dev>',
-            subject,
-            html
-          })
-        });
-        const broadcast = await createRes.json();
-        if (!createRes.ok) {
-          emailResult.error = broadcast.message || 'Broadcast failed';
-        } else {
-          const sendRes = await fetch(`https://api.resend.com/broadcasts/${broadcast.id}/send`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${resendKey}` }
-          });
-          emailResult.sent = sendRes.ok;
-          emailResult.method = 'broadcast';
-        }
-      } catch (e) { emailResult.error = e.message; }
-    }
-  }
-
-  return res.status(200).json({ success: true, teaching, emailResult });
+  return res.status(200).json({ success: true, teaching: inserted[0], emailResult });
 }
 
+// ============ UPDATE ============
+async function updateTeaching(body, supabaseUrl, serviceKey, res) {
+  const { id, title, content, cover_image, video_file, video_url, tags, pinned } = body;
+
+  if (!id) return res.status(400).json({ error: 'Missing id' });
+  if (!content || !content.trim()) return res.status(400).json({ error: 'Content is required' });
+
+  const update = {
+    title: title || null,
+    content,
+    tags: tags || [],
+    pinned: pinned || false
+  };
+
+  // Cover: if new base64 uploaded, upload it. If it's a URL, keep. If null/empty, remove.
+  if (cover_image && cover_image.startsWith('data:')) {
+    const url = await uploadBase64ToStorage(cover_image, 'covers', supabaseUrl, serviceKey);
+    if (url) update.cover_image = url;
+  } else if (cover_image === null) {
+    update.cover_image = null;
+  }
+
+  // Video: same logic
+  if (video_file && video_file.startsWith('data:')) {
+    const url = await uploadBase64ToStorage(video_file, 'videos', supabaseUrl, serviceKey);
+    if (url) update.video_url = url;
+  } else if (video_url) {
+    update.video_url = video_url;
+  } else if (video_url === null) {
+    update.video_url = null;
+  }
+
+  const r = await fetch(`${supabaseUrl}/rest/v1/teachings?id=eq.${id}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': serviceKey,
+      'Authorization': `Bearer ${serviceKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify(update)
+  });
+
+  if (!r.ok) {
+    const err = await r.text();
+    return res.status(500).json({ error: 'Update failed', detail: err });
+  }
+  const updated = await r.json();
+  return res.status(200).json({ success: true, teaching: updated[0] });
+}
+
+// ============ DELETE ============
+async function deleteTeaching(body, supabaseUrl, serviceKey, res) {
+  const { id } = body;
+  if (!id) return res.status(400).json({ error: 'Missing id' });
+
+  const r = await fetch(`${supabaseUrl}/rest/v1/teachings?id=eq.${id}`, {
+    method: 'DELETE',
+    headers: {
+      'apikey': serviceKey,
+      'Authorization': `Bearer ${serviceKey}`
+    }
+  });
+
+  if (!r.ok) {
+    const err = await r.text();
+    return res.status(500).json({ error: 'Delete failed', detail: err });
+  }
+  return res.status(200).json({ success: true });
+}
+
+// ============ HELPERS ============
 async function uploadBase64ToStorage(dataUrl, folder, supabaseUrl, serviceKey) {
   const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
   if (!match) return null;
@@ -125,9 +165,39 @@ async function uploadBase64ToStorage(dataUrl, folder, supabaseUrl, serviceKey) {
     },
     body: buffer
   });
-
   if (!uploadRes.ok) return null;
   return `${supabaseUrl}/storage/v1/object/public/teaching-media/${path}`;
+}
+
+async function sendEmailBlast(title, content, coverImage) {
+  const resendKey = process.env.RESEND_API_KEY;
+  const segmentId = process.env.RESEND_SEGMENT_ID;
+  if (!resendKey) return { sent: false, error: 'RESEND_API_KEY not set' };
+  if (!segmentId) return { sent: false, error: 'RESEND_SEGMENT_ID not set' };
+
+  try {
+    const html = buildEmailHtml(title, content, coverImage);
+    const subject = title ? `New Teaching: ${title}` : 'New Teaching from Moph Echo';
+    const createRes = await fetch('https://api.resend.com/broadcasts', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        audience_id: segmentId,
+        from: 'Moph Echo <onboarding@resend.dev>',
+        subject,
+        html
+      })
+    });
+    const broadcast = await createRes.json();
+    if (!createRes.ok) return { sent: false, error: broadcast.message || 'Broadcast failed' };
+    const sendRes = await fetch(`https://api.resend.com/broadcasts/${broadcast.id}/send`, {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${resendKey}` }
+    });
+    return { sent: sendRes.ok, method: 'broadcast' };
+  } catch (e) {
+    return { sent: false, error: e.message };
+  }
 }
 
 function buildEmailHtml(title, content, coverImage) {
