@@ -95,6 +95,11 @@ body { background:#06060a; }
       <span class="text-xs text-gray-400">📌 Pin this teaching to top of feed</span>
     </label>
 
+    <label class="flex items-center gap-2 cursor-pointer select-none">
+      <input type="checkbox" id="featuredChk" class="w-4 h-4 rounded border-void-600 bg-void-900 accent-amethyst-600">
+      <span class="text-xs text-gray-400">⭐ Feature as today's teaching</span>
+    </label>
+
     <label class="flex items-center gap-2 cursor-pointer select-none" id="emailChkWrap">
       <input type="checkbox" id="sendEmailChk" class="w-4 h-4 rounded border-void-600 bg-void-900 accent-amethyst-600" checked>
       <span class="text-xs text-gray-400">Send email to all users after publishing</span>
@@ -115,7 +120,6 @@ body { background:#06060a; }
   </div>
 </div>
 
-<!-- DELETE CONFIRMATION MODAL -->
 <div id="deleteModal" class="hidden fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
   <div class="glass rounded-2xl p-6 max-w-sm w-full border border-red-500/30 shadow-2xl">
     <h3 class="text-base font-semibold mb-2">Delete this teaching?</h3>
@@ -238,6 +242,7 @@ function newTeaching() {
   document.getElementById('tContent').value = '';
   document.getElementById('tTags').value = '';
   document.getElementById('pinChk').checked = false;
+  document.getElementById('featuredChk').checked = false;
   document.getElementById('sendEmailChk').checked = true;
   document.getElementById('emailChkWrap').classList.remove('hidden');
   clearCover();
@@ -258,6 +263,7 @@ async function publish() {
   const tagsInput = document.getElementById('tTags').value.trim();
   const tags = tagsInput ? tagsInput.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
   const pinned = document.getElementById('pinChk').checked;
+  const featured = document.getElementById('featuredChk').checked;
   const sendEmail = document.getElementById('sendEmailChk').checked;
 
   if (!content) { showStatus('Content is required.', 'error'); return; }
@@ -275,7 +281,8 @@ async function publish() {
       title,
       content,
       tags,
-      pinned
+      pinned,
+      featured
     };
     if (isEdit) payload.id = editId;
 
@@ -305,12 +312,21 @@ async function publish() {
     }
 
     let msg = isEdit ? '✓ Updated' : '✓ Published';
+    if (featured) msg += ' · ⭐ Featured today';
     if (!isEdit && data.emailResult?.sent) msg += ' · Emails sent';
     else if (!isEdit && data.emailResult?.error) msg += ' · Email failed: ' + data.emailResult.error;
     showStatus(msg, 'success');
 
     if (isEdit) setTimeout(newTeaching, 1200);
-    else { document.getElementById('tTitle').value = ''; document.getElementById('tContent').value = ''; document.getElementById('tTags').value = ''; document.getElementById('pinChk').checked = false; clearCover(); clearVideo(); }
+    else {
+      document.getElementById('tTitle').value = '';
+      document.getElementById('tContent').value = '';
+      document.getElementById('tTags').value = '';
+      document.getElementById('pinChk').checked = false;
+      document.getElementById('featuredChk').checked = false;
+      clearCover();
+      clearVideo();
+    }
 
     loadRecent();
   } catch (e) {
@@ -340,13 +356,17 @@ async function loadRecent() {
     });
     const data = await r.json();
     if (!data || data.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600">No teachings yet.</p>'; return; }
-    el.innerHTML = data.map(t => `
+    const today = new Date().toISOString().split('T')[0];
+    el.innerHTML = data.map(t => {
+      const isFeatured = t.featured_date === today;
+      return `
       <div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1">
             <div class="flex items-center gap-2 flex-wrap">
               <p class="text-xs text-gray-300 font-medium truncate">${escapeHtml(t.title || 'Untitled')}</p>
               ${t.pinned ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gold-400/20 text-gold-300">📌</span>' : ''}
+              ${isFeatured ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amethyst-600/30 text-amethyst-300">⭐ Featured</span>' : ''}
               ${t.video_url ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amethyst-600/30 text-amethyst-300">🎬 Video</span>' : ''}
               ${t.cover_image ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amethyst-600/30 text-amethyst-300">🖼 Image</span>' : ''}
             </div>
@@ -363,16 +383,19 @@ async function loadRecent() {
           </div>
         </div>
       </div>
-    `).join('');
+    `;
+    }).join('');
   } catch (e) { el.innerHTML = '<p class="text-xs text-red-400">Failed to load.</p>'; }
 }
 
 function editTeaching(t) {
+  const today = new Date().toISOString().split('T')[0];
   document.getElementById('editId').value = t.id;
   document.getElementById('tTitle').value = t.title || '';
   document.getElementById('tContent').value = t.content || '';
   document.getElementById('tTags').value = (t.tags || []).join(', ');
   document.getElementById('pinChk').checked = !!t.pinned;
+  document.getElementById('featuredChk').checked = t.featured_date === today;
   document.getElementById('emailChkWrap').classList.add('hidden');
   document.getElementById('publishText').textContent = 'Update Teaching';
   document.getElementById('modeLabel').textContent = 'Edit mode';
@@ -443,6 +466,7 @@ async function confirmDelete() {
     alert('Network error');
     btn.textContent = 'Delete'; btn.disabled = false;
   }
+  btn.textContent = 'Delete'; btn.disabled = false;
 }
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
