@@ -41,16 +41,19 @@ body { background:#06060a; }
       </div>
       <div>
         <h1 class="text-sm font-semibold">Moph Echo Admin</h1>
-        <p class="text-[10px] text-gray-500">Publish teachings</p>
+        <p class="text-[10px] text-gray-500" id="modeLabel">Create mode</p>
       </div>
     </div>
     <div class="flex items-center gap-2">
+      <button onclick="newTeaching()" id="newBtn" class="hidden text-xs text-amethyst-400 hover:text-amethyst-300 transition">+ New</button>
       <a href="/" class="text-xs text-gray-500 hover:text-amethyst-400 transition">View App</a>
       <button onclick="lock()" class="text-xs text-gray-500 hover:text-red-400 transition">Lock</button>
     </div>
   </header>
 
   <div class="glass rounded-2xl p-5 border border-void-600 space-y-4">
+    <input type="hidden" id="editId" value="">
+
     <div>
       <label class="text-xs text-gray-500 uppercase tracking-wider">Title (optional)</label>
       <input type="text" id="tTitle" placeholder="e.g., On Stillness" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
@@ -84,7 +87,7 @@ body { background:#06060a; }
 
     <div>
       <label class="text-xs text-gray-500 uppercase tracking-wider">Content</label>
-      <textarea id="tContent" rows="14" placeholder="Write your teaching here...&#10;&#10;Use ✦ for insight markers and ❓ for the closing question.&#10;Use **word** for bold.&#10;&#10;Line breaks are preserved." class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition resize-y font-mono"></textarea>
+      <textarea id="tContent" rows="14" placeholder="Write your teaching here...&#10;&#10;Use ✦ for insight markers and ❓ for the closing question.&#10;Use **word** for bold." class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition resize-y font-mono"></textarea>
     </div>
 
     <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -92,7 +95,7 @@ body { background:#06060a; }
       <span class="text-xs text-gray-400">📌 Pin this teaching to top of feed</span>
     </label>
 
-    <label class="flex items-center gap-2 cursor-pointer select-none">
+    <label class="flex items-center gap-2 cursor-pointer select-none" id="emailChkWrap">
       <input type="checkbox" id="sendEmailChk" class="w-4 h-4 rounded border-void-600 bg-void-900 accent-amethyst-600" checked>
       <span class="text-xs text-gray-400">Send email to all users after publishing</span>
     </label>
@@ -105,10 +108,22 @@ body { background:#06060a; }
 
   <div class="glass rounded-2xl p-5 border border-void-600 mt-4">
     <div class="flex items-center justify-between mb-3">
-      <h3 class="text-sm font-semibold">Recent Teachings</h3>
+      <h3 class="text-sm font-semibold">All Teachings</h3>
       <button onclick="loadRecent()" class="text-[10px] text-amethyst-400 hover:text-amethyst-300">Refresh</button>
     </div>
     <div id="recentTeachings" class="space-y-2 text-xs text-gray-500">Loading...</div>
+  </div>
+</div>
+
+<!-- DELETE CONFIRMATION MODAL -->
+<div id="deleteModal" class="hidden fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+  <div class="glass rounded-2xl p-6 max-w-sm w-full border border-red-500/30 shadow-2xl">
+    <h3 class="text-base font-semibold mb-2">Delete this teaching?</h3>
+    <p class="text-xs text-gray-400 mb-5">This cannot be undone. All comments and reactions will also be removed.</p>
+    <div class="flex gap-2">
+      <button onclick="closeDeleteModal()" class="flex-1 py-2.5 rounded-xl bg-void-800 text-gray-300 text-sm font-medium">Cancel</button>
+      <button onclick="confirmDelete()" id="confirmDelBtn" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium">Delete</button>
+    </div>
   </div>
 </div>
 
@@ -117,10 +132,13 @@ let adminKey = sessionStorage.getItem('moph_admin_key') || '';
 let coverImageUrl = null;
 let videoFileBase64 = null;
 let videoUrlExternal = null;
+let existingCoverUrl = null;
+let existingVideoUrl = null;
+let pendingDeleteId = null;
 
-// ===== COVER UPLOAD =====
+// ===== COVER =====
 document.getElementById('coverDrop').addEventListener('click', () => document.getElementById('coverInput').click());
-document.getElementById('coverInput').addEventListener('change', async (e) => {
+document.getElementById('coverInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
   if (file.size > 3 * 1024 * 1024) { alert('Image too large. Max 3MB.'); return; }
@@ -129,7 +147,7 @@ document.getElementById('coverInput').addEventListener('change', async (e) => {
     coverImageUrl = reader.result;
     document.getElementById('coverPreview').src = coverImageUrl;
     document.getElementById('coverPreview').classList.remove('hidden');
-    document.getElementById('coverLabel').textContent = '✓ Cover selected';
+    document.getElementById('coverLabel').textContent = '✓ New cover selected';
     document.getElementById('clearCoverBtn').classList.remove('hidden');
   };
   reader.readAsDataURL(file);
@@ -137,6 +155,7 @@ document.getElementById('coverInput').addEventListener('change', async (e) => {
 
 function clearCover() {
   coverImageUrl = null;
+  existingCoverUrl = null;
   document.getElementById('coverPreview').classList.add('hidden');
   document.getElementById('coverPreview').src = '';
   document.getElementById('coverLabel').textContent = 'Tap to upload cover image (max 3MB)';
@@ -144,16 +163,15 @@ function clearCover() {
   document.getElementById('clearCoverBtn').classList.add('hidden');
 }
 
-// ===== VIDEO UPLOAD =====
+// ===== VIDEO =====
 document.getElementById('videoDrop').addEventListener('click', (e) => {
   if (e.target.id !== 'videoPreview') document.getElementById('videoInput').click();
 });
-
-document.getElementById('videoInput').addEventListener('change', async (e) => {
+document.getElementById('videoInput').addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
   if (file.size > 3 * 1024 * 1024) {
-    alert('Video too large. Max 3MB. Please compress or use a link instead.');
+    alert('Video too large. Max 3MB. Compress or use a link.');
     document.getElementById('videoInput').value = '';
     return;
   }
@@ -163,14 +181,13 @@ document.getElementById('videoInput').addEventListener('change', async (e) => {
     const preview = document.getElementById('videoPreview');
     preview.src = videoFileBase64;
     preview.classList.remove('hidden');
-    document.getElementById('videoLabel').textContent = '✓ Video selected';
+    document.getElementById('videoLabel').textContent = '✓ New video selected';
     document.getElementById('clearVideoBtn').classList.remove('hidden');
     document.getElementById('videoUrlInput').value = '';
     videoUrlExternal = null;
   };
   reader.readAsDataURL(file);
 });
-
 document.getElementById('videoUrlInput').addEventListener('input', (e) => {
   const url = e.target.value.trim();
   if (url) {
@@ -181,10 +198,10 @@ document.getElementById('videoUrlInput').addEventListener('input', (e) => {
     document.getElementById('clearVideoBtn').classList.remove('hidden');
   }
 });
-
 function clearVideo() {
   videoFileBase64 = null;
   videoUrlExternal = null;
+  existingVideoUrl = null;
   document.getElementById('videoPreview').classList.add('hidden');
   document.getElementById('videoPreview').src = '';
   document.getElementById('videoInput').value = '';
@@ -215,8 +232,27 @@ function showAdmin() {
   loadRecent();
 }
 
-// ===== PUBLISH =====
+function newTeaching() {
+  document.getElementById('editId').value = '';
+  document.getElementById('tTitle').value = '';
+  document.getElementById('tContent').value = '';
+  document.getElementById('tTags').value = '';
+  document.getElementById('pinChk').checked = false;
+  document.getElementById('sendEmailChk').checked = true;
+  document.getElementById('emailChkWrap').classList.remove('hidden');
+  clearCover();
+  clearVideo();
+  document.getElementById('publishText').textContent = 'Publish Teaching';
+  document.getElementById('modeLabel').textContent = 'Create mode';
+  document.getElementById('newBtn').classList.add('hidden');
+  document.getElementById('pubStatus').classList.add('hidden');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== PUBLISH / UPDATE =====
 async function publish() {
+  const editId = document.getElementById('editId').value;
+  const isEdit = !!editId;
   const title = document.getElementById('tTitle').value.trim();
   const content = document.getElementById('tContent').value.trim();
   const tagsInput = document.getElementById('tTags').value.trim();
@@ -229,53 +265,60 @@ async function publish() {
   const btn = document.getElementById('publishBtn');
   const txt = document.getElementById('publishText');
   btn.disabled = true;
-  txt.innerHTML = '<span class="spinner"></span> Publishing...';
-  showStatus('Sending...', 'info');
+  txt.innerHTML = '<span class="spinner"></span> ' + (isEdit ? 'Updating...' : 'Publishing...');
+  showStatus(isEdit ? 'Updating...' : 'Sending...', 'info');
 
   try {
+    const payload = {
+      adminKey,
+      action: isEdit ? 'update' : 'create',
+      title,
+      content,
+      tags,
+      pinned
+    };
+    if (isEdit) payload.id = editId;
+
+    // Cover logic
+    if (coverImageUrl) payload.cover_image = coverImageUrl;
+    else if (isEdit && !existingCoverUrl) payload.cover_image = null;
+
+    // Video logic
+    if (videoFileBase64) payload.video_file = videoFileBase64;
+    else if (videoUrlExternal) payload.video_url = videoUrlExternal;
+    else if (isEdit && !existingVideoUrl) payload.video_url = null;
+
+    if (!isEdit) payload.sendEmail = sendEmail;
+
     const res = await fetch('/api/publish', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        adminKey,
-        title,
-        content,
-        cover_image: coverImageUrl,
-        video_file: videoFileBase64,
-        video_url: videoUrlExternal,
-        sendEmail,
-        tags,
-        pinned
-      })
+      body: JSON.stringify(payload)
     });
     const data = await res.json();
 
     if (!res.ok) {
       showStatus('Error: ' + (data.error || 'Unknown'), 'error');
       btn.disabled = false;
-      txt.textContent = 'Publish Teaching';
+      txt.textContent = isEdit ? 'Update Teaching' : 'Publish Teaching';
       return;
     }
 
-    let msg = '✓ Published';
-    if (data.emailResult?.sent) msg += ' · Emails sent';
-    else if (data.emailResult?.error) msg += ' · Email failed: ' + data.emailResult.error;
-    else if (!sendEmail) msg += ' · Email skipped';
-
+    let msg = isEdit ? '✓ Updated' : '✓ Published';
+    if (!isEdit && data.emailResult?.sent) msg += ' · Emails sent';
+    else if (!isEdit && data.emailResult?.error) msg += ' · Email failed: ' + data.emailResult.error;
     showStatus(msg, 'success');
-    document.getElementById('tTitle').value = '';
-    document.getElementById('tContent').value = '';
-    document.getElementById('tTags').value = '';
-    document.getElementById('pinChk').checked = false;
-    clearCover();
-    clearVideo();
+
+    if (isEdit) setTimeout(newTeaching, 1200);
+    else { document.getElementById('tTitle').value = ''; document.getElementById('tContent').value = ''; document.getElementById('tTags').value = ''; document.getElementById('pinChk').checked = false; clearCover(); clearVideo(); }
+
     loadRecent();
   } catch (e) {
     showStatus('Network error: ' + e.message, 'error');
   }
 
   btn.disabled = false;
-  txt.textContent = 'Publish Teaching';
+  txt.textContent = isEdit ? 'Update Teaching' : 'Publish Teaching';
 }
 
 function showStatus(msg, type) {
@@ -285,28 +328,121 @@ function showStatus(msg, type) {
   el.classList.remove('hidden');
 }
 
+// ===== LOAD LIST =====
 async function loadRecent() {
   const el = document.getElementById('recentTeachings');
   el.innerHTML = '<div class="text-center py-4"><span class="spinner"></span></div>';
   try {
     const res = await fetch('/api/config');
     const cfg = await res.json();
-    const r = await fetch(`${cfg.supabaseUrl}/rest/v1/teachings?select=id,title,tags,pinned,created_at&order=created_at.desc&limit=10`, {
+    const r = await fetch(`${cfg.supabaseUrl}/rest/v1/teachings?select=*&order=pinned.desc,created_at.desc&limit=100`, {
       headers: { 'apikey': cfg.supabaseAnonKey, 'Authorization': `Bearer ${cfg.supabaseAnonKey}` }
     });
     const data = await r.json();
     if (!data || data.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600">No teachings yet.</p>'; return; }
     el.innerHTML = data.map(t => `
       <div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
-        <div class="flex items-center justify-between gap-2">
-          <p class="text-xs text-gray-300 font-medium truncate">${escapeHtml(t.title || 'Untitled')}</p>
-          ${t.pinned ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gold-400/20 text-gold-300">📌</span>' : ''}
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <p class="text-xs text-gray-300 font-medium truncate">${escapeHtml(t.title || 'Untitled')}</p>
+              ${t.pinned ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gold-400/20 text-gold-300">📌</span>' : ''}
+              ${t.video_url ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amethyst-600/30 text-amethyst-300">🎬 Video</span>' : ''}
+              ${t.cover_image ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amethyst-600/30 text-amethyst-300">🖼 Image</span>' : ''}
+            </div>
+            ${(t.tags && t.tags.length > 0) ? `<div class="flex flex-wrap gap-1 mt-1">${t.tags.map(tag => `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-void-700 text-gray-500">#${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
+            <p class="text-[10px] text-gray-600 mt-1">${new Date(t.created_at).toLocaleString()}</p>
+          </div>
+          <div class="flex items-center gap-1 flex-shrink-0">
+            <button onclick='editTeaching(${JSON.stringify(t).replace(/'/g, "&#39;")})' class="p-1.5 text-gray-500 hover:text-amethyst-400 transition" title="Edit">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+            </button>
+            <button onclick="askDelete(${t.id})" class="p-1.5 text-gray-500 hover:text-red-400 transition" title="Delete">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+            </button>
+          </div>
         </div>
-        ${(t.tags && t.tags.length > 0) ? `<div class="flex flex-wrap gap-1 mt-1">${t.tags.map(tag => `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-void-700 text-gray-500">#${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
-        <p class="text-[10px] text-gray-600 mt-1">${new Date(t.created_at).toLocaleString()}</p>
       </div>
     `).join('');
   } catch (e) { el.innerHTML = '<p class="text-xs text-red-400">Failed to load.</p>'; }
+}
+
+function editTeaching(t) {
+  document.getElementById('editId').value = t.id;
+  document.getElementById('tTitle').value = t.title || '';
+  document.getElementById('tContent').value = t.content || '';
+  document.getElementById('tTags').value = (t.tags || []).join(', ');
+  document.getElementById('pinChk').checked = !!t.pinned;
+  document.getElementById('emailChkWrap').classList.add('hidden');
+  document.getElementById('publishText').textContent = 'Update Teaching';
+  document.getElementById('modeLabel').textContent = 'Edit mode';
+  document.getElementById('newBtn').classList.remove('hidden');
+  document.getElementById('pubStatus').classList.add('hidden');
+
+  // Cover
+  existingCoverUrl = t.cover_image || null;
+  coverImageUrl = null;
+  if (t.cover_image) {
+    document.getElementById('coverPreview').src = t.cover_image;
+    document.getElementById('coverPreview').classList.remove('hidden');
+    document.getElementById('coverLabel').textContent = 'Current cover — tap to replace';
+    document.getElementById('clearCoverBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('coverPreview').classList.add('hidden');
+    document.getElementById('coverLabel').textContent = 'Tap to upload cover image (max 3MB)';
+    document.getElementById('clearCoverBtn').classList.add('hidden');
+  }
+
+  // Video
+  existingVideoUrl = t.video_url || null;
+  videoFileBase64 = null;
+  videoUrlExternal = null;
+  if (t.video_url) {
+    document.getElementById('videoLabel').textContent = 'Current video — tap to replace or clear';
+    document.getElementById('clearVideoBtn').classList.remove('hidden');
+    if (t.video_url.startsWith('http') && (t.video_url.includes('.mp4') || t.video_url.includes('teaching-media'))) {
+      document.getElementById('videoPreview').src = t.video_url;
+      document.getElementById('videoPreview').classList.remove('hidden');
+    } else {
+      document.getElementById('videoUrlInput').value = t.video_url;
+    }
+  } else {
+    document.getElementById('videoPreview').classList.add('hidden');
+    document.getElementById('videoLabel').textContent = 'Tap to upload video (max 3MB) or paste a link below';
+    document.getElementById('clearVideoBtn').classList.add('hidden');
+  }
+
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ===== DELETE =====
+function askDelete(id) {
+  pendingDeleteId = id;
+  document.getElementById('deleteModal').classList.remove('hidden');
+}
+function closeDeleteModal() {
+  pendingDeleteId = null;
+  document.getElementById('deleteModal').classList.add('hidden');
+}
+async function confirmDelete() {
+  if (!pendingDeleteId) return;
+  const btn = document.getElementById('confirmDelBtn');
+  btn.textContent = 'Deleting...'; btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminKey, action: 'delete', id: pendingDeleteId })
+    });
+    const data = await res.json();
+    if (!res.ok) { alert('Error: ' + (data.error || 'Unknown')); btn.textContent = 'Delete'; btn.disabled = false; return; }
+    closeDeleteModal();
+    loadRecent();
+  } catch (e) {
+    alert('Network error');
+    btn.textContent = 'Delete'; btn.disabled = false;
+  }
 }
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
