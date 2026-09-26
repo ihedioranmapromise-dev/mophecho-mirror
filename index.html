@@ -24,11 +24,11 @@ body { background:#06060a; min-height: 100dvh; }
 .glass { background:rgba(16,16,28,0.75); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px); }
 ::-webkit-scrollbar { width:4px; }
 ::-webkit-scrollbar-thumb { background:#3a2a5a; border-radius:10px; }
-.fade-in { animation:fadeIn .35s ease; }
-@keyframes fadeIn { from{opacity:0;transform:translateY(8px);} to{opacity:1;transform:translateY(0);} }
+.fade-in { animation:fadeIn .25s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
 .pulse-glow { animation:pulseGlow 2s ease-in-out infinite; }
 @keyframes pulseGlow { 0%,100%{box-shadow:0 0 20px -5px rgba(139,92,246,.3);} 50%{box-shadow:0 0 30px -5px rgba(139,92,246,.6);} }
-.spinner { border:2px solid rgba(139,92,246,.2); border-top-color:#a78bfa; border-radius:50%; width:20px; height:20px; animation:spin .8s linear infinite; }
+.spinner { border:2px solid rgba(139,92,246,.2); border-top-color:#a78bfa; border-radius:50%; width:16px; height:16px; animation:spin .8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg);} }
 .otp-input { letter-spacing:1rem; font-size:1.5rem; text-align:center; padding-left:1rem; }
 .safe-bottom { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
@@ -40,10 +40,20 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .prose-content { line-height: 1.7; white-space: pre-wrap; word-wrap: break-word; }
 .avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: #a78bfa; flex-shrink: 0; }
 .avatar-xs { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: #a78bfa; flex-shrink: 0; }
-.nested-reply { border-left: 1px solid rgba(120,90,160,0.2); padding-left: 12px; margin-left: 4px; margin-top: 8px; }
-.reading-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; background: transparent; z-index: 100; }
+.reading-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 100; pointer-events: none; }
 .reading-progress-bar { height: 100%; background: linear-gradient(90deg, #7c3aed, #a78bfa); width: 0%; transition: width 0.1s; }
 .notification-badge { position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px; padding: 0 4px; background: #ef4444; color: white; font-size: 9px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+.skeleton { background: linear-gradient(90deg, rgba(40,40,60,0.4) 25%, rgba(60,60,80,0.4) 50%, rgba(40,40,60,0.4) 75%); background-size: 200% 100%; animation: shimmer 1.5s infinite; border-radius: 8px; }
+@keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+.pending-opacity { opacity: 0.6; }
+.mention-dropdown { position: absolute; background: #161624; border: 1px solid #3a3a5a; border-radius: 12px; max-height: 180px; overflow-y: auto; z-index: 60; box-shadow: 0 8px 24px rgba(0,0,0,0.5); }
+.mention-item { padding: 8px 12px; cursor: pointer; font-size: 13px; color: #d0d0e8; }
+.mention-item:hover, .mention-item.active { background: #2a1a4a; }
+.video-wrapper { position: relative; background: #000; border-radius: 12px; overflow: hidden; max-height: 70vh; display: flex; align-items: center; justify-content: center; }
+.video-wrapper video { max-width: 100%; max-height: 70vh; width: 100%; display: block; }
+.undo-toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1a1a2e; border: 1px solid #3a3a5a; border-radius: 12px; padding: 12px 16px; z-index: 90; display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); animation: fadeIn 0.2s ease; }
+.comment-thread { display: block; }
+.thread-line { border-left: 1px solid rgba(120,90,160,0.2); padding-left: 10px; margin-left: 4px; }
 </style>
 </head>
 <body class="font-sans text-gray-200">
@@ -59,9 +69,8 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
   </div>
 </div>
 
-<!-- ONBOARDING -->
 <div id="onboarding" class="hidden fixed inset-0 z-[55] bg-void-900 flex items-center justify-center p-4">
-  <div class="glass rounded-3xl p-8 max-w-md w-full border border-amethyst-500/20 shadow-2xl text-center" id="onboardingCard">
+  <div class="glass rounded-3xl p-8 max-w-md w-full border border-amethyst-500/20 shadow-2xl text-center">
     <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center mb-4">
       <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
     </div>
@@ -105,10 +114,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
         <label class="text-xs text-gray-500 uppercase tracking-wider">Confirm Password</label>
         <div class="relative mt-1">
           <input type="password" id="authConfirmPassword" autocomplete="new-password" placeholder="••••••••" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 pr-12 text-base focus:border-amethyst-500 focus:outline-none transition">
-          <button type="button" onclick="togglePass('authConfirmPassword', this)" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-amethyst-400 transition p-2">
-            <svg class="w-5 h-5 eye-open" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-            <svg class="w-5 h-5 eye-closed hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
-          </button>
         </div>
       </div>
       <label class="flex items-center gap-2 cursor-pointer select-none">
@@ -117,7 +122,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       </label>
       <div id="authError" class="hidden text-xs text-red-400 text-center bg-red-900/20 border border-red-500/20 rounded-lg py-2 px-3"></div>
       <div id="authSuccess" class="hidden text-xs text-green-400 text-center bg-green-900/20 border border-green-500/20 rounded-lg py-2 px-3"></div>
-      <button onclick="signIn()" id="signInBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:from-amethyst-500 hover:to-amethyst-600 transition shadow-lg shadow-amethyst-600/20 flex items-center justify-center gap-2">
+      <button onclick="signIn()" id="signInBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:from-amethyst-500 hover:to-amethyst-600 transition shadow-lg shadow-amethyst-600/20">
         <span id="signInText">Enter the Mirror</span>
       </button>
       <button onclick="toggleSignupMode()" id="toggleBtn" class="w-full py-2 text-xs text-gray-500 hover:text-amethyst-400 transition">
@@ -136,12 +141,11 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       </div>
       <h2 class="text-xl font-semibold">Check your email</h2>
       <p class="text-sm text-gray-400 mt-2">We sent a 6-digit code to <span id="otpEmail" class="text-amethyst-400 break-all"></span></p>
-      <p class="text-xs text-gray-500 mt-1">Check inbox AND spam folder</p>
     </div>
     <div class="space-y-4">
       <input type="text" id="otpInput" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" class="otp-input w-full bg-void-900 border border-void-600 rounded-xl py-4 text-white focus:border-amethyst-500 focus:outline-none transition">
       <div id="otpError" class="hidden text-xs text-red-400 text-center bg-red-900/20 border border-red-500/20 rounded-lg py-2 px-3"></div>
-      <button onclick="verifyOtp()" id="otpBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:from-amethyst-500 transition">
+      <button onclick="verifyOtp()" id="otpBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm">
         <span id="otpBtnText">Verify & Enter</span>
       </button>
       <button onclick="resendOtp()" class="w-full py-2 text-xs text-gray-500 hover:text-amethyst-400 transition">Resend code</button>
@@ -162,8 +166,11 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           <p class="text-[9px] text-gray-500">The Reasoning Mirror</p>
         </div>
       </div>
-      <div class="flex items-center gap-1.5">
-        <button onclick="showNotifications()" class="relative p-2 text-gray-500 hover:text-amethyst-400 transition">
+      <div class="flex items-center gap-1">
+        <button onclick="openDownloadModal()" class="p-2 text-gray-500 hover:text-amethyst-400 transition" title="Download log">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+        </button>
+        <button onclick="showNotifications()" class="relative p-2 text-gray-500 hover:text-amethyst-400 transition" title="Notifications">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
           <span id="notifBadge" class="notification-badge hidden">0</span>
         </button>
@@ -197,12 +204,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
     <div class="glass border-t border-void-600 p-3 safe-bottom">
       <div class="flex items-center gap-2 bg-void-900 rounded-2xl border border-void-600 px-3 py-1.5 focus-within:border-amethyst-500/50 transition">
         <input type="text" id="userInput" name="moph-msg-field-2026-xyz" autocomplete="new-password" autocorrect="on" autocapitalize="sentences" spellcheck="false" placeholder="Speak your truth..." class="flex-1 bg-transparent text-base py-2 focus:outline-none placeholder-gray-600 min-w-0" readonly onfocus="this.removeAttribute('readonly')">
-        <button onclick="downloadLog()" class="p-2 text-gray-500 hover:text-gray-300 transition flex-shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-        </button>
-        <button onclick="startVoice()" id="voiceBtn" class="p-2 text-gray-500 hover:text-amethyst-400 transition flex-shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
-        </button>
         <button onclick="processEntry()" id="sendBtn" class="p-2 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white hover:from-amethyst-500 transition flex-shrink-0">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
         </button>
@@ -214,7 +215,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
     <div class="glass rounded-2xl p-4 border border-void-600 space-y-3">
       <div class="flex items-center justify-between">
         <h2 class="text-base font-semibold">Teachings</h2>
-        <div id="activeTag" class="hidden"></div>
+        <button onclick="loadTeachings(true)" class="text-[10px] text-amethyst-400 hover:text-amethyst-300">Refresh</button>
       </div>
       <div class="relative">
         <svg class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -251,18 +252,26 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
         <div class="bg-void-800 rounded-xl p-3 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p><p id="pGift" class="text-sm font-medium text-gray-400">—</p></div>
       </div>
     </div>
+
     <div class="glass rounded-2xl p-5 border border-void-600">
       <div class="flex items-center gap-2 mb-3"><svg class="w-4 h-4 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><h3 class="text-sm font-semibold">Golden Moments</h3></div>
       <div id="goldenList" class="space-y-2"><p class="text-xs text-gray-600">No golden moments yet.</p></div>
     </div>
+
+    <div class="glass rounded-2xl p-5 border border-void-600">
+      <div class="flex items-center justify-between mb-3">
+        <h3 class="text-sm font-semibold">My Comments</h3>
+        <button onclick="loadMyComments()" class="text-[10px] text-amethyst-400 hover:text-amethyst-300">Refresh</button>
+      </div>
+      <div id="myCommentsList" class="space-y-2"><p class="text-xs text-gray-600">Loading...</p></div>
+    </div>
   </main>
 </div>
 
-<!-- USERNAME EDITOR MODAL -->
 <div id="usernameModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
   <div class="glass rounded-2xl p-6 max-w-sm w-full border border-amethyst-500/30 shadow-2xl">
     <h3 class="text-base font-semibold mb-1">Choose your username</h3>
-    <p class="text-xs text-gray-500 mb-4">Letters, numbers, and underscores only. Must be unique.</p>
+    <p class="text-xs text-gray-500 mb-4">Lowercase letters, numbers, underscores. 3–30 chars. Must be unique.</p>
     <input type="text" id="usernameInput" maxlength="30" placeholder="architect_monad" class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
     <div id="usernameErr" class="hidden text-xs text-red-400 mt-2"></div>
     <div class="flex gap-2 mt-4">
@@ -272,7 +281,20 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
   </div>
 </div>
 
-<!-- IMAGE VIEWER MODAL -->
+<div id="downloadModal" class="hidden fixed inset-0 z-[75] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
+  <div class="glass rounded-2xl p-6 max-w-sm w-full border border-amethyst-500/30 shadow-2xl">
+    <h3 class="text-base font-semibold mb-2">Download your reflection log?</h3>
+    <p class="text-xs text-gray-400 mb-4">This saves your entire chat with the mirror.</p>
+    <label class="text-xs text-gray-500 uppercase tracking-wider">File name</label>
+    <input type="text" id="downloadFilename" placeholder="my-journey" value="moph-echo-journey" class="w-full mt-1 mb-4 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+    <div class="flex gap-2">
+      <button onclick="closeDownloadModal()" class="flex-1 py-2.5 rounded-xl bg-void-800 text-gray-300 text-sm font-medium">Cancel</button>
+      <button onclick="downloadAs('txt')" class="flex-1 py-2.5 rounded-xl bg-void-800 border border-void-600 text-gray-200 text-sm font-medium hover:bg-void-700">Save as Text</button>
+      <button onclick="downloadAs('pdf')" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-sm font-medium">Save as PDF</button>
+    </div>
+  </div>
+</div>
+
 <div id="imageViewer" class="hidden fixed inset-0 z-[80] bg-black/95 flex items-center justify-center p-4" onclick="closeImageViewer()">
   <button onclick="closeImageViewer()" class="absolute top-4 right-4 p-2 text-white/80 hover:text-white z-10">
     <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -280,7 +302,17 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
   <img id="imageViewerSrc" src="" class="max-w-full max-h-full object-contain" onclick="event.stopPropagation()">
 </div>
 
-<!-- NOTIFICATIONS PANEL -->
+<div id="videoViewer" class="hidden fixed inset-0 z-[80] bg-black flex flex-col" onclick="closeVideoViewer()">
+  <div class="absolute top-4 right-4 z-10 flex gap-2">
+    <button onclick="event.stopPropagation(); closeVideoViewer()" class="p-2 text-white/80 hover:text-white">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="flex-1 flex items-center justify-center p-2" onclick="event.stopPropagation()">
+    <video id="videoViewerSrc" src="" class="max-w-full max-h-full" controls playsinline></video>
+  </div>
+</div>
+
 <div id="notifPanel" class="hidden fixed inset-0 z-[75] bg-black/70 backdrop-blur-sm" onclick="if(event.target === this) closeNotifications()">
   <div class="absolute top-0 right-0 bottom-0 w-full max-w-md glass border-l border-void-600 flex flex-col" onclick="event.stopPropagation()">
     <div class="px-4 py-3 border-b border-void-600 flex items-center justify-between safe-top">
@@ -303,7 +335,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
     </div>
     <div class="flex-1 min-w-0">
       <p id="installText" class="text-xs text-gray-200 font-medium">Install Moph Echo</p>
-      <p id="installSub" class="text-[10px] text-gray-500 truncate">Add to home screen for the real app experience</p>
+      <p id="installSub" class="text-[10px] text-gray-500 truncate">Add to home screen</p>
     </div>
     <button onclick="handleInstall()" id="installBtn" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-medium flex-shrink-0">Install</button>
     <button onclick="dismissInstall()" class="p-1 text-gray-500 hover:text-gray-300 flex-shrink-0">
@@ -340,7 +372,7 @@ let state = {
   notifications: [],
   usedResponses: [],
   activeTag: null,
-  searchQuery: ''
+  myComments: []
 };
 const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
 
@@ -349,7 +381,7 @@ let obStep = 0;
 const obSlides = [
   { title: 'Welcome to Moph Echo', body: 'A mirror that reflects what you already know but have not yet seen. This is not a chatbot. It is a companion for your awakening.' },
   { title: 'Speak. Observe. Grow.', body: 'Type what you are feeling. The mirror listens, reflects, and asks the question you need. Golden moments mark your deepest realizations.' },
-  { title: 'Teachings', body: 'Reflections from the Architect appear in the Teachings tab. React, comment, and reply. Your username is private until you choose to share.' }
+  { title: 'Teachings', body: 'Reflections from the Architect appear in the Teachings tab. React, comment, and reply. Mention others with @username.' }
 ];
 function nextOnboarding() {
   obStep++;
@@ -361,14 +393,8 @@ function nextOnboarding() {
   if (obStep === obSlides.length - 1) document.getElementById('obBtn').textContent = 'Enter the Mirror';
 }
 function skipOnboarding() { finishOnboarding(); }
-function finishOnboarding() {
-  localStorage.setItem('moph_onboarded', 'true');
-  document.getElementById('onboarding').classList.add('hidden');
-}
-function maybeShowOnboarding() {
-  if (localStorage.getItem('moph_onboarded') === 'true') return;
-  document.getElementById('onboarding').classList.remove('hidden');
-}
+function finishOnboarding() { localStorage.setItem('moph_onboarded', 'true'); document.getElementById('onboarding').classList.add('hidden'); }
+function maybeShowOnboarding() { if (localStorage.getItem('moph_onboarded') !== 'true') document.getElementById('onboarding').classList.remove('hidden'); }
 
 // ===== TRAIT REWARDS =====
 const TRAIT_REWARDS = {
@@ -396,8 +422,8 @@ const TRAIT_REWARDS = {
 
 // ===== WISDOM CORE =====
 const wisdom = {
-  flatness: ["✦ You are describing the Flatness Stage — the space between identities. Not depression. Not confusion. The void where the old self is dying and the new one has not arrived.\n\n❓ What did you lose interest in that you have not admitted to yourself?","✦ Not happy. Not sad. Just flat. This is integration. The nervous system is rewiring.\n\n❓ If this flatness could speak, what would it say it is preparing you for?","✦ The silence you feel is not absence. It is the womb of the next version of you.\n\n❓ What are you trying to force to open before its time?","✦ Losing interest in everything is not depression — it is graduation. The old self had interests that fed it. The new self has not yet named its hunger.\n\n❓ What used to excite you that now feels like noise?"],
-  soul_air: ["✦ Air Souls are the thinkers, the questioners, the ones whose minds never stop. You see patterns before others do. Your gift is clarity — your wound is that you live above the heart.\n\n❓ When was the last time you let yourself feel without analyzing?","✦ Air Soul. Your nature is movement, curiosity, and insight. The mind is your compass but it is not your home.\n\n❓ What would happen if you sat in silence with no question to answer?"],
+  flatness: ["✦ You are describing the Flatness Stage — the space between identities. Not depression. Not confusion. The void where the old self is dying and the new one has not arrived.\n\n❓ What did you lose interest in that you have not admitted to yourself?","✦ Not happy. Not sad. Just flat. This is integration. The nervous system is rewiring.\n\n❓ If this flatness could speak, what would it say it is preparing you for?","✦ The silence you feel is not absence. It is the womb of the next version of you.\n\n❓ What are you trying to force to open before its time?","✦ Losing interest in everything is not depression — it is graduation.\n\n❓ What used to excite you that now feels like noise?"],
+  soul_air: ["✦ Air Souls are the thinkers, the questioners, the ones whose minds never stop. Your gift is clarity — your wound is that you live above the heart.\n\n❓ When was the last time you let yourself feel without analyzing?","✦ Air Soul. The mind is your compass but it is not your home.\n\n❓ What would happen if you sat in silence with no question to answer?"],
   soul_fire: ["✦ A Fire Soul burns. Your anger is not destruction — it is fuel that has not yet been aimed.\n\n❓ What are you burning to become?","✦ Fire Soul. You are here to transform, not to comfort.\n\n❓ Where is your fire without a hearth right now?"],
   soul_water: ["✦ A Water Soul feels everything. Your depth is not weakness — it is the deepest gift.\n\n❓ Whose emotion are you carrying that is not yours?","✦ Water Soul. Your sadness is not a problem — it is your language.\n\n❓ What is your sadness trying to tell you right now?"],
   soul_earth: ["✦ An Earth Soul builds. Patient, grounded, practical. Your wound is confusing stillness with being stuck.\n\n❓ What are you building right now that no one sees yet?","✦ Earth Soul. Your slowness is your strength.\n\n❓ What needs you to stay steady right now?"],
@@ -516,16 +542,16 @@ function formatResponse(text) {
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
-// ===== TIME HELPERS =====
+// ===== TIME =====
 function relativeTime(dateStr) {
   const now = Date.now();
   const then = new Date(dateStr).getTime();
   const diff = Math.floor((now - then) / 1000);
   if (diff < 60) return 'just now';
-  if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
-  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-  if (diff < 604800) return Math.floor(diff / 86400) + 'd ago';
-  if (diff < 2592000) return Math.floor(diff / 604800) + 'w ago';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+  if (diff < 604800) return Math.floor(diff / 86400) + 'd';
+  if (diff < 2592000) return Math.floor(diff / 604800) + 'w';
   return new Date(dateStr).toLocaleDateString();
 }
 
@@ -631,7 +657,7 @@ function backToAuth() { document.getElementById('otpScreen').classList.add('hidd
 
 async function signOut() {
   await sb.auth.signOut();
-  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null }, goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null, searchQuery: '' };
+  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null }, goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null, myComments: [] };
   document.getElementById('mainApp').classList.add('hidden');
   document.getElementById('authScreen').classList.remove('hidden');
   document.getElementById('authPassword').value = '';
@@ -643,16 +669,37 @@ async function enterApp(user) {
   document.getElementById('otpScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userEmail').textContent = user.email;
-  await loadProfile(); await loadMessages(); await loadGoldenStars(); await loadTeachings(); await loadNotifications();
+
+  // Show skeleton in teachings
+  showTeachingsSkeleton();
+
+  await loadProfile();
+  await Promise.all([
+    loadMessages(),
+    loadGoldenStars(),
+    loadTeachings(),
+    loadNotifications()
+  ]);
   renderChat(); renderProfile(); renderTeachings(); renderNotifications();
   document.getElementById('userInput').focus();
   maybeShowOnboarding();
 }
 
+function showTeachingsSkeleton() {
+  const el = document.getElementById('teachingsFeed');
+  el.innerHTML = Array(3).fill(0).map(() => `
+    <div class="glass rounded-2xl border border-void-600 p-4 space-y-3">
+      <div class="skeleton h-4 w-3/4"></div>
+      <div class="skeleton h-3 w-full"></div>
+      <div class="skeleton h-3 w-5/6"></div>
+      <div class="skeleton h-3 w-2/3"></div>
+    </div>
+  `).join('');
+}
+
 async function loadProfile() {
   const { data, error } = await sb.from('profiles').select('*').eq('id', state.user.id).single();
   if (error || !data) {
-    // Profile was not created (trigger may not have run). Create it now with a username.
     const emailPrefix = (state.user.email || 'architect').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '_');
     let base = emailPrefix.length >= 3 ? emailPrefix : 'architect';
     let username = base;
@@ -667,6 +714,7 @@ async function loadProfile() {
     return loadProfile();
   }
   state.profile = { ...state.profile, ...data };
+  state.profileCache[state.user.id] = { username: state.profile.username, avatar_url: state.profile.avatar_url };
   if (state.profile.avatar_url) {
     document.getElementById('avatarUpload').innerHTML = `<img src="${state.profile.avatar_url}" class="w-full h-full object-cover"><input type="file" id="avatarInput" accept="image/*" class="hidden">`;
     document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
@@ -695,51 +743,54 @@ async function saveGoldenStar(text, trait_type, trait_value) {
   state.goldenStars.unshift({ text, trait_type, trait_value, date: new Date().toLocaleString() });
 }
 
-// ===== PROFILE CACHE =====
-async function getProfileInfo(userId) {
-  if (state.profileCache[userId]) return state.profileCache[userId];
-  const { data } = await sb.from('profiles').select('username, avatar_url').eq('id', userId).single();
-  const info = data || { username: 'architect', avatar_url: null };
-  state.profileCache[userId] = info;
-  return info;
-}
-
-async function batchFetchProfiles(userIds) {
-  const missing = userIds.filter(id => !state.profileCache[id]);
-  if (missing.length === 0) return;
-  const unique = [...new Set(missing)];
-  const { data } = await sb.from('profiles').select('id, username, avatar_url').in('id', unique);
-  (data || []).forEach(p => { state.profileCache[p.id] = { username: p.username || 'architect', avatar_url: p.avatar_url }; });
-  unique.forEach(id => { if (!state.profileCache[id]) state.profileCache[id] = { username: 'architect', avatar_url: null }; });
-}
-
-function avatarHtml(userId, size) {
-  const info = state.profileCache[userId] || {};
-  const cls = size === 'xs' ? 'avatar-xs' : 'avatar-sm';
-  if (info.avatar_url) return `<img src="${info.avatar_url}" class="${cls}" alt="">`;
-  const initial = (info.username || '?')[0].toUpperCase();
-  return `<div class="${cls}">${initial}</div>`;
-}
-
-// ===== TEACHINGS =====
-async function loadTeachings() {
+// ===== BATCHED TEACHINGS LOADER =====
+async function loadTeachings(force) {
   try {
-    const { data, error } = await sb.from('teachings').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(100);
-    if (error || !data) { state.teachings = []; return; }
-    state.teachings = data;
+    // Query 1: teachings
+    const { data: teachings, error } = await sb.from('teachings').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(50);
+    if (error || !teachings) { state.teachings = []; return; }
+
+    const teachingIds = teachings.map(t => t.id);
+    if (teachingIds.length === 0) { state.teachings = []; return; }
+
+    // Query 2: all comments for these teachings
+    const { data: allComments } = await sb.from('teaching_comments').select('*').in('teaching_id', teachingIds);
+    const commentIds = (allComments || []).map(c => c.id);
+
+    // Query 3: reactions (teaching + comment)
+    const { data: tReactions } = await sb.from('teaching_reactions').select('*').in('teaching_id', teachingIds);
+    const { data: cReactions } = commentIds.length > 0
+      ? await sb.from('comment_reactions').select('*').in('comment_id', commentIds)
+      : { data: [] };
+
+    // Query 4: profiles for comment authors
     const userIds = new Set();
-    for (const t of state.teachings) {
-      const { data: reactions } = await sb.from('teaching_reactions').select('*').eq('teaching_id', t.id);
-      t.reactions = reactions || [];
-      const { data: comments } = await sb.from('teaching_comments').select('*').eq('teaching_id', t.id).order('created_at', { ascending: true });
-      t.comments = comments || [];
-      for (const c of t.comments) {
-        userIds.add(c.user_id);
-        const { data: cr } = await sb.from('comment_reactions').select('*').eq('comment_id', c.id);
-        c.reactions = cr || [];
-      }
+    (allComments || []).forEach(c => userIds.add(c.user_id));
+    if (userIds.size > 0) {
+      const { data: profiles } = await sb.from('profiles').select('id, username, avatar_url').in('id', [...userIds]);
+      (profiles || []).forEach(p => { state.profileCache[p.id] = { username: p.username || 'architect', avatar_url: p.avatar_url }; });
+      [...userIds].forEach(id => { if (!state.profileCache[id]) state.profileCache[id] = { username: 'architect', avatar_url: null }; });
     }
-    await batchFetchProfiles([...userIds]);
+
+    // Stitch in memory
+    const tReactionsByTeaching = {};
+    (tReactions || []).forEach(r => { if (!tReactionsByTeaching[r.teaching_id]) tReactionsByTeaching[r.teaching_id] = []; tReactionsByTeaching[r.teaching_id].push(r); });
+
+    const cReactionsByComment = {};
+    (cReactions || []).forEach(r => { if (!cReactionsByComment[r.comment_id]) cReactionsByComment[r.comment_id] = []; cReactionsByComment[r.comment_id].push(r); });
+
+    const commentsByTeaching = {};
+    (allComments || []).forEach(c => {
+      if (!commentsByTeaching[c.teaching_id]) commentsByTeaching[c.teaching_id] = [];
+      commentsByTeaching[c.teaching_id].push({ ...c, reactions: cReactionsByComment[c.id] || [] });
+    });
+
+    state.teachings = teachings.map(t => ({
+      ...t,
+      reactions: tReactionsByTeaching[t.id] || [],
+      comments: commentsByTeaching[t.id] || []
+    }));
+
     renderTagFilters();
   } catch (e) { state.teachings = []; }
 }
@@ -757,7 +808,6 @@ function setTag(tag) { state.activeTag = tag; renderTagFilters(); filterTeaching
 
 function filterTeachings() {
   const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
-  state.searchQuery = q;
   let filtered = state.teachings;
   if (state.activeTag) filtered = filtered.filter(t => (t.tags || []).includes(state.activeTag));
   if (q) filtered = filtered.filter(t => ((t.title || '') + ' ' + (t.content || '')).toLowerCase().includes(q));
@@ -766,32 +816,51 @@ function filterTeachings() {
   el.innerHTML = filtered.map(t => renderTeachingPost(t)).join('');
 }
 
-function renderTeachings() {
-  const el = document.getElementById('teachingsFeed');
-  if (!state.teachings || state.teachings.length === 0) { el.innerHTML = '<div class="glass rounded-2xl p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No teachings yet. Check back soon.</p></div>'; return; }
-  filterTeachings();
-}
+function renderTeachings() { filterTeachings(); }
 
 function countEmoji(reactions, emoji) { return reactions.filter(r => r.emoji === emoji).length; }
 function userReacted(reactions, emoji) { return reactions.some(r => r.user_id === state.user.id && r.emoji === emoji); }
 
 function renderTeachingPost(t) {
   const reactionBar = EMOJIS.map(e => { const count = countEmoji(t.reactions, e); const active = userReacted(t.reactions, e) ? 'active' : ''; return `<button class="reaction-pill ${active}" onclick="toggleTeachingReaction(${t.id}, '${e}')">${e}${count > 0 ? ' ' + count : ''}</button>`; }).join('');
-  const commentsOpen = localStorage.getItem('comments_open_' + t.id) === 'true';
   const tagHtml = (t.tags || []).map(tag => `<span class="text-[10px] px-2 py-0.5 rounded-full bg-void-800 border border-void-600 text-gray-400">#${escapeHtml(tag)}</span>`).join('');
   const pinnedHtml = t.pinned ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-gold-400/20 border border-gold-400/40 text-gold-300">📌 Pinned</span>` : '';
   const commentsHtml = renderCommentTree(t.comments, null, t.id);
 
+  // Media
+  let mediaHtml = '';
+  if (t.video_url) {
+    // Video — autoplay muted loop like X
+    const isExternal = !t.video_url.includes('teaching-media') && !t.video_url.match(/\.(mp4|webm|mov)$/i);
+    if (isExternal) {
+      mediaHtml = `<div class="rounded-xl overflow-hidden mb-3 bg-void-800 p-4 text-center cursor-pointer" onclick="window.open('${escapeHtml(t.video_url)}', '_blank')">
+        <p class="text-xs text-amethyst-400">🎬 Watch video on external site</p>
+      </div>`;
+    } else {
+      mediaHtml = `<div class="video-wrapper mb-3 cursor-pointer" onclick="openVideoViewer('${escapeHtml(t.video_url)}')">
+        <video src="${escapeHtml(t.video_url)}" autoplay muted loop playsinline preload="metadata"></video>
+        <div class="absolute inset-0 flex items-center justify-center pointer-events-none" style="background:rgba(0,0,0,0.1);">
+          <div class="bg-black/50 rounded-full p-3" style="backdrop-filter:blur(4px);">
+            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+          </div>
+        </div>
+      </div>`;
+    }
+  }
+  if (t.cover_image) {
+    mediaHtml += `<img src="${escapeHtml(t.cover_image)}" class="w-full rounded-xl mb-3 cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(t.cover_image)}')">`;
+  }
+
   return `<article class="glass rounded-2xl border border-void-600 overflow-hidden fade-in" data-teaching-id="${t.id}">
-    ${t.cover_image ? `<img src="${escapeHtml(t.cover_image)}" class="w-full h-48 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(t.cover_image)}')">` : ''}
     <div class="p-4">
       ${(pinnedHtml || tagHtml) ? `<div class="flex flex-wrap gap-1.5 mb-2">${pinnedHtml}${tagHtml}</div>` : ''}
       ${t.title ? `<h3 class="text-base font-semibold mb-2">${escapeHtml(t.title)}</h3>` : ''}
+      ${mediaHtml}
       <div class="text-sm text-gray-300 prose-content">${formatResponse(t.content)}</div>
       <p class="text-[10px] text-gray-600 mt-3">${relativeTime(t.created_at)}</p>
       <div class="flex flex-wrap gap-1.5 mt-4">${reactionBar}</div>
-      <div class="flex items-center gap-3 mt-3">
-        <button onclick="toggleComments(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
+      <div class="flex items-center gap-3 mt-3 pb-3 border-b border-void-600">
+        <button onclick="focusCommentBox(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
           ${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}
         </button>
@@ -800,25 +869,88 @@ function renderTeachingPost(t) {
           Share
         </button>
       </div>
-      <div id="comments-${t.id}" class="${commentsOpen ? '' : 'hidden'} mt-4 space-y-3 pt-4 border-t border-void-600">
-        <div id="comments-list-${t.id}" class="space-y-3">${commentsHtml || '<p class="text-xs text-gray-600">No comments yet.</p>'}</div>
-        <div class="space-y-2 pt-3 border-t border-void-600">
-          <textarea id="comment-text-${t.id}" rows="2" placeholder="Add a comment..." class="w-full bg-void-900 border border-void-600 rounded-xl px-3 py-2 text-sm focus:border-amethyst-500 focus:outline-none resize-none"></textarea>
-          <div class="flex items-center gap-2">
-            <label class="p-2 text-gray-500 hover:text-amethyst-400 cursor-pointer transition flex items-center gap-1 text-xs">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-              <span id="comment-file-label-${t.id}">Photo</span>
-              <input type="file" id="comment-file-${t.id}" accept="image/*" class="hidden" onchange="document.getElementById('comment-file-label-${t.id}').textContent = this.files[0] ? '✓ Photo' : 'Photo'">
-            </label>
-            <button onclick="submitComment(${t.id}, null)" class="ml-auto px-4 py-2 rounded-lg bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-medium">Post</button>
+
+      <!-- Always-visible comment box (X style — top of comments) -->
+      <div class="pt-3">
+        <div class="flex gap-2 mb-3">
+          ${avatarHtml(state.user.id, 'sm')}
+          <div class="flex-1 min-w-0">
+            <div class="relative">
+              <textarea id="comment-text-${t.id}" rows="1" placeholder="Post your reply" class="w-full bg-transparent border-b border-void-600 pb-2 text-sm focus:border-amethyst-500 focus:outline-none resize-none" oninput="autoGrow(this); handleMention(this, ${t.id}, null)"></textarea>
+              <div class="mention-dropdown hidden" id="mention-dropdown-${t.id}-null"></div>
+            </div>
+            <div id="comment-preview-${t.id}" class="hidden mt-2"></div>
+            <div class="flex items-center justify-end gap-2 mt-2">
+              <label class="p-2 text-gray-500 hover:text-amethyst-400 cursor-pointer transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <input type="file" id="comment-file-${t.id}" accept="image/*" class="hidden" onchange="previewCommentImage(${t.id}, null, this)">
+              </label>
+              <button id="comment-btn-${t.id}" onclick="submitComment(${t.id}, null)" class="px-4 py-1.5 rounded-full bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-semibold disabled:opacity-40" disabled>Reply</button>
+            </div>
           </div>
         </div>
+      </div>
+
+      <div id="comments-${t.id}" class="space-y-3 mt-1">
+        ${commentsHtml || '<p class="text-xs text-gray-600 text-center py-4">No comments yet. Be the first.</p>'}
       </div>
     </div>
   </article>`;
 }
 
-// Recursive comment tree render
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  const teachingId = el.id.replace('comment-text-', '');
+  const btn = document.getElementById('comment-btn-' + teachingId);
+  if (btn) btn.disabled = !el.value.trim() && !document.getElementById('comment-preview-' + teachingId)?.querySelector('img');
+}
+
+function focusCommentBox(teachingId) {
+  const el = document.getElementById('comment-text-' + teachingId);
+  if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+}
+
+function previewCommentImage(teachingId, parentId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const targetId = parentId ? `reply-preview-${parentId}` : `comment-preview-${teachingId}`;
+    const target = document.getElementById(targetId);
+    if (!target) return;
+    target.innerHTML = `
+      <div class="relative inline-block">
+        <img src="${reader.result}" class="rounded-lg max-h-40">
+        <button onclick="removeCommentImage('${targetId}')" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs">✕</button>
+      </div>
+    `;
+    target.classList.remove('hidden');
+    const btnId = parentId ? `reply-btn-${parentId}` : `comment-btn-${teachingId}`;
+    const btn = document.getElementById(btnId);
+    if (btn) btn.disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeCommentImage(targetId) {
+  const target = document.getElementById(targetId);
+  if (target) { target.innerHTML = ''; target.classList.add('hidden'); }
+  if (targetId.startsWith('comment-preview-')) {
+    const tid = targetId.replace('comment-preview-', '');
+    document.getElementById('comment-file-' + tid).value = '';
+    const btn = document.getElementById('comment-btn-' + tid);
+    const txt = document.getElementById('comment-text-' + tid);
+    if (btn) btn.disabled = !txt.value.trim();
+  } else {
+    const pid = targetId.replace('reply-preview-', '');
+    document.getElementById('reply-file-' + pid).value = '';
+    const btn = document.getElementById('reply-btn-' + pid);
+    const txt = document.getElementById('reply-text-' + pid);
+    if (btn) btn.disabled = !txt.value.trim();
+  }
+}
+
 function renderCommentTree(comments, parentId, teachingId, depth = 0) {
   const children = comments.filter(c => (c.parent_id || null) === parentId);
   if (children.length === 0) return '';
@@ -832,44 +964,60 @@ function renderComment(c, teachingId, depth, repliesHtml) {
   const reactionBar = EMOJIS.map(e => { const count = countEmoji(c.reactions || [], e); const active = userReacted(c.reactions || [], e) ? 'active' : ''; return `<button class="reaction-pill ${active}" onclick="toggleCommentReaction(${c.id}, '${e}')" style="font-size:11px;padding:2px 8px;">${e}${count > 0 ? ' ' + count : ''}</button>`; }).join('');
   const info = state.profileCache[c.user_id] || { username: 'architect', avatar_url: null };
   const isOwner = c.user_id === state.user.id;
-  const canEdit = isOwner && (Date.now() - new Date(c.created_at).getTime()) < 5 * 60 * 1000;
   const maxVisualDepth = Math.min(depth, 6);
-  const indentStyle = maxVisualDepth > 0 ? 'margin-left: ' + (maxVisualDepth * 12) + 'px; padding-left: 10px; border-left: 1px solid rgba(120,90,160,0.2);' : '';
+  const indentStyle = maxVisualDepth > 0 ? `margin-left:${maxVisualDepth * 12}px;padding-left:10px;border-left:1px solid rgba(120,90,160,0.2);` : '';
   const edited = c.updated_at && c.updated_at !== c.created_at;
+  const pendingClass = c._pending ? 'pending-opacity' : '';
+  const contentWithMentions = (c.content || '').replace(/@([a-z0-9_]+)/gi, '<span class="text-amethyst-300 font-medium">@$1</span>');
 
-  return `<div style="${indentStyle}" class="mb-2" id="comment-${c.id}">
+  return `<div style="${indentStyle}" class="mb-2 ${pendingClass}" id="comment-${c.id}">
     <div class="flex gap-2">
       ${avatarHtml(c.user_id, 'sm')}
       <div class="flex-1 min-w-0">
         <div class="flex items-center gap-2 flex-wrap">
           <span class="text-xs font-medium text-amethyst-300">@${escapeHtml(info.username)}</span>
           <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
-          ${edited ? `<span class="text-[10px] text-gray-700">(edited)</span>` : ''}
+          ${edited ? `<span class="text-[10px] text-gray-700">· edited</span>` : ''}
+          ${isOwner ? `<button onclick="openCommentMenu(${c.id}, ${teachingId})" class="ml-auto text-gray-600 hover:text-gray-300 transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg></button>` : ''}
         </div>
-        ${c.content ? `<p class="text-sm text-gray-300 prose-content mt-1">${escapeHtml(c.content)}</p>` : ''}
+        ${contentWithMentions ? `<p class="text-sm text-gray-300 prose-content mt-1">${contentWithMentions}</p>` : ''}
         ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-lg mt-2 max-h-64 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
         <div class="flex items-center gap-1.5 mt-2 flex-wrap">${reactionBar}</div>
         <div class="flex items-center gap-3 mt-1.5">
           <button onclick="showReplyBox(${c.id}, ${teachingId})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Reply</button>
-          ${canEdit ? `<button onclick="editComment(${c.id}, ${teachingId})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Edit</button>` : ''}
-          ${isOwner ? `<button onclick="deleteComment(${c.id}, ${teachingId})" class="text-[10px] text-gray-500 hover:text-red-400 transition">Delete</button>` : ''}
         </div>
         <div id="reply-box-${c.id}" class="hidden mt-2 space-y-2">
-          <textarea id="reply-text-${c.id}" rows="2" placeholder="Reply to @${escapeHtml(info.username)}..." class="w-full bg-void-900 border border-void-600 rounded-xl px-3 py-2 text-sm focus:border-amethyst-500 focus:outline-none resize-none"></textarea>
-          <div class="flex items-center gap-2">
-            <label class="p-1.5 text-gray-500 hover:text-amethyst-400 cursor-pointer transition flex items-center gap-1 text-[10px]">
-              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-              <span id="reply-file-label-${c.id}">Photo</span>
-              <input type="file" id="reply-file-${c.id}" accept="image/*" class="hidden" onchange="document.getElementById('reply-file-label-${c.id}').textContent = this.files[0] ? '✓' : 'Photo'">
-            </label>
-            <button onclick="cancelReply(${c.id})" class="ml-auto text-[10px] text-gray-500 hover:text-gray-300 px-2 py-1">Cancel</button>
-            <button onclick="submitComment(${teachingId}, ${c.id})" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-[10px] font-medium">Reply</button>
+          <div class="flex gap-2">
+            ${avatarHtml(state.user.id, 'xs')}
+            <div class="flex-1">
+              <div class="relative">
+                <textarea id="reply-text-${c.id}" rows="1" placeholder="Post your reply" class="w-full bg-transparent border-b border-void-600 pb-1 text-sm focus:border-amethyst-500 focus:outline-none resize-none" oninput="autoGrow(this); handleMention(this, ${teachingId}, ${c.id})"></textarea>
+                <div class="mention-dropdown hidden" id="mention-dropdown-${teachingId}-${c.id}"></div>
+              </div>
+              <div id="reply-preview-${c.id}" class="hidden mt-2"></div>
+              <div class="flex items-center justify-end gap-2 mt-1">
+                <label class="p-1.5 text-gray-500 hover:text-amethyst-400 cursor-pointer transition">
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  <input type="file" id="reply-file-${c.id}" accept="image/*" class="hidden" onchange="previewCommentImage(${teachingId}, ${c.id}, this)">
+                </label>
+                <button onclick="cancelReply(${c.id})" class="text-[10px] text-gray-500 hover:text-gray-300 px-2 py-1">Cancel</button>
+                <button id="reply-btn-${c.id}" onclick="submitComment(${teachingId}, ${c.id})" class="px-3 py-1 rounded-full bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-[10px] font-semibold disabled:opacity-40" disabled>Reply</button>
+              </div>
+            </div>
           </div>
         </div>
         ${repliesHtml ? `<div class="mt-1">${repliesHtml}</div>` : ''}
       </div>
     </div>
   </div>`;
+}
+
+function avatarHtml(userId, size) {
+  const info = state.profileCache[userId] || {};
+  const cls = size === 'xs' ? 'avatar-xs' : 'avatar-sm';
+  if (info.avatar_url) return `<img src="${info.avatar_url}" class="${cls}" alt="">`;
+  const initial = (info.username || '?')[0].toUpperCase();
+  return `<div class="${cls}">${initial}</div>`;
 }
 
 function showReplyBox(commentId, teachingId) {
@@ -882,72 +1030,20 @@ function cancelReply(commentId) {
   if (box) box.classList.add('hidden');
 }
 
-function toggleComments(teachingId) {
-  const el = document.getElementById('comments-' + teachingId);
-  const open = !el.classList.contains('hidden');
-  if (open) { el.classList.add('hidden'); localStorage.setItem('comments_open_' + teachingId, 'false'); }
-  else { el.classList.remove('hidden'); localStorage.setItem('comments_open_' + teachingId, 'true'); }
-}
-
-async function toggleTeachingReaction(teachingId, emoji) {
-  const t = state.teachings.find(x => x.id === teachingId);
-  if (!t) return;
-  const existing = t.reactions.find(r => r.user_id === state.user.id && r.emoji === emoji);
-  if (existing) await sb.from('teaching_reactions').delete().eq('id', existing.id);
-  else await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
-  const openIds = state.teachings.map(x => x.id).filter(id => !document.getElementById('comments-' + id)?.classList.contains('hidden'));
-  await loadTeachings(); renderTeachings();
-  openIds.forEach(id => document.getElementById('comments-' + id)?.classList.remove('hidden'));
-}
-
-async function toggleCommentReaction(commentId, emoji) {
-  let comment = null;
-  for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; break; } }
-  if (!comment) return;
-  const existing = comment.reactions.find(r => r.user_id === state.user.id && r.emoji === emoji);
-  if (existing) await sb.from('comment_reactions').delete().eq('id', existing.id);
-  else await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
-  const openIds = state.teachings.map(t => t.id).filter(id => !document.getElementById('comments-' + id)?.classList.contains('hidden'));
-  await loadTeachings(); renderTeachings();
-  openIds.forEach(id => document.getElementById('comments-' + id)?.classList.remove('hidden'));
-}
-
-async function submitComment(teachingId, parentId) {
-  const textId = parentId ? 'reply-text-' + parentId : 'comment-text-' + teachingId;
-  const fileId = parentId ? 'reply-file-' + parentId : 'comment-file-' + teachingId;
-  const textEl = document.getElementById(textId);
-  const fileEl = document.getElementById(fileId);
-  const text = textEl.value.trim();
-  const file = fileEl.files[0];
-  if (!text && !file) return;
-  let image_url = null;
-  if (file) {
-    const path = `${state.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-    const { error } = await sb.storage.from('comment-images').upload(path, file);
-    if (!error) { const { data } = sb.storage.from('comment-images').getPublicUrl(path); image_url = data.publicUrl; }
-  }
-  await sb.from('teaching_comments').insert({ teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url, parent_id: parentId || null });
-
-  // Insert notification for parent comment author
-  if (parentId) {
-    const parent = state.teachings.flatMap(t => t.comments).find(c => c.id === parentId);
-    if (parent && parent.user_id !== state.user.id) {
-      await sb.from('notifications').insert({
-        user_id: parent.user_id,
-        type: 'reply',
-        actor_id: state.user.id,
-        actor_username: state.profile.username,
-        teaching_id: teachingId,
-        comment_id: parentId,
-        message: '@' + state.profile.username + ' replied to your comment'
-      });
-    }
-  }
-
-  localStorage.setItem('comments_open_' + teachingId, 'true');
-  await loadTeachings(); renderTeachings();
-  const c = document.getElementById('comments-' + teachingId);
-  if (c) c.classList.remove('hidden');
+// ===== COMMENT MENU (X-style) =====
+function openCommentMenu(commentId, teachingId) {
+  // Simple popup with Edit and Delete
+  const menu = document.createElement('div');
+  menu.className = 'fixed inset-0 z-[78] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4';
+  menu.innerHTML = `
+    <div class="glass rounded-2xl w-full max-w-sm border border-void-600 overflow-hidden">
+      <button onclick="this.closest('.fixed').remove(); editComment(${commentId}, ${teachingId})" class="w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Edit comment</button>
+      <button onclick="this.closest('.fixed').remove(); askDeleteComment(${commentId}, ${teachingId})" class="w-full py-4 text-left px-5 text-sm text-red-400 hover:bg-void-800 transition border-b border-void-600">Delete comment</button>
+      <button onclick="this.closest('.fixed').remove()" class="w-full py-4 text-center px-5 text-sm text-gray-400 hover:bg-void-800 transition">Cancel</button>
+    </div>
+  `;
+  menu.addEventListener('click', (e) => { if (e.target === menu) menu.remove(); });
+  document.body.appendChild(menu);
 }
 
 async function editComment(commentId, teachingId) {
@@ -957,28 +1053,274 @@ async function editComment(commentId, teachingId) {
   const newText = prompt('Edit your comment:', comment.content || '');
   if (newText === null || newText === comment.content) return;
   await sb.from('teaching_comments').update({ content: newText, updated_at: new Date().toISOString() }).eq('id', commentId);
-  const openIds = state.teachings.map(t => t.id).filter(id => !document.getElementById('comments-' + id)?.classList.contains('hidden'));
   await loadTeachings(); renderTeachings();
-  openIds.forEach(id => document.getElementById('comments-' + id)?.classList.remove('hidden'));
 }
 
-async function deleteComment(commentId, teachingId) {
-  if (!confirm('Delete this comment?')) return;
-  await sb.from('teaching_comments').delete().eq('id', commentId);
-  const openIds = state.teachings.map(t => t.id).filter(id => !document.getElementById('comments-' + id)?.classList.contains('hidden'));
-  await loadTeachings(); renderTeachings();
-  openIds.forEach(id => document.getElementById('comments-' + id)?.classList.remove('hidden'));
+// ===== DELETE WITH UNDO =====
+let pendingDeletes = {};
+
+function askDeleteComment(commentId, teachingId) {
+  // Hide the comment immediately
+  const el = document.getElementById('comment-' + commentId);
+  if (el) el.style.display = 'none';
+
+  // Show undo toast
+  const toast = document.createElement('div');
+  toast.className = 'undo-toast';
+  toast.id = 'undo-' + commentId;
+  toast.innerHTML = `
+    <span class="text-xs text-gray-300">Comment deleted</span>
+    <button onclick="undoDelete(${commentId})" class="text-xs text-amethyst-400 hover:text-amethyst-300 font-semibold">Undo</button>
+  `;
+  document.body.appendChild(toast);
+
+  // Schedule actual delete after 5 seconds
+  pendingDeletes[commentId] = setTimeout(async () => {
+    await sb.from('teaching_comments').delete().eq('id', commentId);
+    const t = document.getElementById('undo-' + commentId);
+    if (t) t.remove();
+    delete pendingDeletes[commentId];
+    // Silent reload — comment is gone
+  }, 5000);
+}
+
+function undoDelete(commentId) {
+  if (pendingDeletes[commentId]) { clearTimeout(pendingDeletes[commentId]); delete pendingDeletes[commentId]; }
+  const el = document.getElementById('comment-' + commentId);
+  if (el) el.style.display = '';
+  const t = document.getElementById('undo-' + commentId);
+  if (t) t.remove();
+}
+
+// ===== MENTIONS =====
+let mentionTargets = {};
+
+function handleMention(textarea, teachingId, parentId) {
+  const val = textarea.value;
+  const cursorPos = textarea.selectionStart;
+  const beforeCursor = val.substring(0, cursorPos);
+  const atMatch = beforeCursor.match(/@([a-z0-9_]*)$/i);
+
+  const dropdownId = `mention-dropdown-${teachingId}-${parentId === null ? 'null' : parentId}`;
+  const dropdown = document.getElementById(dropdownId);
+  if (!dropdown) return;
+
+  if (!atMatch) { dropdown.classList.add('hidden'); return; }
+
+  const query = atMatch[1].toLowerCase();
+  // Get unique usernames from cache
+  const allUsers = Object.values(state.profileCache).filter(p => p.username);
+  const matches = allUsers.filter(u => u.username.toLowerCase().startsWith(query) && u.username.toLowerCase() !== state.profile.username.toLowerCase()).slice(0, 6);
+
+  if (matches.length === 0) { dropdown.classList.add('hidden'); return; }
+
+  dropdown.innerHTML = matches.map((u, i) => `<div class="mention-item ${i === 0 ? 'active' : ''}" onclick="insertMention('${textarea.id}', '${u.username}', '${dropdownId}')">@${escapeHtml(u.username)}</div>`).join('');
+  dropdown.classList.remove('hidden');
+  mentionTargets[dropdownId] = { textareaId: textarea.id, users: matches };
+}
+
+function insertMention(textareaId, username, dropdownId) {
+  const textarea = document.getElementById(textareaId);
+  const val = textarea.value;
+  const cursorPos = textarea.selectionStart;
+  const beforeCursor = val.substring(0, cursorPos);
+  const afterCursor = val.substring(cursorPos);
+  const newBefore = beforeCursor.replace(/@([a-z0-9_]*)$/i, '@' + username + ' ');
+  textarea.value = newBefore + afterCursor;
+  textarea.focus();
+  textarea.selectionStart = textarea.selectionEnd = newBefore.length;
+  const dd = document.getElementById(dropdownId);
+  if (dd) dd.classList.add('hidden');
+}
+
+function extractMentions(text) {
+  const matches = text.match(/@([a-z0-9_]+)/gi) || [];
+  return matches.map(m => m.substring(1).toLowerCase());
+}
+
+// ===== SUBMIT COMMENT (OPTIMISTIC) =====
+async function submitComment(teachingId, parentId) {
+  const textId = parentId ? 'reply-text-' + parentId : 'comment-text-' + teachingId;
+  const fileId = parentId ? 'reply-file-' + parentId : 'comment-file-' + teachingId;
+  const previewId = parentId ? 'reply-preview-' + parentId : 'comment-preview-' + teachingId;
+  const btnId = parentId ? 'reply-btn-' + parentId : 'comment-btn-' + teachingId;
+
+  const textEl = document.getElementById(textId);
+  const fileEl = document.getElementById(fileId);
+  const previewEl = document.getElementById(previewId);
+  const btn = document.getElementById(btnId);
+  const text = textEl.value.trim();
+  const file = fileEl.files[0];
+
+  if (!text && !file) return;
+
+  // Optimistic — insert into local state immediately
+  const tempId = 'temp-' + Date.now();
+  const hasPreviewImage = previewEl && !previewEl.classList.contains('hidden');
+  const previewImgSrc = hasPreviewImage ? previewEl.querySelector('img')?.src : null;
+
+  const optimisticComment = {
+    id: tempId,
+    teaching_id: teachingId,
+    user_id: state.user.id,
+    content: text || null,
+    image_url: previewImgSrc,
+    parent_id: parentId || null,
+    created_at: new Date().toISOString(),
+    reactions: [],
+    _pending: true
+  };
+
+  const t = state.teachings.find(x => x.id === teachingId);
+  if (t) {
+    t.comments.push(optimisticComment);
+    renderTeachings();
+    // Re-open reply box if this was a reply
+    if (parentId) {
+      const rbox = document.getElementById('reply-box-' + parentId);
+      if (rbox) rbox.classList.add('hidden');
+    }
+  }
+
+  // Clear input
+  textEl.value = '';
+  if (fileEl) fileEl.value = '';
+  if (previewEl) { previewEl.innerHTML = ''; previewEl.classList.add('hidden'); }
+  if (btn) btn.disabled = true;
+
+  // Save to DB
+  try {
+    let image_url = null;
+    if (file) {
+      const path = `${state.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const { error } = await sb.storage.from('comment-images').upload(path, file);
+      if (!error) { const { data } = sb.storage.from('comment-images').getPublicUrl(path); image_url = data.publicUrl; }
+    }
+
+    const { data: inserted, error } = await sb.from('teaching_comments').insert({
+      teaching_id: teachingId,
+      user_id: state.user.id,
+      content: text || null,
+      image_url,
+      parent_id: parentId || null
+    }).select().single();
+
+    if (error) throw error;
+
+    // Replace optimistic with real
+    if (t) {
+      const idx = t.comments.findIndex(c => c.id === tempId);
+      if (idx >= 0) t.comments[idx] = { ...inserted, reactions: [] };
+    }
+
+    // Notifications — reply
+    if (parentId) {
+      const parent = t.comments.find(c => c.id === parentId);
+      if (parent && parent.user_id !== state.user.id) {
+        await sb.from('notifications').insert({
+          user_id: parent.user_id,
+          type: 'reply',
+          actor_id: state.user.id,
+          actor_username: state.profile.username,
+          teaching_id: teachingId,
+          comment_id: parentId,
+          message: '@' + state.profile.username + ' replied to your comment'
+        });
+      }
+    }
+
+    // Notifications — mentions
+    const mentions = extractMentions(text);
+    for (const mentionUsername of mentions) {
+      // Find user by username
+      const { data: mentionedUser } = await sb.from('profiles').select('id').ilike('username', mentionUsername).limit(1).maybeSingle();
+      if (mentionedUser && mentionedUser.id !== state.user.id) {
+        await sb.from('notifications').insert({
+          user_id: mentionedUser.id,
+          type: 'mention',
+          actor_id: state.user.id,
+          actor_username: state.profile.username,
+          teaching_id: teachingId,
+          comment_id: inserted.id,
+          message: '@' + state.profile.username + ' mentioned you in a comment'
+        });
+      }
+    }
+
+    renderTeachings();
+  } catch (e) {
+    console.error(e);
+    // Mark as failed
+    if (t) {
+      const idx = t.comments.findIndex(c => c.id === tempId);
+      if (idx >= 0) t.comments[idx]._error = true;
+      renderTeachings();
+    }
+  }
+}
+
+// ===== REACTIONS =====
+async function toggleTeachingReaction(teachingId, emoji) {
+  const t = state.teachings.find(x => x.id === teachingId);
+  if (!t) return;
+  const existing = t.reactions.find(r => r.user_id === state.user.id && r.emoji === emoji);
+
+  // Optimistic
+  if (existing) {
+    t.reactions = t.reactions.filter(r => r.id !== existing.id);
+  } else {
+    t.reactions.push({ id: 'temp-' + Date.now(), teaching_id: teachingId, user_id: state.user.id, emoji, _pending: true });
+  }
+  renderTeachings();
+
+  if (existing) await sb.from('teaching_reactions').delete().eq('id', existing.id);
+  else {
+    await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
+    // Notify admin (skip for now — admin not a user in the system as such)
+  }
+}
+
+async function toggleCommentReaction(commentId, emoji) {
+  let comment = null, teachingId = null;
+  for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; teachingId = t.id; break; } }
+  if (!comment) return;
+  const existing = (comment.reactions || []).find(r => r.user_id === state.user.id && r.emoji === emoji);
+
+  // Optimistic
+  if (existing) {
+    comment.reactions = comment.reactions.filter(r => r.id !== existing.id);
+  } else {
+    comment.reactions.push({ id: 'temp-' + Date.now(), comment_id: commentId, user_id: state.user.id, emoji, _pending: true });
+  }
+  renderTeachings();
+
+  if (existing) await sb.from('comment_reactions').delete().eq('id', existing.id);
+  else {
+    await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
+    // Notify comment owner
+    if (comment.user_id !== state.user.id) {
+      await sb.from('notifications').insert({
+        user_id: comment.user_id,
+        type: 'reaction',
+        actor_id: state.user.id,
+        actor_username: state.profile.username,
+        teaching_id: teachingId,
+        comment_id: commentId,
+        message: '@' + state.profile.username + ' reacted ' + emoji + ' to your comment'
+      });
+    }
+  }
 }
 
 function shareTeaching(teachingId) {
   const t = state.teachings.find(x => x.id === teachingId);
   if (!t) return;
   const text = (t.title ? t.title + '\n\n' : '') + (t.content || '').substring(0, 200) + '...\n\nRead on Moph Echo: https://mophecho-mirror.vercel.app';
-  if (navigator.share) { navigator.share({ title: t.title || 'Moph Echo Teaching', text, url: 'https://mophecho-mirror.vercel.app' }).catch(() => {}); }
-  else { navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard')).catch(() => {}); }
+  if (navigator.share) navigator.share({ title: t.title || 'Moph Echo Teaching', text, url: 'https://mophecho-mirror.vercel.app' }).catch(() => {});
+  else navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard')).catch(() => {});
 }
 
-// ===== IMAGE VIEWER =====
+// ===== VIEWERS =====
 function openImageViewer(src) {
   document.getElementById('imageViewerSrc').src = src;
   document.getElementById('imageViewer').classList.remove('hidden');
@@ -987,6 +1329,19 @@ function openImageViewer(src) {
 function closeImageViewer() {
   document.getElementById('imageViewer').classList.add('hidden');
   document.getElementById('imageViewerSrc').src = '';
+  document.body.style.overflow = '';
+}
+function openVideoViewer(src) {
+  const v = document.getElementById('videoViewerSrc');
+  v.src = src;
+  document.getElementById('videoViewer').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  v.play().catch(() => {});
+}
+function closeVideoViewer() {
+  const v = document.getElementById('videoViewerSrc');
+  v.pause(); v.src = '';
+  document.getElementById('videoViewer').classList.add('hidden');
   document.body.style.overflow = '';
 }
 
@@ -1013,12 +1368,10 @@ function renderNotifications() {
 
 function showNotifications() { document.getElementById('notifPanel').classList.remove('hidden'); renderNotifications(); }
 function closeNotifications() { document.getElementById('notifPanel').classList.add('hidden'); }
-
 async function markAllRead() {
   await sb.from('notifications').update({ is_read: true }).eq('user_id', state.user.id).eq('is_read', false);
   await loadNotifications(); renderNotifications();
 }
-
 async function openNotification(notifId, teachingId) {
   await sb.from('notifications').update({ is_read: true }).eq('id', notifId);
   await loadNotifications();
@@ -1028,23 +1381,18 @@ async function openNotification(notifId, teachingId) {
     setTimeout(() => {
       const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 500);
+    }, 400);
   }
 }
 
-// ===== USERNAME EDITOR =====
-function openUsernameEditor() {
-  document.getElementById('usernameInput').value = state.profile.username || '';
-  document.getElementById('usernameErr').classList.add('hidden');
-  document.getElementById('usernameModal').classList.remove('hidden');
-}
+// ===== USERNAME =====
+function openUsernameEditor() { document.getElementById('usernameInput').value = state.profile.username || ''; document.getElementById('usernameErr').classList.add('hidden'); document.getElementById('usernameModal').classList.remove('hidden'); }
 function closeUsernameEditor() { document.getElementById('usernameModal').classList.add('hidden'); }
-
 async function saveUsername() {
   const raw = document.getElementById('usernameInput').value.trim().toLowerCase();
   const err = document.getElementById('usernameErr');
   err.classList.add('hidden');
-  if (!/^[a-z0-9_]{3,30}$/.test(raw)) { err.textContent = 'Only lowercase letters, numbers, and underscores. 3-30 chars.'; err.classList.remove('hidden'); return; }
+  if (!/^[a-z0-9_]{3,30}$/.test(raw)) { err.textContent = 'Only lowercase letters, numbers, underscores. 3-30 chars.'; err.classList.remove('hidden'); return; }
   const { data: existing } = await sb.from('profiles').select('id').ilike('username', raw).neq('id', state.user.id).limit(1);
   if (existing && existing.length > 0) { err.textContent = 'That username is already taken.'; err.classList.remove('hidden'); return; }
   const btn = document.getElementById('saveUsernameBtn');
@@ -1053,10 +1401,80 @@ async function saveUsername() {
   btn.textContent = 'Save'; btn.disabled = false;
   if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
   state.profile.username = raw;
+  state.profileCache[state.user.id] = { username: raw, avatar_url: state.profile.avatar_url };
   document.getElementById('displayUsername').textContent = '@' + raw;
   closeUsernameEditor();
 }
 
+// ===== AVATAR =====
+async function handleAvatarUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('avatarLoading').classList.remove('hidden');
+  const ext = file.name.split('.').pop() || 'jpg';
+  const path = `${state.user.id}/avatar-${Date.now()}.${ext}`;
+  const { error: upErr } = await sb.storage.from('avatars').upload(path, file, { upsert: true });
+  if (upErr) { document.getElementById('avatarLoading').classList.add('hidden'); alert('Upload failed: ' + upErr.message); return; }
+  const { data: urlData } = sb.storage.from('avatars').getPublicUrl(path);
+  const avatar_url = urlData.publicUrl + '?t=' + Date.now();
+  await sb.from('profiles').update({ avatar_url }).eq('id', state.user.id);
+  state.profile.avatar_url = avatar_url;
+  state.profileCache[state.user.id] = { username: state.profile.username, avatar_url };
+  document.getElementById('avatarUpload').innerHTML = `<img src="${avatar_url}" class="w-full h-full object-cover"><input type="file" id="avatarInput" accept="image/*" class="hidden">`;
+  document.getElementById('avatarLoading').classList.add('hidden');
+  document.getElementById('avatarHint').textContent = '✓ Photo saved';
+  setTimeout(() => { document.getElementById('avatarHint').textContent = 'Tap photo to change'; }, 2000);
+  document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
+}
+
+document.getElementById('avatarUpload').addEventListener('click', () => document.getElementById('avatarInput').click());
+document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
+
+// ===== TABS =====
+function switchTab(tab) {
+  ['chat','teachings','profile'].forEach(t => {
+    const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (panel) panel.classList.add('hidden');
+    const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.className = 'flex-1 py-1.5 text-[11px] font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5';
+  });
+  const activePanel = document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (activePanel) activePanel.classList.remove('hidden');
+  const activeBtn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
+  if (activeBtn) activeBtn.className = 'flex-1 py-1.5 text-[11px] font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5';
+  if (tab === 'profile') { renderProfile(); loadMyComments(); }
+  if (tab === 'teachings') { renderTeachings(); }
+}
+
+// ===== MY COMMENTS =====
+async function loadMyComments() {
+  const el = document.getElementById('myCommentsList');
+  el.innerHTML = '<p class="text-xs text-gray-600">Loading...</p>';
+  const { data } = await sb.from('teaching_comments').select('id, content, teaching_id, created_at').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(30);
+  if (!data || data.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600">You have not commented yet.</p>'; return; }
+  state.myComments = data;
+  el.innerHTML = data.map(c => {
+    const t = state.teachings.find(x => x.id === c.teaching_id);
+    const title = t ? (t.title || 'Untitled teaching') : 'Teaching';
+    return `
+      <div class="bg-void-800/50 rounded-xl p-3 border border-void-600 cursor-pointer hover:border-amethyst-500/40 transition" onclick="jumpToComment(${c.teaching_id}, ${c.id})">
+        <p class="text-xs text-amethyst-300 mb-1">${escapeHtml(title)}</p>
+        <p class="text-xs text-gray-300 line-clamp-2">${escapeHtml(c.content || '[image]')}</p>
+        <p class="text-[10px] text-gray-600 mt-1">${relativeTime(c.created_at)}</p>
+      </div>
+    `;
+  }).join('');
+}
+
+function jumpToComment(teachingId, commentId) {
+  switchTab('teachings');
+  setTimeout(() => {
+    const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
+}
+
+// ===== PROFILE =====
 function renderProfile() {
   document.getElementById('pElement').textContent = state.profile.element || '—';
   document.getElementById('pElement').className = state.profile.element ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
@@ -1072,43 +1490,7 @@ function renderProfile() {
   else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 rounded-xl p-3"><p class="text-xs text-gold-200 prose-content">${formatResponse(s.text)}</p><p class="text-[10px] text-gray-600 mt-2">${s.date}</p></div>`).join('');
 }
 
-async function handleAvatarUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  document.getElementById('avatarLoading').classList.remove('hidden');
-  const ext = file.name.split('.').pop() || 'jpg';
-  const path = `${state.user.id}/avatar-${Date.now()}.${ext}`;
-  const { error: upErr } = await sb.storage.from('avatars').upload(path, file, { upsert: true });
-  if (upErr) { document.getElementById('avatarLoading').classList.add('hidden'); alert('Upload failed: ' + upErr.message); return; }
-  const { data: urlData } = sb.storage.from('avatars').getPublicUrl(path);
-  const avatar_url = urlData.publicUrl;
-  await sb.from('profiles').update({ avatar_url }).eq('id', state.user.id);
-  state.profile.avatar_url = avatar_url;
-  document.getElementById('avatarUpload').innerHTML = `<img src="${avatar_url}?t=${Date.now()}" class="w-full h-full object-cover"><input type="file" id="avatarInput" accept="image/*" class="hidden">`;
-  document.getElementById('avatarLoading').classList.add('hidden');
-  document.getElementById('avatarHint').textContent = '✓ Photo saved';
-  setTimeout(() => { document.getElementById('avatarHint').textContent = 'Tap photo to change'; }, 2000);
-  document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
-}
-
-document.getElementById('avatarUpload').addEventListener('click', () => document.getElementById('avatarInput').click());
-document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
-
-function switchTab(tab) {
-  ['chat','teachings','profile'].forEach(t => {
-    const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1));
-    if (panel) panel.classList.add('hidden');
-    const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
-    if (btn) btn.className = 'flex-1 py-1.5 text-[11px] font-medium rounded-lg text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5';
-  });
-  const activePanel = document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1));
-  if (activePanel) activePanel.classList.remove('hidden');
-  const activeBtn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
-  if (activeBtn) activeBtn.className = 'flex-1 py-1.5 text-[11px] font-medium rounded-lg bg-amethyst-600/20 text-amethyst-400 border border-amethyst-500/20 flex items-center justify-center gap-1.5';
-  if (tab === 'profile') renderProfile();
-  if (tab === 'teachings') { loadTeachings().then(renderTeachings); }
-}
-
+// ===== CHAT =====
 function renderChat() {
   const c = document.getElementById('chatContainer');
   if (state.messages.length === 0) {
@@ -1119,129 +1501,4 @@ function renderChat() {
     if (m.role === 'user') return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-2xl rounded-br-md px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`;
     if (m.role === 'surprise') return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%]"><div class="flex items-start gap-2"><svg class="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><p class="text-sm text-gold-200">${formatResponse(m.text)}</p></div></div></div>`;
     return `<div class="flex justify-start fade-in"><div class="glass rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`;
-  }).join('');
-  c.scrollTop = c.scrollHeight;
-}
-
-async function processEntry() {
-  const input = document.getElementById('userInput');
-  const text = input.value.trim();
-  if (!text || !state.user) return;
-  state.messages.push({ role: 'user', text }); await saveMessage('user', text);
-  input.value = ''; renderChat();
-  await new Promise(r => setTimeout(r, 400));
-  const reflection = generateReflection(text);
-  state.messages.push({ role: 'mirror', text: reflection }); await saveMessage('mirror', reflection);
-  identifyProfile(text);
-  const newStar = generateGoldenStar(text);
-  if (newStar) {
-    setTimeout(async () => {
-      state.messages.push({ role: 'surprise', text: newStar.text });
-      await saveMessage('surprise', newStar.text);
-      await saveGoldenStar(newStar.text, newStar.trait_type, newStar.trait_value);
-      renderChat(); renderProfile();
-    }, 1500);
-  }
-  renderChat(); renderProfile(); checkGrounding(text); input.focus();
-}
-
-function identifyProfile(text) {
-  const l = text.toLowerCase();
-  let changed = false;
-  if (!state.profile.element) {
-    if (l.includes('anger')||l.includes('passion')||l.includes('burn')||l.includes('fire')) { state.profile.element='Fire'; changed=true; }
-    else if (l.includes('sad')||l.includes('cry')||l.includes('deep')||l.includes('void')||l.includes('empty')) { state.profile.element='Water'; changed=true; }
-    else if (l.includes('heavy')||l.includes('grounded')||l.includes('money')||l.includes('debt')) { state.profile.element='Earth'; changed=true; }
-    else if (l.includes('think')||l.includes('curious')||l.includes('mind')||l.includes('question')) { state.profile.element='Air'; changed=true; }
-  }
-  if (!state.profile.wound) {
-    if (l.includes('alone')||l.includes('lonely')||l.includes('abandoned')) { state.profile.wound='Abandonment'; changed=true; }
-    else if (l.includes('betray')||l.includes('trust')||l.includes('liar')) { state.profile.wound='Betrayal'; changed=true; }
-    else if (l.includes('worthless')||l.includes('not enough')||l.includes('failure')) { state.profile.wound='Worthlessness'; changed=true; }
-    else if (l.includes('powerless')||l.includes('control')||l.includes('weak')) { state.profile.wound='Powerlessness'; changed=true; }
-    else if (l.includes('invisible')||l.includes('ignore')) { state.profile.wound='Invisibility'; changed=true; }
-  }
-  if (!state.profile.gift) {
-    if (l.includes('intuitive')||l.includes('know without knowing')) { state.profile.gift='Intuition'; changed=true; }
-    else if (l.includes('heal')||l.includes('comfort')||l.includes('nurture')) { state.profile.gift='Healing'; changed=true; }
-    else if (l.includes('teach')||l.includes('explain')||l.includes('guide')) { state.profile.gift='Teaching'; changed=true; }
-    else if (l.includes('create')||l.includes('build')||l.includes('design')) { state.profile.gift='Creation'; changed=true; }
-    else if (l.includes('protect')||l.includes('shield')||l.includes('guard')) { state.profile.gift='Protection'; changed=true; }
-  }
-  if (!state.profile.stage) {
-    if (l.includes('confused')||l.includes('what is happening')||l.includes('help')) { state.profile.stage='Seeking'; changed=true; }
-    else if (l.includes('sync')||l.includes('coincidence')||l.includes('pattern')) { state.profile.stage='Alignment'; changed=true; }
-    else if (l.includes('void')||l.includes('empty')||l.includes('flat')) { state.profile.stage='Flatness'; changed=true; }
-    else if (l.includes('build')||l.includes('create')||l.includes('work')) { state.profile.stage='Forging'; changed=true; }
-  }
-  if (changed) saveProfile();
-}
-
-function generateGoldenStar(text) {
-  if (state.profile.element && !state.goldenStars.some(s => s.trait_type === 'element')) {
-    const reward = TRAIT_REWARDS.element[state.profile.element];
-    if (reward) return { text: reward, trait_type: 'element', trait_value: state.profile.element };
-  }
-  if (state.profile.wound && !state.goldenStars.some(s => s.trait_type === 'wound')) {
-    const reward = TRAIT_REWARDS.wound[state.profile.wound];
-    if (reward) return { text: reward, trait_type: 'wound', trait_value: state.profile.wound };
-  }
-  if (state.profile.gift && !state.goldenStars.some(s => s.trait_type === 'gift')) {
-    const reward = TRAIT_REWARDS.gift[state.profile.gift];
-    if (reward) return { text: reward, trait_type: 'gift', trait_value: state.profile.gift };
-  }
-  return null;
-}
-
-function startVoice() {
-  if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) { alert('Voice not supported.'); return; }
-  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const rec = new SR(); rec.lang='en-US'; rec.interimResults=false;
-  const input = document.getElementById('userInput'); const btn = document.getElementById('voiceBtn');
-  input.placeholder='Listening...'; btn.classList.add('text-amethyst-400','animate-pulse');
-  rec.onresult = (e) => { input.value = e.results[0][0].transcript; input.placeholder='Speak your truth...'; btn.classList.remove('text-amethyst-400','animate-pulse'); processEntry(); };
-  rec.onerror = () => { input.placeholder='Speak your truth...'; btn.classList.remove('text-amethyst-400','animate-pulse'); };
-  rec.start();
-}
-
-function downloadLog() {
-  if (state.messages.length === 0) { alert('No reflections.'); return; }
-  let log = 'MOPH ECHO MIRROR — REFLECTION LOG\n' + `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
-  state.messages.forEach(m => { const r = m.role==='user'?'YOU':m.role==='surprise'?'GOLDEN':'MIRROR'; log += `[${r}] ${String(m.text).replace(/<[^>]*>/g,'')}\n${'-'.repeat(30)}\n`; });
-  const blob = new Blob([log], { type: 'text/plain' });
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `moph-echo-${Date.now()}.txt`; a.click();
-}
-
-function checkGrounding(text) {
-  const l = text.toLowerCase();
-  const alert = document.getElementById('groundingAlert');
-  if (l.includes('hungry')||l.includes('floating')||l.includes('eat')) alert.classList.remove('hidden');
-  else alert.classList.add('hidden');
-}
-
-// Reading progress (only in teachings)
-window.addEventListener('scroll', () => {
-  const panel = document.getElementById('panelTeachings');
-  const bar = document.getElementById('readingBar');
-  if (!panel || panel.classList.contains('hidden')) { bar.style.width = '0%'; return; }
-  const scrollTop = panel.scrollTop;
-  const scrollHeight = panel.scrollHeight - panel.clientHeight;
-  const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-  bar.style.width = pct + '%';
-});
-
-document.getElementById('panelTeachings')?.addEventListener('scroll', () => {
-  const panel = document.getElementById('panelTeachings');
-  const bar = document.getElementById('readingBar');
-  const scrollTop = panel.scrollTop;
-  const scrollHeight = panel.scrollHeight - panel.clientHeight;
-  const pct = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
-  bar.style.width = pct + '%';
-});
-
-document.getElementById('userInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); processEntry(); } });
-
-initConfig();
-</script>
-</body>
-</html>
+  }).
