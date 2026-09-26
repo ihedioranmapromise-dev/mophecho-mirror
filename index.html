@@ -52,8 +52,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .video-wrapper { position: relative; background: #000; border-radius: 12px; overflow: hidden; max-height: 70vh; display: flex; align-items: center; justify-content: center; }
 .video-wrapper video { max-width: 100%; max-height: 70vh; width: 100%; display: block; }
 .undo-toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%); background: #1a1a2e; border: 1px solid #3a3a5a; border-radius: 12px; padding: 12px 16px; z-index: 90; display: flex; align-items: center; gap: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.5); animation: fadeIn 0.2s ease; }
-.comment-thread { display: block; }
-.thread-line { border-left: 1px solid rgba(120,90,160,0.2); padding-left: 10px; margin-left: 4px; }
 </style>
 </head>
 <body class="font-sans text-gray-200">
@@ -289,8 +287,8 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
     <input type="text" id="downloadFilename" placeholder="my-journey" value="moph-echo-journey" class="w-full mt-1 mb-4 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
     <div class="flex gap-2">
       <button onclick="closeDownloadModal()" class="flex-1 py-2.5 rounded-xl bg-void-800 text-gray-300 text-sm font-medium">Cancel</button>
-      <button onclick="downloadAs('txt')" class="flex-1 py-2.5 rounded-xl bg-void-800 border border-void-600 text-gray-200 text-sm font-medium hover:bg-void-700">Save as Text</button>
-      <button onclick="downloadAs('pdf')" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-sm font-medium">Save as PDF</button>
+      <button onclick="downloadAs('txt')" class="flex-1 py-2.5 rounded-xl bg-void-800 border border-void-600 text-gray-200 text-sm font-medium hover:bg-void-700">Text</button>
+      <button onclick="downloadAs('pdf')" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-sm font-medium">PDF</button>
     </div>
   </div>
 </div>
@@ -663,6 +661,7 @@ async function signOut() {
   document.getElementById('authPassword').value = '';
 }
 
+// ===== FAST ENTRY: chat first, rest in background =====
 async function enterApp(user) {
   state.user = user;
   document.getElementById('authScreen').classList.add('hidden');
@@ -670,19 +669,29 @@ async function enterApp(user) {
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userEmail').textContent = user.email;
 
-  // Show skeleton in teachings
+  // Show skeleton in teachings while we load in background
   showTeachingsSkeleton();
 
+  // Load profile first (needed for usernames and avatars)
   await loadProfile();
-  await Promise.all([
-    loadMessages(),
+  renderProfile();
+
+  // Load chat messages — the fastest, most important thing
+  await loadMessages();
+  renderChat();
+  document.getElementById('userInput').focus();
+  maybeShowOnboarding();
+
+  // Now load the rest in the background — chat is already visible
+  Promise.all([
     loadGoldenStars(),
     loadTeachings(),
     loadNotifications()
-  ]);
-  renderChat(); renderProfile(); renderTeachings(); renderNotifications();
-  document.getElementById('userInput').focus();
-  maybeShowOnboarding();
+  ]).then(() => {
+    renderProfile();
+    renderTeachings();
+    renderNotifications();
+  }).catch(err => console.error('Background load error:', err));
 }
 
 function showTeachingsSkeleton() {
@@ -727,7 +736,7 @@ async function saveProfile() {
 }
 
 async function loadMessages() {
-  const { data } = await sb.from('journal_entries').select('*').eq('user_id', state.user.id).order('created_at', { ascending: true }).limit(200);
+  const { data } = await sb.from('journal_entries').select('role, content, created_at').eq('user_id', state.user.id).order('created_at', { ascending: true }).limit(200);
   if (data) state.messages = data.map(m => ({ role: m.role, text: m.content }));
 }
 
@@ -746,24 +755,20 @@ async function saveGoldenStar(text, trait_type, trait_value) {
 // ===== BATCHED TEACHINGS LOADER =====
 async function loadTeachings(force) {
   try {
-    // Query 1: teachings
     const { data: teachings, error } = await sb.from('teachings').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(50);
     if (error || !teachings) { state.teachings = []; return; }
 
     const teachingIds = teachings.map(t => t.id);
     if (teachingIds.length === 0) { state.teachings = []; return; }
 
-    // Query 2: all comments for these teachings
     const { data: allComments } = await sb.from('teaching_comments').select('*').in('teaching_id', teachingIds);
     const commentIds = (allComments || []).map(c => c.id);
 
-    // Query 3: reactions (teaching + comment)
     const { data: tReactions } = await sb.from('teaching_reactions').select('*').in('teaching_id', teachingIds);
     const { data: cReactions } = commentIds.length > 0
       ? await sb.from('comment_reactions').select('*').in('comment_id', commentIds)
       : { data: [] };
 
-    // Query 4: profiles for comment authors
     const userIds = new Set();
     (allComments || []).forEach(c => userIds.add(c.user_id));
     if (userIds.size > 0) {
@@ -772,7 +777,6 @@ async function loadTeachings(force) {
       [...userIds].forEach(id => { if (!state.profileCache[id]) state.profileCache[id] = { username: 'architect', avatar_url: null }; });
     }
 
-    // Stitch in memory
     const tReactionsByTeaching = {};
     (tReactions || []).forEach(r => { if (!tReactionsByTeaching[r.teaching_id]) tReactionsByTeaching[r.teaching_id] = []; tReactionsByTeaching[r.teaching_id].push(r); });
 
@@ -827,10 +831,8 @@ function renderTeachingPost(t) {
   const pinnedHtml = t.pinned ? `<span class="text-[10px] px-2 py-0.5 rounded-full bg-gold-400/20 border border-gold-400/40 text-gold-300">📌 Pinned</span>` : '';
   const commentsHtml = renderCommentTree(t.comments, null, t.id);
 
-  // Media
   let mediaHtml = '';
   if (t.video_url) {
-    // Video — autoplay muted loop like X
     const isExternal = !t.video_url.includes('teaching-media') && !t.video_url.match(/\.(mp4|webm|mov)$/i);
     if (isExternal) {
       mediaHtml = `<div class="rounded-xl overflow-hidden mb-3 bg-void-800 p-4 text-center cursor-pointer" onclick="window.open('${escapeHtml(t.video_url)}', '_blank')">
@@ -870,7 +872,6 @@ function renderTeachingPost(t) {
         </button>
       </div>
 
-      <!-- Always-visible comment box (X style — top of comments) -->
       <div class="pt-3">
         <div class="flex gap-2 mb-3">
           ${avatarHtml(state.user.id, 'sm')}
@@ -1032,7 +1033,6 @@ function cancelReply(commentId) {
 
 // ===== COMMENT MENU (X-style) =====
 function openCommentMenu(commentId, teachingId) {
-  // Simple popup with Edit and Delete
   const menu = document.createElement('div');
   menu.className = 'fixed inset-0 z-[78] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4';
   menu.innerHTML = `
@@ -1060,11 +1060,9 @@ async function editComment(commentId, teachingId) {
 let pendingDeletes = {};
 
 function askDeleteComment(commentId, teachingId) {
-  // Hide the comment immediately
   const el = document.getElementById('comment-' + commentId);
   if (el) el.style.display = 'none';
 
-  // Show undo toast
   const toast = document.createElement('div');
   toast.className = 'undo-toast';
   toast.id = 'undo-' + commentId;
@@ -1074,13 +1072,11 @@ function askDeleteComment(commentId, teachingId) {
   `;
   document.body.appendChild(toast);
 
-  // Schedule actual delete after 5 seconds
   pendingDeletes[commentId] = setTimeout(async () => {
     await sb.from('teaching_comments').delete().eq('id', commentId);
     const t = document.getElementById('undo-' + commentId);
     if (t) t.remove();
     delete pendingDeletes[commentId];
-    // Silent reload — comment is gone
   }, 5000);
 }
 
@@ -1108,9 +1104,8 @@ function handleMention(textarea, teachingId, parentId) {
   if (!atMatch) { dropdown.classList.add('hidden'); return; }
 
   const query = atMatch[1].toLowerCase();
-  // Get unique usernames from cache
   const allUsers = Object.values(state.profileCache).filter(p => p.username);
-  const matches = allUsers.filter(u => u.username.toLowerCase().startsWith(query) && u.username.toLowerCase() !== state.profile.username.toLowerCase()).slice(0, 6);
+  const matches = allUsers.filter(u => u.username.toLowerCase().startsWith(query) && u.username.toLowerCase() !== (state.profile.username || '').toLowerCase()).slice(0, 6);
 
   if (matches.length === 0) { dropdown.classList.add('hidden'); return; }
 
@@ -1154,7 +1149,6 @@ async function submitComment(teachingId, parentId) {
 
   if (!text && !file) return;
 
-  // Optimistic — insert into local state immediately
   const tempId = 'temp-' + Date.now();
   const hasPreviewImage = previewEl && !previewEl.classList.contains('hidden');
   const previewImgSrc = hasPreviewImage ? previewEl.querySelector('img')?.src : null;
@@ -1175,20 +1169,17 @@ async function submitComment(teachingId, parentId) {
   if (t) {
     t.comments.push(optimisticComment);
     renderTeachings();
-    // Re-open reply box if this was a reply
     if (parentId) {
       const rbox = document.getElementById('reply-box-' + parentId);
       if (rbox) rbox.classList.add('hidden');
     }
   }
 
-  // Clear input
   textEl.value = '';
   if (fileEl) fileEl.value = '';
   if (previewEl) { previewEl.innerHTML = ''; previewEl.classList.add('hidden'); }
   if (btn) btn.disabled = true;
 
-  // Save to DB
   try {
     let image_url = null;
     if (file) {
@@ -1207,13 +1198,11 @@ async function submitComment(teachingId, parentId) {
 
     if (error) throw error;
 
-    // Replace optimistic with real
     if (t) {
       const idx = t.comments.findIndex(c => c.id === tempId);
       if (idx >= 0) t.comments[idx] = { ...inserted, reactions: [] };
     }
 
-    // Notifications — reply
     if (parentId) {
       const parent = t.comments.find(c => c.id === parentId);
       if (parent && parent.user_id !== state.user.id) {
@@ -1229,10 +1218,8 @@ async function submitComment(teachingId, parentId) {
       }
     }
 
-    // Notifications — mentions
     const mentions = extractMentions(text);
     for (const mentionUsername of mentions) {
-      // Find user by username
       const { data: mentionedUser } = await sb.from('profiles').select('id').ilike('username', mentionUsername).limit(1).maybeSingle();
       if (mentionedUser && mentionedUser.id !== state.user.id) {
         await sb.from('notifications').insert({
@@ -1250,7 +1237,6 @@ async function submitComment(teachingId, parentId) {
     renderTeachings();
   } catch (e) {
     console.error(e);
-    // Mark as failed
     if (t) {
       const idx = t.comments.findIndex(c => c.id === tempId);
       if (idx >= 0) t.comments[idx]._error = true;
@@ -1265,7 +1251,6 @@ async function toggleTeachingReaction(teachingId, emoji) {
   if (!t) return;
   const existing = t.reactions.find(r => r.user_id === state.user.id && r.emoji === emoji);
 
-  // Optimistic
   if (existing) {
     t.reactions = t.reactions.filter(r => r.id !== existing.id);
   } else {
@@ -1274,10 +1259,7 @@ async function toggleTeachingReaction(teachingId, emoji) {
   renderTeachings();
 
   if (existing) await sb.from('teaching_reactions').delete().eq('id', existing.id);
-  else {
-    await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
-    // Notify admin (skip for now — admin not a user in the system as such)
-  }
+  else await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
 }
 
 async function toggleCommentReaction(commentId, emoji) {
@@ -1286,7 +1268,6 @@ async function toggleCommentReaction(commentId, emoji) {
   if (!comment) return;
   const existing = (comment.reactions || []).find(r => r.user_id === state.user.id && r.emoji === emoji);
 
-  // Optimistic
   if (existing) {
     comment.reactions = comment.reactions.filter(r => r.id !== existing.id);
   } else {
@@ -1297,7 +1278,6 @@ async function toggleCommentReaction(commentId, emoji) {
   if (existing) await sb.from('comment_reactions').delete().eq('id', existing.id);
   else {
     await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
-    // Notify comment owner
     if (comment.user_id !== state.user.id) {
       await sb.from('notifications').insert({
         user_id: comment.user_id,
@@ -1459,7 +1439,7 @@ async function loadMyComments() {
     return `
       <div class="bg-void-800/50 rounded-xl p-3 border border-void-600 cursor-pointer hover:border-amethyst-500/40 transition" onclick="jumpToComment(${c.teaching_id}, ${c.id})">
         <p class="text-xs text-amethyst-300 mb-1">${escapeHtml(title)}</p>
-        <p class="text-xs text-gray-300 line-clamp-2">${escapeHtml(c.content || '[image]')}</p>
+        <p class="text-xs text-gray-300">${escapeHtml(c.content || '[image]')}</p>
         <p class="text-[10px] text-gray-600 mt-1">${relativeTime(c.created_at)}</p>
       </div>
     `;
@@ -1585,7 +1565,6 @@ function closeDownloadModal() { document.getElementById('downloadModal').classLi
 
 function downloadAs(format) {
   const filename = (document.getElementById('downloadFilename').value.trim() || 'moph-echo-journey').replace(/[^a-z0-9-_]/gi, '_');
-
   let log = 'MOPH ECHO MIRROR — REFLECTION LOG\n' + `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
   state.messages.forEach(m => {
     const r = m.role === 'user' ? 'YOU' : m.role === 'surprise' ? 'GOLDEN' : 'MIRROR';
@@ -1603,7 +1582,6 @@ function downloadAs(format) {
     return;
   }
 
-  // PDF via print window
   const htmlMessages = state.messages.map(m => {
     if (m.role === 'user') return `<div class="msg user"><div class="bubble user">${escapeHtml(m.text)}</div></div>`;
     if (m.role === 'surprise') return `<div class="msg mirror"><div class="bubble gold">${escapeHtml(String(m.text).replace(/<[^>]*>/g, ''))}</div></div>`;
@@ -1645,7 +1623,6 @@ function checkGrounding(text) {
   else alert.classList.add('hidden');
 }
 
-// Reading progress
 document.getElementById('panelTeachings')?.addEventListener('scroll', () => {
   const panel = document.getElementById('panelTeachings');
   const bar = document.getElementById('readingBar');
@@ -1654,14 +1631,12 @@ document.getElementById('panelTeachings')?.addEventListener('scroll', () => {
   bar.style.width = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 + '%' : '0%';
 });
 
-// Close mention dropdown on outside click
 document.addEventListener('click', (e) => {
   if (!e.target.closest('textarea')) document.querySelectorAll('.mention-dropdown').forEach(d => d.classList.add('hidden'));
 });
 
 document.getElementById('userInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); processEntry(); } });
 
-// Init
 initConfig();
 </script>
 </body>
