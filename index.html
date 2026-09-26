@@ -30,8 +30,6 @@ body { background:#06060a; min-height: 100dvh; transition: background-color .3s;
 ::-webkit-scrollbar-thumb { background:#3a2a5a; border-radius:10px; }
 .fade-in { animation:fadeIn .3s cubic-bezier(0.2,0.8,0.3,1); }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
-.slide-up { animation:slideUp .3s cubic-bezier(0.2,0.8,0.3,1); }
-@keyframes slideUp { from{opacity:0;transform:translateY(24px);} to{opacity:1;transform:translateY(0);} }
 .pulse-glow { animation:pulseGlow 2.4s ease-in-out infinite; }
 @keyframes pulseGlow { 0%,100%{box-shadow:0 0 22px -6px rgba(var(--accent-rgb),.35);} 50%{box-shadow:0 0 34px -6px rgba(var(--accent-rgb),.65);} }
 .spinner { border:2px solid rgba(var(--accent-rgb),.2); border-top-color:var(--accent-400); border-radius:50%; width:16px; height:16px; animation:spin .8s linear infinite; }
@@ -64,8 +62,10 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .btn { transition: all 0.18s cubic-bezier(0.2,0.8,0.3,1); }
 .btn:hover { transform: translateY(-1px); }
 .btn:active { transform: translateY(0) scale(0.98); }
-.tab-btn { transition: all 0.2s; }
-.private-badge { display: inline-flex; align-items: center; gap: 4px; color: #6a6a8a; font-style: italic; font-size: 12px; }
+.profile-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 500; color: #6a6a8a; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+.profile-tab.active { color: var(--accent-400); border-bottom-color: var(--accent-500); }
+.post-card { background: rgba(16,16,28,0.55); border: 1px solid #2a2a3a; border-radius: 1.25rem; padding: 16px; transition: all 0.2s; }
+.post-card:hover { border-color: rgba(var(--accent-rgb),0.3); }
 .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; }
 .toggle-switch input { opacity: 0; width: 0; height: 0; }
 .toggle-slider { position: absolute; cursor: pointer; inset: 0; background-color: #2a2a3a; transition: .3s; border-radius: 22px; }
@@ -76,10 +76,12 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .theme-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px rgba(255,255,255,0.2); }
 .social-icon { width: 40px; height: 40px; border-radius: 12px; background: #1a1a2e; border: 1px solid #2a2a3a; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
 .social-icon:hover { background: rgba(var(--accent-rgb),0.15); border-color: rgba(var(--accent-rgb),0.4); transform: translateY(-2px); }
-.profile-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 500; color: #6a6a8a; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
-.profile-tab.active { color: var(--accent-400); border-bottom-color: var(--accent-500); }
-.post-card { background: rgba(16,16,28,0.55); border: 1px solid #2a2a3a; border-radius: 1.25rem; padding: 16px; transition: all 0.2s; }
-.post-card:hover { border-color: rgba(var(--accent-rgb),0.3); }
+.private-badge { display: inline-flex; align-items: center; gap: 4px; color: #6a6a8a; font-style: italic; font-size: 12px; }
+.streak-badge { display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg, #f97316, #ea580c); color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; box-shadow: 0 4px 12px -4px rgba(249,115,22,0.5); }
+.featured-banner { background: linear-gradient(135deg, rgba(var(--accent-rgb),0.2), rgba(var(--accent-rgb),0.08)); border: 1px solid rgba(var(--accent-rgb),0.4); border-radius: 1.25rem; padding: 14px 18px; margin-bottom: 16px; }
+.poke-btn { background: rgba(40,40,60,0.5); border: 1px solid rgba(120,90,160,0.2); padding: 2px 8px; border-radius: 12px; font-size: 11px; cursor: pointer; transition: all 0.15s; margin-left: 6px; }
+.poke-btn:hover { background: rgba(var(--accent-rgb),0.2); border-color: rgba(var(--accent-rgb),0.4); }
+.poke-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 </style>
 </head>
 <body class="font-sans text-gray-200" data-theme="amethyst">
@@ -193,6 +195,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
         </div>
       </div>
       <div class="flex items-center gap-0.5">
+        <div id="streakBadge" class="streak-badge hidden mr-1"><span>🔥</span><span id="streakCount">0</span></div>
         <button onclick="openDownloadModal()" class="btn p-2.5 text-gray-500 hover:text-amethyst-400 rounded-xl transition" title="Download log">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         </button>
@@ -238,6 +241,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
   </main>
 
   <main id="panelTeachings" class="hidden flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4">
+    <div id="featuredBanner" class="hidden"></div>
     <div class="glass card p-5 border border-void-600 space-y-3.5">
       <div class="flex items-center justify-between">
         <h2 class="text-base font-semibold">Teachings</h2>
@@ -253,18 +257,18 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
   </main>
 
   <main id="panelProfile" class="hidden flex-1 overflow-y-auto px-3 sm:px-4 pb-4">
-    <!-- Profile Header (avatar + username + settings gear) -->
     <div class="glass card p-5 border border-void-600 mb-3">
       <div class="flex items-start gap-4">
         <div id="avatarUpload" class="w-20 h-20 rounded-full bg-void-700 border-2 border-void-600 flex items-center justify-center cursor-pointer hover:border-amethyst-500/50 transition overflow-hidden flex-shrink-0 relative">
           <svg id="avatarPlaceholder" class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
           <input type="file" id="avatarInput" accept="image/*" class="hidden">
-          <div id="avatarLoading" class="hidden absolute inset-0 bg-void-900/80 flex items-center justify-center">
-            <div class="spinner"></div>
-          </div>
+          <div id="avatarLoading" class="hidden absolute inset-0 bg-void-900/80 flex items-center justify-center"><div class="spinner"></div></div>
         </div>
         <div class="flex-1 min-w-0">
-          <h2 class="text-lg font-semibold truncate" id="displayUsername">—</h2>
+          <div class="flex items-center gap-2 flex-wrap">
+            <h2 class="text-lg font-semibold truncate" id="displayUsername">—</h2>
+            <div id="streakBadgeProfile" class="streak-badge hidden"><span>🔥</span><span id="streakCountProfile">0</span></div>
+          </div>
           <p id="userEmail" class="text-xs text-gray-500 truncate mt-0.5">—</p>
           <p id="profileBio" class="text-sm text-gray-400 mt-2 line-clamp-3">Tap to add a bio...</p>
           <p id="profileJoined" class="text-[10px] text-gray-600 mt-2"></p>
@@ -273,21 +277,24 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
         </button>
       </div>
-      <!-- Social icons row -->
       <div id="profileSocials" class="flex flex-wrap gap-2 mt-4"></div>
     </div>
 
-    <!-- Profile Tabs -->
     <div class="flex border-b border-void-600 mb-3">
       <div class="profile-tab active" id="pTabPosts" onclick="switchProfileTab('posts')">Posts</div>
       <div class="profile-tab" id="pTabAbout" onclick="switchProfileTab('about')">About</div>
     </div>
 
-    <!-- Posts tab -->
     <div id="profilePosts" class="space-y-3"></div>
 
-    <!-- About tab -->
     <div id="profileAbout" class="hidden space-y-3">
+      <div class="glass card p-5 border border-void-600">
+        <h3 class="text-sm font-semibold mb-3">Streak</h3>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Current</p><p id="pStreak" class="text-sm font-medium text-orange-400">0 days</p></div>
+          <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Longest</p><p id="pLongestStreak" class="text-sm font-medium text-orange-400">0 days</p></div>
+        </div>
+      </div>
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-3">Spiritual Stats</h3>
         <div class="grid grid-cols-2 gap-3">
@@ -305,7 +312,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
   </main>
 </div>
 
-<!-- SETTINGS MODAL -->
 <div id="settingsModal" class="hidden fixed inset-0 z-[70] bg-void-900 overflow-y-auto">
   <div class="max-w-2xl mx-auto p-4 safe-top">
     <div class="flex items-center justify-between mb-4">
@@ -315,9 +321,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       <h2 class="text-base font-semibold">Settings</h2>
       <button onclick="saveSettings()" id="saveSettingsBtn" class="btn px-4 py-2 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-semibold">Save</button>
     </div>
-
     <div class="space-y-4 pb-8">
-      <!-- Username -->
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-3">Identity</h3>
         <label class="text-xs text-gray-500 uppercase tracking-wider">Username</label>
@@ -327,8 +331,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
         <textarea id="setBio" rows="3" maxlength="200" placeholder="A short line about you..." class="w-full mt-1.5 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition resize-none"></textarea>
         <p class="text-[10px] text-gray-600 mt-1 text-right"><span id="bioCount">0</span>/200</p>
       </div>
-
-      <!-- Website + Socials -->
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-3">Links</h3>
         <label class="text-xs text-gray-500 uppercase tracking-wider">Website</label>
@@ -347,58 +349,29 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
         <input type="url" id="setSocialLinkedin" placeholder="https://linkedin.com/in/yourname" class="w-full mt-1.5 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
         <p class="text-[10px] text-gray-600 mt-2">Paste the full link. Leave blank to hide.</p>
       </div>
-
-      <!-- Privacy -->
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-1">Privacy</h3>
         <p class="text-[10px] text-gray-500 mb-4">When off, others see "Private" on your profile.</p>
         <div class="space-y-3">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-300">Show Element publicly</span>
-            <label class="toggle-switch"><input type="checkbox" id="privElement"><span class="toggle-slider"></span></label>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-300">Show Stage publicly</span>
-            <label class="toggle-switch"><input type="checkbox" id="privStage"><span class="toggle-slider"></span></label>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-300">Show Core Wound publicly</span>
-            <label class="toggle-switch"><input type="checkbox" id="privWound"><span class="toggle-slider"></span></label>
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-300">Show Core Gift publicly</span>
-            <label class="toggle-switch"><input type="checkbox" id="privGift"><span class="toggle-slider"></span></label>
-          </div>
+          <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Show Element publicly</span><label class="toggle-switch"><input type="checkbox" id="privElement"><span class="toggle-slider"></span></label></div>
+          <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Show Stage publicly</span><label class="toggle-switch"><input type="checkbox" id="privStage"><span class="toggle-slider"></span></label></div>
+          <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Show Core Wound publicly</span><label class="toggle-switch"><input type="checkbox" id="privWound"><span class="toggle-slider"></span></label></div>
+          <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Show Core Gift publicly</span><label class="toggle-switch"><input type="checkbox" id="privGift"><span class="toggle-slider"></span></label></div>
         </div>
       </div>
-
-      <!-- Theme -->
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-3">Theme</h3>
         <div class="flex gap-3 flex-wrap">
-          <div class="flex flex-col items-center gap-1.5">
-            <div class="theme-swatch active" data-theme="amethyst" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)" onclick="selectTheme('amethyst')"></div>
-            <span class="text-[10px] text-gray-500">Amethyst</span>
-          </div>
-          <div class="flex flex-col items-center gap-1.5">
-            <div class="theme-swatch" data-theme="emerald" style="background:linear-gradient(135deg,#34d399,#059669)" onclick="selectTheme('emerald')"></div>
-            <span class="text-[10px] text-gray-500">Emerald</span>
-          </div>
-          <div class="flex flex-col items-center gap-1.5">
-            <div class="theme-swatch" data-theme="crimson" style="background:linear-gradient(135deg,#fb7185,#e11d48)" onclick="selectTheme('crimson')"></div>
-            <span class="text-[10px] text-gray-500">Crimson</span>
-          </div>
-          <div class="flex flex-col items-center gap-1.5">
-            <div class="theme-swatch" data-theme="gold" style="background:linear-gradient(135deg,#fcd34d,#d97706)" onclick="selectTheme('gold')"></div>
-            <span class="text-[10px] text-gray-500">Gold</span>
-          </div>
+          <div class="flex flex-col items-center gap-1.5"><div class="theme-swatch active" data-theme="amethyst" style="background:linear-gradient(135deg,#a78bfa,#7c3aed)" onclick="selectTheme('amethyst')"></div><span class="text-[10px] text-gray-500">Amethyst</span></div>
+          <div class="flex flex-col items-center gap-1.5"><div class="theme-swatch" data-theme="emerald" style="background:linear-gradient(135deg,#34d399,#059669)" onclick="selectTheme('emerald')"></div><span class="text-[10px] text-gray-500">Emerald</span></div>
+          <div class="flex flex-col items-center gap-1.5"><div class="theme-swatch" data-theme="crimson" style="background:linear-gradient(135deg,#fb7185,#e11d48)" onclick="selectTheme('crimson')"></div><span class="text-[10px] text-gray-500">Crimson</span></div>
+          <div class="flex flex-col items-center gap-1.5"><div class="theme-swatch" data-theme="gold" style="background:linear-gradient(135deg,#fcd34d,#d97706)" onclick="selectTheme('gold')"></div><span class="text-[10px] text-gray-500">Gold</span></div>
         </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- PUBLIC PROFILE MODAL -->
 <div id="publicProfileModal" class="hidden fixed inset-0 z-[72] bg-void-900 overflow-y-auto">
   <div class="max-w-2xl mx-auto p-4 safe-top">
     <div class="flex items-center justify-between mb-4">
@@ -489,7 +462,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 </div>
 
 <script>
-// ===== PWA =====
 let deferredPrompt = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -502,23 +474,13 @@ function handleInstall() { if (deferredPrompt) { deferredPrompt.prompt(); deferr
 function dismissInstall() { document.getElementById('installBanner').classList.add('hidden'); localStorage.setItem('moph_install_dismissed', 'true'); }
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 
-// ===== STATE =====
 let sb = null;
 let signupMode = false;
 let pendingEmail = '';
 let state = {
-  user: null,
-  messages: [],
-  profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null, bio:null, website:null, social_x:null, social_instagram:null, social_youtube:null, social_tiktok:null, social_whatsapp:null, social_linkedin:null, privacy_element:true, privacy_stage:true, privacy_wound:true, privacy_gift:true, theme:'amethyst', joined_at:null },
-  goldenStars: [],
-  teachings: [],
-  profileCache: {},
-  notifications: [],
-  usedResponses: [],
-  activeTag: null,
-  myComments: [],
-  selectedTheme: 'amethyst',
-  viewingUserId: null
+  user: null, messages: [],
+  profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null, bio:null, website:null, social_x:null, social_instagram:null, social_youtube:null, social_tiktok:null, social_whatsapp:null, social_linkedin:null, privacy_element:true, privacy_stage:true, privacy_wound:true, privacy_gift:true, theme:'amethyst', joined_at:null, streak_count:0, longest_streak:0, last_active_date:null },
+  goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null, myComments: [], selectedTheme: 'amethyst', viewingUserId: null, featuredTeaching: null
 };
 const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
 
@@ -531,44 +493,25 @@ const SOCIAL_ICONS = {
   social_linkedin: { name: 'LinkedIn', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>' }
 };
 
-// ===== ONBOARDING =====
 let obStep = 0;
 const obSlides = [
   { title: 'Welcome to Moph Echo', body: 'A mirror that reflects what you already know but have not yet seen. This is not a chatbot. It is a companion for your awakening.' },
   { title: 'Speak. Observe. Grow.', body: 'Type what you are feeling. The mirror listens, reflects, and asks the question you need. Golden moments mark your deepest realizations.' },
   { title: 'Teachings', body: 'Reflections from the Architect appear in the Teachings tab. React, comment, and reply. Mention others with @username.' }
 ];
-function nextOnboarding() {
-  obStep++;
-  if (obStep >= obSlides.length) { finishOnboarding(); return; }
-  document.getElementById('obTitle').textContent = obSlides[obStep].title;
-  document.getElementById('obBody').textContent = obSlides[obStep].body;
-  const dots = document.getElementById('obDots').children;
-  for (let i = 0; i < dots.length; i++) dots[i].className = 'w-2 h-2 rounded-full ' + (i <= obStep ? 'bg-amethyst-500' : 'bg-void-600');
-  if (obStep === obSlides.length - 1) document.getElementById('obBtn').textContent = 'Enter the Mirror';
-}
+function nextOnboarding() { obStep++; if (obStep >= obSlides.length) { finishOnboarding(); return; } document.getElementById('obTitle').textContent = obSlides[obStep].title; document.getElementById('obBody').textContent = obSlides[obStep].body; const dots = document.getElementById('obDots').children; for (let i = 0; i < dots.length; i++) dots[i].className = 'w-2 h-2 rounded-full ' + (i <= obStep ? 'bg-amethyst-500' : 'bg-void-600'); if (obStep === obSlides.length - 1) document.getElementById('obBtn').textContent = 'Enter the Mirror'; }
 function skipOnboarding() { finishOnboarding(); }
 function finishOnboarding() { localStorage.setItem('moph_onboarded', 'true'); document.getElementById('onboarding').classList.add('hidden'); }
 function maybeShowOnboarding() { if (localStorage.getItem('moph_onboarded') !== 'true') document.getElementById('onboarding').classList.remove('hidden'); }
 
-// ===== THEME =====
-function applyTheme(theme) {
-  document.body.setAttribute('data-theme', theme || 'amethyst');
-  state.selectedTheme = theme || 'amethyst';
-}
-function selectTheme(theme) {
-  applyTheme(theme);
-  document.querySelectorAll('.theme-swatch').forEach(s => {
-    s.classList.toggle('active', s.dataset.theme === theme);
-  });
-}
+function applyTheme(theme) { document.body.setAttribute('data-theme', theme || 'amethyst'); state.selectedTheme = theme || 'amethyst'; }
+function selectTheme(theme) { applyTheme(theme); document.querySelectorAll('.theme-swatch').forEach(s => s.classList.toggle('active', s.dataset.theme === theme)); }
 
-// ===== TRAIT REWARDS =====
 const TRAIT_REWARDS = {
   element: {
-    Fire: "✨ I see you clearly now. You are a **Fire Soul** — passion, intensity, transformation. You do not do anything halfway; you burn. Your anger is not destruction — it is fuel that has not yet been aimed. Your wound is impatience. Your gift is courage.\n\nThis is your first golden moment.",
-    Water: "✨ I see you clearly now. You are a **Water Soul** — depth, emotion, fluidity. You feel everything. Your depth is not weakness; it is the deepest gift. Your wound is drowning in other people's feelings. Your gift is healing what you touch.\n\nThis is your first golden moment.",
-    Earth: "✨ I see you clearly now. You are an **Earth Soul** — grounded, patient, practical. You are the one people lean on. Your wound is confusing stillness with being stuck. Your gift is that you can be trusted with anything real.\n\nThis is your first golden moment.",
+    Fire: "✨ I see you clearly now. You are a **Fire Soul** — passion, intensity, transformation. Your anger is not destruction — it is fuel that has not yet been aimed. Your wound is impatience. Your gift is courage.\n\nThis is your first golden moment.",
+    Water: "✨ I see you clearly now. You are a **Water Soul** — depth, emotion, fluidity. Your depth is not weakness; it is the deepest gift. Your wound is drowning in other people's feelings. Your gift is healing what you touch.\n\nThis is your first golden moment.",
+    Earth: "✨ I see you clearly now. You are an **Earth Soul** — grounded, patient, practical. Your wound is confusing stillness with being stuck. Your gift is that you can be trusted with anything real.\n\nThis is your first golden moment.",
     Air: "✨ I see you clearly now. You are an **Air Soul** — your mind is a compass, not a cage. Your wound is living above the heart — you can solve everything except how to feel. Your gift is clarity.\n\nThis is your first golden moment."
   },
   wound: {
@@ -587,7 +530,6 @@ const TRAIT_REWARDS = {
   }
 };
 
-// ===== WISDOM CORE =====
 const wisdom = {
   flatness: ["✦ You are describing the Flatness Stage — the space between identities. Not depression. Not confusion. The void where the old self is dying and the new one has not arrived.\n\n❓ What did you lose interest in that you have not admitted to yourself?","✦ Not happy. Not sad. Just flat. This is integration. The nervous system is rewiring.\n\n❓ If this flatness could speak, what would it say it is preparing you for?","✦ The silence you feel is not absence. It is the womb of the next version of you.\n\n❓ What are you trying to force to open before its time?","✦ Losing interest in everything is not depression — it is graduation.\n\n❓ What used to excite you that now feels like noise?"],
   soul_air: ["✦ Air Souls are the thinkers, the questioners, the ones whose minds never stop. Your gift is clarity — your wound is that you live above the heart.\n\n❓ When was the last time you let yourself feel without analyzing?","✦ Air Soul. The mind is your compass but it is not your home.\n\n❓ What would happen if you sat in silence with no question to answer?"],
@@ -664,26 +606,15 @@ const keywordMap = [
 ];
 
 function escapeRegex(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); }
-const keywordRegexes = keywordMap.map(map => ({
-  cat: map.cat,
-  patterns: map.keys.map(k => new RegExp('\\b' + escapeRegex(k) + '\\b', 'i'))
-}));
+const keywordRegexes = keywordMap.map(map => ({ cat: map.cat, patterns: map.keys.map(k => new RegExp('\\b' + escapeRegex(k) + '\\b', 'i')) }));
 
 function generateReflection(text) {
   const used = state.usedResponses || [];
   let bestCat = null, bestScore = 0;
-  for (const entry of keywordRegexes) {
-    for (let i = 0; i < entry.patterns.length; i++) {
-      const match = text.match(entry.patterns[i]);
-      if (match) { const phraseLen = match[0].length; if (phraseLen > bestScore) { bestCat = entry.cat; bestScore = phraseLen; } }
-    }
-  }
+  for (const entry of keywordRegexes) { for (let i = 0; i < entry.patterns.length; i++) { const match = text.match(entry.patterns[i]); if (match) { const len = match[0].length; if (len > bestScore) { bestCat = entry.cat; bestScore = len; } } } }
   if (!bestCat && text.trim().split(/\s+/).length <= 4 && state.messages.length > 1) {
     const prev = state.messages[state.messages.length - 1];
-    if (prev && prev.text) {
-      const pl = String(prev.text);
-      for (const entry of keywordRegexes) { for (const p of entry.patterns) { if (p.test(pl)) { bestCat = entry.cat; break; } } if (bestCat) break; }
-    }
+    if (prev && prev.text) { const pl = String(prev.text); for (const entry of keywordRegexes) { for (const p of entry.patterns) { if (p.test(pl)) { bestCat = entry.cat; break; } } if (bestCat) break; } }
   }
   if (!bestCat) bestCat = 'default';
   const pool = wisdom[bestCat] || wisdom.default;
@@ -706,13 +637,10 @@ function formatResponse(text) {
   html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
   return html;
 }
-
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
 
 function relativeTime(dateStr) {
-  const now = Date.now();
-  const then = new Date(dateStr).getTime();
-  const diff = Math.floor((now - then) / 1000);
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (diff < 60) return 'just now';
   if (diff < 3600) return Math.floor(diff / 60) + 'm';
   if (diff < 86400) return Math.floor(diff / 3600) + 'h';
@@ -721,7 +649,6 @@ function relativeTime(dateStr) {
   return new Date(dateStr).toLocaleDateString();
 }
 
-// ===== AUTH =====
 const customStorage = {
   getItem: (key) => localStorage.getItem(key) || sessionStorage.getItem(key),
   setItem: (key, value) => { const r = localStorage.getItem('moph_remember') === 'true'; if (r) { localStorage.setItem(key, value); sessionStorage.removeItem(key); } else { sessionStorage.setItem(key, value); localStorage.removeItem(key); } },
@@ -731,23 +658,14 @@ const customStorage = {
 document.getElementById('rememberMe').addEventListener('change', (e) => localStorage.setItem('moph_remember', e.target.checked ? 'true' : 'false'));
 document.getElementById('rememberMe').checked = localStorage.getItem('moph_remember') !== 'false';
 
-function togglePass(id, btn) {
-  const input = document.getElementById(id);
-  const eyeOpen = btn.querySelector('.eye-open');
-  const eyeClosed = btn.querySelector('.eye-closed');
-  if (input.type === 'password') { input.type = 'text'; eyeOpen.classList.add('hidden'); eyeClosed.classList.remove('hidden'); }
-  else { input.type = 'password'; eyeOpen.classList.remove('hidden'); eyeClosed.classList.add('hidden'); }
-}
+function togglePass(id, btn) { const input = document.getElementById(id); const eyeOpen = btn.querySelector('.eye-open'); const eyeClosed = btn.querySelector('.eye-closed'); if (input.type === 'password') { input.type = 'text'; eyeOpen.classList.add('hidden'); eyeClosed.classList.remove('hidden'); } else { input.type = 'password'; eyeOpen.classList.remove('hidden'); eyeClosed.classList.add('hidden'); } }
 
 function toggleSignupMode() {
   signupMode = !signupMode;
-  const wrap = document.getElementById('confirmPassWrap');
-  const btn = document.getElementById('signInText');
-  const toggle = document.getElementById('toggleBtn');
+  const wrap = document.getElementById('confirmPassWrap'); const btn = document.getElementById('signInText'); const toggle = document.getElementById('toggleBtn');
   if (signupMode) { wrap.classList.remove('hidden'); btn.textContent = 'Create Account'; toggle.textContent = 'Already have an account? Sign in'; }
   else { wrap.classList.add('hidden'); btn.textContent = 'Enter the Mirror'; toggle.textContent = 'New here? Create an account'; }
-  document.getElementById('authError').classList.add('hidden');
-  document.getElementById('authSuccess').classList.add('hidden');
+  document.getElementById('authError').classList.add('hidden'); document.getElementById('authSuccess').classList.add('hidden');
 }
 
 async function initConfig() {
@@ -788,21 +706,16 @@ async function signIn() {
     if (data.user) { pendingEmail = email; document.getElementById('otpEmail').textContent = email; document.getElementById('authScreen').classList.add('hidden'); document.getElementById('otpScreen').classList.remove('hidden'); document.getElementById('otpInput').focus(); }
   } else {
     const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-    if (error) {
-      if (error.message.toLowerCase().includes('email not confirmed')) { pendingEmail = email; document.getElementById('otpEmail').textContent = email; document.getElementById('authScreen').classList.add('hidden'); document.getElementById('otpScreen').classList.remove('hidden'); return; }
-      showError(error.message); return;
-    }
+    if (error) { if (error.message.toLowerCase().includes('email not confirmed')) { pendingEmail = email; document.getElementById('otpEmail').textContent = email; document.getElementById('authScreen').classList.add('hidden'); document.getElementById('otpScreen').classList.remove('hidden'); return; } showError(error.message); return; }
     if (data.user) await enterApp(data.user);
   }
 }
 
 async function verifyOtp() {
   const token = document.getElementById('otpInput').value.trim();
-  const err = document.getElementById('otpError');
-  err.classList.add('hidden');
+  const err = document.getElementById('otpError'); err.classList.add('hidden');
   if (!token || token.length !== 6) { err.textContent = 'Enter the 6-digit code.'; err.classList.remove('hidden'); return; }
-  const btn = document.getElementById('otpBtnText');
-  btn.textContent = 'Verifying...';
+  const btn = document.getElementById('otpBtnText'); btn.textContent = 'Verifying...';
   const { data, error } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: 'signup' });
   if (error) {
     const { data: d2, error: e2 } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: 'email' });
@@ -813,18 +726,12 @@ async function verifyOtp() {
   else { err.textContent = 'Verification failed.'; err.classList.remove('hidden'); btn.textContent = 'Verify & Enter'; }
 }
 
-async function resendOtp() {
-  const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail });
-  const err = document.getElementById('otpError');
-  if (error) { err.textContent = error.message; err.classList.remove('hidden'); }
-  else { err.textContent = 'Code resent.'; err.classList.remove('hidden', 'text-red-400'); err.classList.add('text-green-400'); }
-}
-
+async function resendOtp() { const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail }); const err = document.getElementById('otpError'); if (error) { err.textContent = error.message; err.classList.remove('hidden'); } else { err.textContent = 'Code resent.'; err.classList.remove('hidden', 'text-red-400'); err.classList.add('text-green-400'); } }
 function backToAuth() { document.getElementById('otpScreen').classList.add('hidden'); document.getElementById('authScreen').classList.remove('hidden'); document.getElementById('otpInput').value = ''; }
 
 async function signOut() {
   await sb.auth.signOut();
-  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null, bio:null, website:null, social_x:null, social_instagram:null, social_youtube:null, social_tiktok:null, social_whatsapp:null, social_linkedin:null, privacy_element:true, privacy_stage:true, privacy_wound:true, privacy_gift:true, theme:'amethyst', joined_at:null }, goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null, myComments: [], selectedTheme: 'amethyst', viewingUserId: null };
+  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null, bio:null, website:null, social_x:null, social_instagram:null, social_youtube:null, social_tiktok:null, social_whatsapp:null, social_linkedin:null, privacy_element:true, privacy_stage:true, privacy_wound:true, privacy_gift:true, theme:'amethyst', joined_at:null, streak_count:0, longest_streak:0, last_active_date:null }, goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null, myComments: [], selectedTheme: 'amethyst', viewingUserId: null, featuredTeaching: null };
   applyTheme('amethyst');
   document.getElementById('mainApp').classList.add('hidden');
   document.getElementById('authScreen').classList.remove('hidden');
@@ -837,27 +744,64 @@ async function enterApp(user) {
   document.getElementById('otpScreen').classList.add('hidden');
   document.getElementById('mainApp').classList.remove('hidden');
   document.getElementById('userEmail').textContent = user.email;
-
   showTeachingsSkeleton();
-
   await loadProfile();
   applyTheme(state.profile.theme || 'amethyst');
+  updateStreakUI();
   renderProfile();
-
   await loadMessages();
   renderChat();
   document.getElementById('userInput').focus();
   maybeShowOnboarding();
-
-  Promise.all([
-    loadGoldenStars(),
-    loadTeachings(),
-    loadNotifications()
-  ]).then(() => {
-    renderProfile();
-    renderTeachings();
-    renderNotifications();
+  Promise.all([ loadGoldenStars(), loadTeachings(), loadNotifications() ]).then(() => {
+    renderProfile(); renderTeachings(); renderNotifications();
   }).catch(err => console.error('Background load error:', err));
+  // Streak update fires in background
+  updateStreak();
+}
+
+// ===== STREAK =====
+async function updateStreak() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const last = state.profile.last_active_date;
+    if (last === today) return; // already counted today
+
+    let newStreak = 1;
+    if (last) {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      if (last === yesterday) newStreak = (state.profile.streak_count || 0) + 1;
+      else newStreak = 1;
+    }
+    const longest = Math.max(state.profile.longest_streak || 0, newStreak);
+
+    await sb.from('profiles').update({ streak_count: newStreak, longest_streak: longest, last_active_date: today }).eq('id', state.user.id);
+    state.profile.streak_count = newStreak;
+    state.profile.longest_streak = longest;
+    state.profile.last_active_date = today;
+    updateStreakUI();
+  } catch (e) { console.error('Streak error:', e); }
+}
+
+function updateStreakUI() {
+  const c = state.profile.streak_count || 0;
+  const headerBadge = document.getElementById('streakBadge');
+  const headerCount = document.getElementById('streakCount');
+  const profileBadge = document.getElementById('streakBadgeProfile');
+  const profileCount = document.getElementById('streakCountProfile');
+  if (c >= 2) {
+    headerBadge.classList.remove('hidden');
+    headerCount.textContent = c;
+    profileBadge.classList.remove('hidden');
+    profileCount.textContent = c;
+  } else {
+    headerBadge.classList.add('hidden');
+    profileBadge.classList.add('hidden');
+  }
+  const pStreak = document.getElementById('pStreak');
+  const pLongest = document.getElementById('pLongestStreak');
+  if (pStreak) pStreak.textContent = c + (c === 1 ? ' day' : ' days');
+  if (pLongest) pLongest.textContent = (state.profile.longest_streak || 0) + ' days';
 }
 
 function showTeachingsSkeleton() {
@@ -879,12 +823,7 @@ async function loadProfile() {
     let base = emailPrefix.length >= 3 ? emailPrefix : 'architect';
     let username = base;
     let counter = 0;
-    while (true) {
-      const { data: existing } = await sb.from('profiles').select('id').ilike('username', username).limit(1);
-      if (!existing || existing.length === 0) break;
-      counter++;
-      username = base + '_' + counter;
-    }
+    while (true) { const { data: existing } = await sb.from('profiles').select('id').ilike('username', username).limit(1); if (!existing || existing.length === 0) break; counter++; username = base + '_' + counter; }
     await sb.from('profiles').insert({ id: state.user.id, username });
     return loadProfile();
   }
@@ -905,35 +844,20 @@ async function loadMessages() {
   const { data } = await sb.from('journal_entries').select('role, content, created_at').eq('user_id', state.user.id).order('created_at', { ascending: true }).limit(200);
   if (data) state.messages = data.map(m => ({ role: m.role, text: m.content }));
 }
-
 async function saveMessage(role, text) { await sb.from('journal_entries').insert({ user_id: state.user.id, role, content: text }); }
-
-async function loadGoldenStars() {
-  const { data } = await sb.from('golden_moments').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false });
-  if (data) state.goldenStars = data.map(g => ({ text: g.content, trait_type: g.trait_type || null, trait_value: g.trait_value || null, date: new Date(g.created_at).toLocaleString() }));
-}
-
-async function saveGoldenStar(text, trait_type, trait_value) {
-  await sb.from('golden_moments').insert({ user_id: state.user.id, content: text, trait_type: trait_type || null, trait_value: trait_value || null });
-  state.goldenStars.unshift({ text, trait_type, trait_value, date: new Date().toLocaleString() });
-}
+async function loadGoldenStars() { const { data } = await sb.from('golden_moments').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }); if (data) state.goldenStars = data.map(g => ({ text: g.content, trait_type: g.trait_type || null, trait_value: g.trait_value || null, date: new Date(g.created_at).toLocaleString() })); }
+async function saveGoldenStar(text, trait_type, trait_value) { await sb.from('golden_moments').insert({ user_id: state.user.id, content: text, trait_type: trait_type || null, trait_value: trait_value || null }); state.goldenStars.unshift({ text, trait_type, trait_value, date: new Date().toLocaleString() }); }
 
 async function loadTeachings(force) {
   try {
     const { data: teachings, error } = await sb.from('teachings').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(50);
     if (error || !teachings) { state.teachings = []; return; }
-
     const teachingIds = teachings.map(t => t.id);
     if (teachingIds.length === 0) { state.teachings = []; return; }
-
     const { data: allComments } = await sb.from('teaching_comments').select('*').in('teaching_id', teachingIds);
     const commentIds = (allComments || []).map(c => c.id);
-
     const { data: tReactions } = await sb.from('teaching_reactions').select('*').in('teaching_id', teachingIds);
-    const { data: cReactions } = commentIds.length > 0
-      ? await sb.from('comment_reactions').select('*').in('comment_id', commentIds)
-      : { data: [] };
-
+    const { data: cReactions } = commentIds.length > 0 ? await sb.from('comment_reactions').select('*').in('comment_id', commentIds) : { data: [] };
     const userIds = new Set();
     (allComments || []).forEach(c => userIds.add(c.user_id));
     if (userIds.size > 0) {
@@ -941,27 +865,41 @@ async function loadTeachings(force) {
       (profiles || []).forEach(p => { state.profileCache[p.id] = { username: p.username || 'architect', avatar_url: p.avatar_url }; });
       [...userIds].forEach(id => { if (!state.profileCache[id]) state.profileCache[id] = { username: 'architect', avatar_url: null }; });
     }
-
     const tReactionsByTeaching = {};
     (tReactions || []).forEach(r => { if (!tReactionsByTeaching[r.teaching_id]) tReactionsByTeaching[r.teaching_id] = []; tReactionsByTeaching[r.teaching_id].push(r); });
-
     const cReactionsByComment = {};
     (cReactions || []).forEach(r => { if (!cReactionsByComment[r.comment_id]) cReactionsByComment[r.comment_id] = []; cReactionsByComment[r.comment_id].push(r); });
-
     const commentsByTeaching = {};
-    (allComments || []).forEach(c => {
-      if (!commentsByTeaching[c.teaching_id]) commentsByTeaching[c.teaching_id] = [];
-      commentsByTeaching[c.teaching_id].push({ ...c, reactions: cReactionsByComment[c.id] || [] });
-    });
-
-    state.teachings = teachings.map(t => ({
-      ...t,
-      reactions: tReactionsByTeaching[t.id] || [],
-      comments: commentsByTeaching[t.id] || []
-    }));
-
+    (allComments || []).forEach(c => { if (!commentsByTeaching[c.teaching_id]) commentsByTeaching[c.teaching_id] = []; commentsByTeaching[c.teaching_id].push({ ...c, reactions: cReactionsByComment[c.id] || [] }); });
+    state.teachings = teachings.map(t => ({ ...t, reactions: tReactionsByTeaching[t.id] || [], comments: commentsByTeaching[t.id] || [] }));
+    // Find featured
+    const today = new Date().toISOString().split('T')[0];
+    state.featuredTeaching = state.teachings.find(t => t.featured_date === today) || null;
     renderTagFilters();
+    renderFeaturedBanner();
   } catch (e) { state.teachings = []; }
+}
+
+function renderFeaturedBanner() {
+  const el = document.getElementById('featuredBanner');
+  if (!state.featuredTeaching) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.innerHTML = `
+    <div class="featured-banner">
+      <div class="flex items-center gap-2 mb-1.5">
+        <span class="text-[10px] px-2 py-0.5 rounded-full bg-gold-400/20 text-gold-300 border border-gold-400/40 font-semibold tracking-wider">TODAY'S TEACHING</span>
+      </div>
+      <h3 class="text-base font-semibold text-gray-100 mb-1">${escapeHtml(state.featuredTeaching.title || 'Untitled')}</h3>
+      <p class="text-xs text-gray-400 line-clamp-2">${escapeHtml((state.featuredTeaching.content || '').substring(0, 140))}...</p>
+      <button onclick="scrollToFeatured()" class="mt-2 text-[10px] text-amethyst-400 hover:text-amethyst-300 font-semibold">Read in full →</button>
+    </div>
+  `;
+}
+
+function scrollToFeatured() {
+  if (!state.featuredTeaching) return;
+  const el = document.querySelector(`[data-teaching-id="${state.featuredTeaching.id}"]`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function renderTagFilters() {
@@ -969,8 +907,7 @@ function renderTagFilters() {
   state.teachings.forEach(t => (t.tags || []).forEach(tag => allTags.add(tag)));
   const el = document.getElementById('tagFilters');
   if (allTags.size === 0) { el.innerHTML = ''; return; }
-  el.innerHTML = `<button onclick="setTag(null)" class="text-[10px] px-3 py-1.5 rounded-full transition ${!state.activeTag ? 'bg-amethyst-600/40 text-amethyst-200 border border-amethyst-500/40' : 'bg-void-800 text-gray-400 border border-void-600'}">All</button>` +
-    [...allTags].map(tag => `<button onclick="setTag('${escapeHtml(tag)}')" class="text-[10px] px-3 py-1.5 rounded-full transition ${state.activeTag === tag ? 'bg-amethyst-600/40 text-amethyst-200 border border-amethyst-500/40' : 'bg-void-800 text-gray-400 border border-void-600'}">#${escapeHtml(tag)}</button>`).join('');
+  el.innerHTML = `<button onclick="setTag(null)" class="text-[10px] px-3 py-1.5 rounded-full transition ${!state.activeTag ? 'bg-amethyst-600/40 text-amethyst-200 border border-amethyst-500/40' : 'bg-void-800 text-gray-400 border border-void-600'}">All</button>` + [...allTags].map(tag => `<button onclick="setTag('${escapeHtml(tag)}')" class="text-[10px] px-3 py-1.5 rounded-full transition ${state.activeTag === tag ? 'bg-amethyst-600/40 text-amethyst-200 border border-amethyst-500/40' : 'bg-void-800 text-gray-400 border border-void-600'}">#${escapeHtml(tag)}</button>`).join('');
 }
 
 function setTag(tag) { state.activeTag = tag; renderTagFilters(); filterTeachings(); }
@@ -985,7 +922,7 @@ function filterTeachings() {
   el.innerHTML = filtered.map(t => renderTeachingPost(t)).join('');
 }
 
-function renderTeachings() { filterTeachings(); }
+function renderTeachings() { filterTeachings(); renderFeaturedBanner(); }
 
 function countEmoji(reactions, emoji) { return reactions.filter(r => r.emoji === emoji).length; }
 function userReacted(reactions, emoji) { return reactions.some(r => r.user_id === state.user.id && r.emoji === emoji); }
@@ -994,33 +931,19 @@ function renderTeachingPost(t) {
   const reactionBar = EMOJIS.map(e => { const count = countEmoji(t.reactions, e); const active = userReacted(t.reactions, e) ? 'active' : ''; return `<button class="reaction-pill ${active}" onclick="toggleTeachingReaction(${t.id}, '${e}')">${e}${count > 0 ? ' ' + count : ''}</button>`; }).join('');
   const tagHtml = (t.tags || []).map(tag => `<span class="text-[10px] px-2.5 py-1 rounded-full bg-void-800 border border-void-600 text-gray-400">#${escapeHtml(tag)}</span>`).join('');
   const pinnedHtml = t.pinned ? `<span class="text-[10px] px-2.5 py-1 rounded-full bg-gold-400/20 border border-gold-400/40 text-gold-300">📌 Pinned</span>` : '';
+  const featuredHtml = (state.featuredTeaching && state.featuredTeaching.id === t.id) ? `<span class="text-[10px] px-2.5 py-1 rounded-full bg-amethyst-600/30 border border-amethyst-500/40 text-amethyst-300">⭐ Today's Teaching</span>` : '';
   const commentsHtml = renderCommentTree(t.comments, null, t.id);
-
   let mediaHtml = '';
   if (t.video_url) {
     const isExternal = !t.video_url.includes('teaching-media') && !t.video_url.match(/\.(mp4|webm|mov)$/i);
-    if (isExternal) {
-      mediaHtml = `<div class="rounded-2xl overflow-hidden mb-3.5 bg-void-800 p-4 text-center cursor-pointer" onclick="window.open('${escapeHtml(t.video_url)}', '_blank')">
-        <p class="text-xs text-amethyst-400">🎬 Watch video on external site</p>
-      </div>`;
-    } else {
-      mediaHtml = `<div class="video-wrapper mb-3.5 cursor-pointer" onclick="openVideoViewer('${escapeHtml(t.video_url)}')">
-        <video src="${escapeHtml(t.video_url)}" autoplay muted loop playsinline preload="metadata"></video>
-        <div class="absolute inset-0 flex items-center justify-center pointer-events-none" style="background:rgba(0,0,0,0.1);">
-          <div class="bg-black/50 rounded-full p-3.5" style="backdrop-filter:blur(6px);">
-            <svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
-          </div>
-        </div>
-      </div>`;
-    }
+    if (isExternal) mediaHtml = `<div class="rounded-2xl overflow-hidden mb-3.5 bg-void-800 p-4 text-center cursor-pointer" onclick="window.open('${escapeHtml(t.video_url)}', '_blank')"><p class="text-xs text-amethyst-400">🎬 Watch video on external site</p></div>`;
+    else mediaHtml = `<div class="video-wrapper mb-3.5 cursor-pointer" onclick="openVideoViewer('${escapeHtml(t.video_url)}')"><video src="${escapeHtml(t.video_url)}" autoplay muted loop playsinline preload="metadata"></video><div class="absolute inset-0 flex items-center justify-center pointer-events-none" style="background:rgba(0,0,0,0.1);"><div class="bg-black/50 rounded-full p-3.5" style="backdrop-filter:blur(6px);"><svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div></div>`;
   }
-  if (t.cover_image) {
-    mediaHtml += `<img src="${escapeHtml(t.cover_image)}" class="w-full rounded-2xl mb-3.5 cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(t.cover_image)}')">`;
-  }
+  if (t.cover_image) mediaHtml += `<img src="${escapeHtml(t.cover_image)}" class="w-full rounded-2xl mb-3.5 cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(t.cover_image)}')">`;
 
   return `<article class="glass card-lg border border-void-600 overflow-hidden fade-in" data-teaching-id="${t.id}">
     <div class="p-5">
-      ${(pinnedHtml || tagHtml) ? `<div class="flex flex-wrap gap-1.5 mb-2.5">${pinnedHtml}${tagHtml}</div>` : ''}
+      ${(pinnedHtml || tagHtml || featuredHtml) ? `<div class="flex flex-wrap gap-1.5 mb-2.5">${featuredHtml}${pinnedHtml}${tagHtml}</div>` : ''}
       ${t.title ? `<h3 class="text-base font-semibold mb-2.5">${escapeHtml(t.title)}</h3>` : ''}
       ${mediaHtml}
       <div class="text-sm text-gray-300 prose-content">${formatResponse(t.content)}</div>
@@ -1036,7 +959,6 @@ function renderTeachingPost(t) {
           Share
         </button>
       </div>
-
       <div class="pt-4">
         <div class="flex gap-2.5 mb-3.5">
           ${avatarHtml(state.user.id, 'sm')}
@@ -1056,7 +978,6 @@ function renderTeachingPost(t) {
           </div>
         </div>
       </div>
-
       <div id="comments-${t.id}" class="space-y-3 mt-1">
         ${commentsHtml || '<p class="text-xs text-gray-600 text-center py-4">No comments yet. Be the first.</p>'}
       </div>
@@ -1065,76 +986,39 @@ function renderTeachingPost(t) {
 }
 
 function autoGrow(el) {
-  el.style.height = 'auto';
-  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px';
   let btn, preview;
-  if (el.id.startsWith('comment-text-')) {
-    const tid = el.id.replace('comment-text-', '');
-    btn = document.getElementById('comment-btn-' + tid);
-    preview = document.getElementById('comment-preview-' + tid);
-  } else if (el.id.startsWith('reply-text-')) {
-    const cid = el.id.replace('reply-text-', '');
-    btn = document.getElementById('reply-btn-' + cid);
-    preview = document.getElementById('reply-preview-' + cid);
-  }
-  if (btn) {
-    const hasImage = preview && !preview.classList.contains('hidden') && preview.querySelector('img');
-    btn.disabled = !el.value.trim() && !hasImage;
-  }
+  if (el.id.startsWith('comment-text-')) { const tid = el.id.replace('comment-text-', ''); btn = document.getElementById('comment-btn-' + tid); preview = document.getElementById('comment-preview-' + tid); }
+  else if (el.id.startsWith('reply-text-')) { const cid = el.id.replace('reply-text-', ''); btn = document.getElementById('reply-btn-' + cid); preview = document.getElementById('reply-preview-' + cid); }
+  if (btn) { const hasImage = preview && !preview.classList.contains('hidden') && preview.querySelector('img'); btn.disabled = !el.value.trim() && !hasImage; }
 }
 
-function focusCommentBox(teachingId) {
-  const el = document.getElementById('comment-text-' + teachingId);
-  if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-}
+function focusCommentBox(teachingId) { const el = document.getElementById('comment-text-' + teachingId); if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
 
 function previewCommentImage(teachingId, parentId, input) {
-  const file = input.files[0];
-  if (!file) return;
+  const file = input.files[0]; if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
     const targetId = parentId ? `reply-preview-${parentId}` : `comment-preview-${teachingId}`;
-    const target = document.getElementById(targetId);
-    if (!target) return;
-    target.innerHTML = `
-      <div class="relative inline-block">
-        <img src="${reader.result}" class="rounded-2xl max-h-40">
-        <button onclick="removeCommentImage('${targetId}')" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg">✕</button>
-      </div>
-    `;
+    const target = document.getElementById(targetId); if (!target) return;
+    target.innerHTML = `<div class="relative inline-block"><img src="${reader.result}" class="rounded-2xl max-h-40"><button onclick="removeCommentImage('${targetId}')" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg">✕</button></div>`;
     target.classList.remove('hidden');
     const btnId = parentId ? `reply-btn-${parentId}` : `comment-btn-${teachingId}`;
-    const btn = document.getElementById(btnId);
-    if (btn) btn.disabled = false;
+    const btn = document.getElementById(btnId); if (btn) btn.disabled = false;
   };
   reader.readAsDataURL(file);
 }
 
 function removeCommentImage(targetId) {
-  const target = document.getElementById(targetId);
-  if (target) { target.innerHTML = ''; target.classList.add('hidden'); }
-  if (targetId.startsWith('comment-preview-')) {
-    const tid = targetId.replace('comment-preview-', '');
-    document.getElementById('comment-file-' + tid).value = '';
-    const btn = document.getElementById('comment-btn-' + tid);
-    const txt = document.getElementById('comment-text-' + tid);
-    if (btn) btn.disabled = !txt.value.trim();
-  } else {
-    const pid = targetId.replace('reply-preview-', '');
-    document.getElementById('reply-file-' + pid).value = '';
-    const btn = document.getElementById('reply-btn-' + pid);
-    const txt = document.getElementById('reply-text-' + pid);
-    if (btn) btn.disabled = !txt.value.trim();
-  }
+  const target = document.getElementById(targetId); if (target) { target.innerHTML = ''; target.classList.add('hidden'); }
+  if (targetId.startsWith('comment-preview-')) { const tid = targetId.replace('comment-preview-', ''); document.getElementById('comment-file-' + tid).value = ''; const btn = document.getElementById('comment-btn-' + tid); const txt = document.getElementById('comment-text-' + tid); if (btn) btn.disabled = !txt.value.trim(); }
+  else { const pid = targetId.replace('reply-preview-', ''); document.getElementById('reply-file-' + pid).value = ''; const btn = document.getElementById('reply-btn-' + pid); const txt = document.getElementById('reply-text-' + pid); if (btn) btn.disabled = !txt.value.trim(); }
 }
 
 function renderCommentTree(comments, parentId, teachingId, depth = 0) {
   const children = comments.filter(c => (c.parent_id || null) === parentId);
   if (children.length === 0) return '';
-  return children.map(c => {
-    const replies = renderCommentTree(comments, c.id, teachingId, depth + 1);
-    return renderComment(c, teachingId, depth, replies);
-  }).join('');
+  return children.map(c => { const replies = renderCommentTree(comments, c.id, teachingId, depth + 1); return renderComment(c, teachingId, depth, replies); }).join('');
 }
 
 function renderComment(c, teachingId, depth, repliesHtml) {
@@ -1155,6 +1039,7 @@ function renderComment(c, teachingId, depth, repliesHtml) {
           <button onclick="openPublicProfile('${c.user_id}')" class="text-xs font-medium text-amethyst-300 hover:underline">@${escapeHtml(info.username)}</button>
           <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
           ${edited ? `<span class="text-[10px] text-gray-700">· edited</span>` : ''}
+          ${!isOwner ? `<button onclick="sendPoke('${c.user_id}', this)" class="poke-btn" title="Wave hello">👋</button>` : ''}
           ${isOwner ? `<button onclick="openCommentMenu(${c.id}, ${teachingId})" class="ml-auto p-1 text-gray-600 hover:text-gray-300 transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg></button>` : ''}
         </div>
         ${contentWithMentions ? `<p class="text-sm text-gray-300 prose-content mt-1.5">${contentWithMentions}</p>` : ''}
@@ -1189,35 +1074,39 @@ function renderComment(c, teachingId, depth, repliesHtml) {
   </div>`;
 }
 
-function avatarHtml(userId, size) {
-  const info = state.profileCache[userId] || {};
-  const cls = size === 'xs' ? 'avatar-xs' : size === 'lg' ? 'avatar-lg' : 'avatar-sm';
-  if (info.avatar_url) return `<img src="${info.avatar_url}" class="${cls}" alt="">`;
-  const initial = (info.username || '?')[0].toUpperCase();
-  return `<div class="${cls}">${initial}</div>`;
+function avatarHtml(userId, size) { const info = state.profileCache[userId] || {}; const cls = size === 'xs' ? 'avatar-xs' : size === 'lg' ? 'avatar-lg' : 'avatar-sm'; if (info.avatar_url) return `<img src="${info.avatar_url}" class="${cls}" alt="">`; const initial = (info.username || '?')[0].toUpperCase(); return `<div class="${cls}">${initial}</div>`; }
+
+function showReplyBox(commentId, teachingId) { const box = document.getElementById('reply-box-' + commentId); if (box) { box.classList.toggle('hidden'); if (!box.classList.contains('hidden')) document.getElementById('reply-text-' + commentId).focus(); } }
+function cancelReply(commentId) { const box = document.getElementById('reply-box-' + commentId); if (box) box.classList.add('hidden'); }
+
+// ===== POKE =====
+async function sendPoke(toUserId, btn) {
+  if (toUserId === state.user.id) return;
+  if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    // rate limit: check if poked this user in last 24h
+    const since = new Date(Date.now() - 86400000).toISOString();
+    const { data: existing } = await sb.from('pokes').select('id').eq('from_user', state.user.id).eq('to_user', toUserId).gte('created_at', since).limit(1);
+    if (existing && existing.length > 0) { btn.textContent = '✓'; setTimeout(() => { btn.disabled = false; btn.textContent = '👋'; }, 1500); return; }
+    await sb.from('pokes').insert({ from_user: state.user.id, to_user: toUserId });
+    await sb.from('notifications').insert({
+      user_id: toUserId,
+      type: 'poke',
+      actor_id: state.user.id,
+      actor_username: state.profile.username,
+      message: '👋 @' + state.profile.username + ' waved at you'
+    });
+    btn.textContent = '✓';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '👋'; }, 1500);
+  } catch (e) { console.error(e); btn.disabled = false; btn.textContent = '👋'; }
 }
 
-function showReplyBox(commentId, teachingId) {
-  const box = document.getElementById('reply-box-' + commentId);
-  if (box) { box.classList.toggle('hidden'); if (!box.classList.contains('hidden')) document.getElementById('reply-text-' + commentId).focus(); }
-}
-
-function cancelReply(commentId) {
-  const box = document.getElementById('reply-box-' + commentId);
-  if (box) box.classList.add('hidden');
-}
-
+// ===== COMMENT MENU =====
 function openCommentMenu(commentId, teachingId) {
   const menu = document.createElement('div');
   menu.className = 'fixed inset-0 z-[78] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4';
-  menu.innerHTML = `
-    <div class="glass card w-full max-w-sm border border-void-600 overflow-hidden">
-      <button onclick="this.closest('.fixed').remove(); editComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Edit comment</button>
-      <button onclick="this.closest('.fixed').remove(); shareComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Share as post</button>
-      <button onclick="this.closest('.fixed').remove(); askDeleteComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-red-400 hover:bg-void-800 transition border-b border-void-600">Delete comment</button>
-      <button onclick="this.closest('.fixed').remove()" class="btn w-full py-4 text-center px-5 text-sm text-gray-400 hover:bg-void-800 transition">Cancel</button>
-    </div>
-  `;
+  menu.innerHTML = `<div class="glass card w-full max-w-sm border border-void-600 overflow-hidden"><button onclick="this.closest('.fixed').remove(); editComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Edit comment</button><button onclick="this.closest('.fixed').remove(); shareComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Share as post</button><button onclick="this.closest('.fixed').remove(); askDeleteComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-red-400 hover:bg-void-800 transition border-b border-void-600">Delete comment</button><button onclick="this.closest('.fixed').remove()" class="btn w-full py-4 text-center px-5 text-sm text-gray-400 hover:bg-void-800 transition">Cancel</button></div>`;
   menu.addEventListener('click', (e) => { if (e.target === menu) menu.remove(); });
   document.body.appendChild(menu);
 }
@@ -1243,203 +1132,82 @@ function shareComment(commentId, teachingId) {
 }
 
 let pendingDeletes = {};
-
 function askDeleteComment(commentId, teachingId) {
-  const el = document.getElementById('comment-' + commentId);
-  if (el) el.style.display = 'none';
-
-  const toast = document.createElement('div');
-  toast.className = 'undo-toast';
-  toast.id = 'undo-' + commentId;
-  toast.innerHTML = `
-    <span class="text-xs text-gray-300">Comment deleted</span>
-    <button onclick="undoDelete(${commentId})" class="text-xs text-amethyst-400 hover:text-amethyst-300 font-semibold transition">Undo</button>
-  `;
+  const el = document.getElementById('comment-' + commentId); if (el) el.style.display = 'none';
+  const toast = document.createElement('div'); toast.className = 'undo-toast'; toast.id = 'undo-' + commentId;
+  toast.innerHTML = `<span class="text-xs text-gray-300">Comment deleted</span><button onclick="undoDelete(${commentId})" class="text-xs text-amethyst-400 hover:text-amethyst-300 font-semibold transition">Undo</button>`;
   document.body.appendChild(toast);
-
-  pendingDeletes[commentId] = setTimeout(async () => {
-    await sb.from('teaching_comments').delete().eq('id', commentId);
-    const t = document.getElementById('undo-' + commentId);
-    if (t) t.remove();
-    delete pendingDeletes[commentId];
-  }, 5000);
+  pendingDeletes[commentId] = setTimeout(async () => { await sb.from('teaching_comments').delete().eq('id', commentId); const t = document.getElementById('undo-' + commentId); if (t) t.remove(); delete pendingDeletes[commentId]; }, 5000);
 }
-
-function undoDelete(commentId) {
-  if (pendingDeletes[commentId]) { clearTimeout(pendingDeletes[commentId]); delete pendingDeletes[commentId]; }
-  const el = document.getElementById('comment-' + commentId);
-  if (el) el.style.display = '';
-  const t = document.getElementById('undo-' + commentId);
-  if (t) t.remove();
-}
+function undoDelete(commentId) { if (pendingDeletes[commentId]) { clearTimeout(pendingDeletes[commentId]); delete pendingDeletes[commentId]; } const el = document.getElementById('comment-' + commentId); if (el) el.style.display = ''; const t = document.getElementById('undo-' + commentId); if (t) t.remove(); }
 
 let mentionTargets = {};
-
 function handleMention(textarea, teachingId, parentId) {
-  const val = textarea.value;
-  const cursorPos = textarea.selectionStart;
-  const beforeCursor = val.substring(0, cursorPos);
+  const val = textarea.value; const cursorPos = textarea.selectionStart; const beforeCursor = val.substring(0, cursorPos);
   const atMatch = beforeCursor.match(/@([a-z0-9_]*)$/i);
-
   const dropdownId = `mention-dropdown-${teachingId}-${parentId === null ? 'null' : parentId}`;
-  const dropdown = document.getElementById(dropdownId);
-  if (!dropdown) return;
-
+  const dropdown = document.getElementById(dropdownId); if (!dropdown) return;
   if (!atMatch) { dropdown.classList.add('hidden'); return; }
-
   const query = atMatch[1].toLowerCase();
   const allUsers = Object.values(state.profileCache).filter(p => p.username);
   const matches = allUsers.filter(u => u.username.toLowerCase().startsWith(query) && u.username.toLowerCase() !== (state.profile.username || '').toLowerCase()).slice(0, 6);
-
   if (matches.length === 0) { dropdown.classList.add('hidden'); return; }
-
   dropdown.innerHTML = matches.map((u, i) => `<div class="mention-item ${i === 0 ? 'active' : ''}" onclick="insertMention('${textarea.id}', '${u.username}', '${dropdownId}')">@${escapeHtml(u.username)}</div>`).join('');
   dropdown.classList.remove('hidden');
   mentionTargets[dropdownId] = { textareaId: textarea.id, users: matches };
 }
 
 function insertMention(textareaId, username, dropdownId) {
-  const textarea = document.getElementById(textareaId);
-  const val = textarea.value;
-  const cursorPos = textarea.selectionStart;
-  const beforeCursor = val.substring(0, cursorPos);
-  const afterCursor = val.substring(cursorPos);
+  const textarea = document.getElementById(textareaId); const val = textarea.value; const cursorPos = textarea.selectionStart;
+  const beforeCursor = val.substring(0, cursorPos); const afterCursor = val.substring(cursorPos);
   const newBefore = beforeCursor.replace(/@([a-z0-9_]*)$/i, '@' + username + ' ');
-  textarea.value = newBefore + afterCursor;
-  textarea.focus();
-  textarea.selectionStart = textarea.selectionEnd = newBefore.length;
-  const dd = document.getElementById(dropdownId);
-  if (dd) dd.classList.add('hidden');
+  textarea.value = newBefore + afterCursor; textarea.focus(); textarea.selectionStart = textarea.selectionEnd = newBefore.length;
+  const dd = document.getElementById(dropdownId); if (dd) dd.classList.add('hidden');
 }
 
-function extractMentions(text) {
-  const matches = text.match(/@([a-z0-9_]+)/gi) || [];
-  return matches.map(m => m.substring(1).toLowerCase());
-}
+function extractMentions(text) { const matches = text.match(/@([a-z0-9_]+)/gi) || []; return matches.map(m => m.substring(1).toLowerCase()); }
 
 async function submitComment(teachingId, parentId) {
   const textId = parentId ? 'reply-text-' + parentId : 'comment-text-' + teachingId;
   const fileId = parentId ? 'reply-file-' + parentId : 'comment-file-' + teachingId;
   const previewId = parentId ? 'reply-preview-' + parentId : 'comment-preview-' + teachingId;
   const btnId = parentId ? 'reply-btn-' + parentId : 'comment-btn-' + teachingId;
-
-  const textEl = document.getElementById(textId);
-  const fileEl = document.getElementById(fileId);
-  const previewEl = document.getElementById(previewId);
-  const btn = document.getElementById(btnId);
-  const text = textEl.value.trim();
-  const file = fileEl.files[0];
-
+  const textEl = document.getElementById(textId); const fileEl = document.getElementById(fileId);
+  const previewEl = document.getElementById(previewId); const btn = document.getElementById(btnId);
+  const text = textEl.value.trim(); const file = fileEl.files[0];
   if (!text && !file) return;
-
   const tempId = 'temp-' + Date.now();
   const hasPreviewImage = previewEl && !previewEl.classList.contains('hidden');
   const previewImgSrc = hasPreviewImage ? previewEl.querySelector('img')?.src : null;
-
-  const optimisticComment = {
-    id: tempId,
-    teaching_id: teachingId,
-    user_id: state.user.id,
-    content: text || null,
-    image_url: previewImgSrc,
-    parent_id: parentId || null,
-    created_at: new Date().toISOString(),
-    reactions: [],
-    _pending: true
-  };
-
+  const optimisticComment = { id: tempId, teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url: previewImgSrc, parent_id: parentId || null, created_at: new Date().toISOString(), reactions: [], _pending: true };
   const t = state.teachings.find(x => x.id === teachingId);
-  if (t) {
-    t.comments.push(optimisticComment);
-    renderTeachings();
-    if (parentId) {
-      const rbox = document.getElementById('reply-box-' + parentId);
-      if (rbox) rbox.classList.add('hidden');
-    }
-  }
-
-  textEl.value = '';
-  if (fileEl) fileEl.value = '';
-  if (previewEl) { previewEl.innerHTML = ''; previewEl.classList.add('hidden'); }
-  if (btn) btn.disabled = true;
-
+  if (t) { t.comments.push(optimisticComment); renderTeachings(); if (parentId) { const rbox = document.getElementById('reply-box-' + parentId); if (rbox) rbox.classList.add('hidden'); } }
+  textEl.value = ''; if (fileEl) fileEl.value = ''; if (previewEl) { previewEl.innerHTML = ''; previewEl.classList.add('hidden'); } if (btn) btn.disabled = true;
   try {
     let image_url = null;
-    if (file) {
-      const path = `${state.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
-      const { error } = await sb.storage.from('comment-images').upload(path, file);
-      if (!error) { const { data } = sb.storage.from('comment-images').getPublicUrl(path); image_url = data.publicUrl; }
-    }
-
-    const { data: inserted, error } = await sb.from('teaching_comments').insert({
-      teaching_id: teachingId,
-      user_id: state.user.id,
-      content: text || null,
-      image_url,
-      parent_id: parentId || null
-    }).select().single();
-
+    if (file) { const path = `${state.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`; const { error } = await sb.storage.from('comment-images').upload(path, file); if (!error) { const { data } = sb.storage.from('comment-images').getPublicUrl(path); image_url = data.publicUrl; } }
+    const { data: inserted, error } = await sb.from('teaching_comments').insert({ teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url, parent_id: parentId || null }).select().single();
     if (error) throw error;
-
-    if (t) {
-      const idx = t.comments.findIndex(c => c.id === tempId);
-      if (idx >= 0) t.comments[idx] = { ...inserted, reactions: [] };
-    }
-
+    if (t) { const idx = t.comments.findIndex(c => c.id === tempId); if (idx >= 0) t.comments[idx] = { ...inserted, reactions: [] }; }
     if (parentId) {
       const parent = t.comments.find(c => c.id === parentId);
-      if (parent && parent.user_id !== state.user.id) {
-        await sb.from('notifications').insert({
-          user_id: parent.user_id,
-          type: 'reply',
-          actor_id: state.user.id,
-          actor_username: state.profile.username,
-          teaching_id: teachingId,
-          comment_id: parentId,
-          message: '@' + state.profile.username + ' replied to your comment'
-        });
-      }
+      if (parent && parent.user_id !== state.user.id) await sb.from('notifications').insert({ user_id: parent.user_id, type: 'reply', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: parentId, message: '@' + state.profile.username + ' replied to your comment' });
     }
-
     const mentions = extractMentions(text);
     for (const mentionUsername of mentions) {
       const { data: mentionedUser } = await sb.from('profiles').select('id').ilike('username', mentionUsername).limit(1).maybeSingle();
-      if (mentionedUser && mentionedUser.id !== state.user.id) {
-        await sb.from('notifications').insert({
-          user_id: mentionedUser.id,
-          type: 'mention',
-          actor_id: state.user.id,
-          actor_username: state.profile.username,
-          teaching_id: teachingId,
-          comment_id: inserted.id,
-          message: '@' + state.profile.username + ' mentioned you in a comment'
-        });
-      }
+      if (mentionedUser && mentionedUser.id !== state.user.id) await sb.from('notifications').insert({ user_id: mentionedUser.id, type: 'mention', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: inserted.id, message: '@' + state.profile.username + ' mentioned you in a comment' });
     }
-
     renderTeachings();
-  } catch (e) {
-    console.error(e);
-    if (t) {
-      const idx = t.comments.findIndex(c => c.id === tempId);
-      if (idx >= 0) t.comments[idx]._error = true;
-      renderTeachings();
-    }
-  }
+  } catch (e) { console.error(e); if (t) { const idx = t.comments.findIndex(c => c.id === tempId); if (idx >= 0) t.comments[idx]._error = true; renderTeachings(); } }
 }
 
 async function toggleTeachingReaction(teachingId, emoji) {
-  const t = state.teachings.find(x => x.id === teachingId);
-  if (!t) return;
+  const t = state.teachings.find(x => x.id === teachingId); if (!t) return;
   const existing = t.reactions.find(r => r.user_id === state.user.id && r.emoji === emoji);
-
-  if (existing) {
-    t.reactions = t.reactions.filter(r => r.id !== existing.id);
-  } else {
-    t.reactions.push({ id: 'temp-' + Date.now(), teaching_id: teachingId, user_id: state.user.id, emoji, _pending: true });
-  }
+  if (existing) t.reactions = t.reactions.filter(r => r.id !== existing.id);
+  else t.reactions.push({ id: 'temp-' + Date.now(), teaching_id: teachingId, user_id: state.user.id, emoji, _pending: true });
   renderTeachings();
-
   if (existing) await sb.from('teaching_reactions').delete().eq('id', existing.id);
   else await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
 }
@@ -1449,62 +1217,27 @@ async function toggleCommentReaction(commentId, emoji) {
   for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; teachingId = t.id; break; } }
   if (!comment) return;
   const existing = (comment.reactions || []).find(r => r.user_id === state.user.id && r.emoji === emoji);
-
-  if (existing) {
-    comment.reactions = comment.reactions.filter(r => r.id !== existing.id);
-  } else {
-    comment.reactions.push({ id: 'temp-' + Date.now(), comment_id: commentId, user_id: state.user.id, emoji, _pending: true });
-  }
+  if (existing) comment.reactions = comment.reactions.filter(r => r.id !== existing.id);
+  else comment.reactions.push({ id: 'temp-' + Date.now(), comment_id: commentId, user_id: state.user.id, emoji, _pending: true });
   renderTeachings();
-
   if (existing) await sb.from('comment_reactions').delete().eq('id', existing.id);
   else {
     await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
-    if (comment.user_id !== state.user.id) {
-      await sb.from('notifications').insert({
-        user_id: comment.user_id,
-        type: 'reaction',
-        actor_id: state.user.id,
-        actor_username: state.profile.username,
-        teaching_id: teachingId,
-        comment_id: commentId,
-        message: '@' + state.profile.username + ' reacted ' + emoji + ' to your comment'
-      });
-    }
+    if (comment.user_id !== state.user.id) await sb.from('notifications').insert({ user_id: comment.user_id, type: 'reaction', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: commentId, message: '@' + state.profile.username + ' reacted ' + emoji + ' to your comment' });
   }
 }
 
 function shareTeaching(teachingId) {
-  const t = state.teachings.find(x => x.id === teachingId);
-  if (!t) return;
+  const t = state.teachings.find(x => x.id === teachingId); if (!t) return;
   const text = (t.title ? t.title + '\n\n' : '') + (t.content || '').substring(0, 200) + '...\n\nRead on Moph Echo: https://mophecho-mirror.vercel.app';
   if (navigator.share) navigator.share({ title: t.title || 'Moph Echo Teaching', text, url: 'https://mophecho-mirror.vercel.app' }).catch(() => {});
   else navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard')).catch(() => {});
 }
 
-function openImageViewer(src) {
-  document.getElementById('imageViewerSrc').src = src;
-  document.getElementById('imageViewer').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-}
-function closeImageViewer() {
-  document.getElementById('imageViewer').classList.add('hidden');
-  document.getElementById('imageViewerSrc').src = '';
-  document.body.style.overflow = '';
-}
-function openVideoViewer(src) {
-  const v = document.getElementById('videoViewerSrc');
-  v.src = src;
-  document.getElementById('videoViewer').classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-  v.play().catch(() => {});
-}
-function closeVideoViewer() {
-  const v = document.getElementById('videoViewerSrc');
-  v.pause(); v.src = '';
-  document.getElementById('videoViewer').classList.add('hidden');
-  document.body.style.overflow = '';
-}
+function openImageViewer(src) { document.getElementById('imageViewerSrc').src = src; document.getElementById('imageViewer').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+function closeImageViewer() { document.getElementById('imageViewer').classList.add('hidden'); document.getElementById('imageViewerSrc').src = ''; document.body.style.overflow = ''; }
+function openVideoViewer(src) { const v = document.getElementById('videoViewerSrc'); v.src = src; document.getElementById('videoViewer').classList.remove('hidden'); document.body.style.overflow = 'hidden'; v.play().catch(() => {}); }
+function closeVideoViewer() { const v = document.getElementById('videoViewerSrc'); v.pause(); v.src = ''; document.getElementById('videoViewer').classList.add('hidden'); document.body.style.overflow = ''; }
 
 async function loadNotifications() {
   const { data } = await sb.from('notifications').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(50);
@@ -1518,34 +1251,19 @@ async function loadNotifications() {
 function renderNotifications() {
   const el = document.getElementById('notifList');
   if (state.notifications.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600 text-center py-8">No notifications yet.</p>'; return; }
-  el.innerHTML = state.notifications.map(n => `
-    <div class="bg-void-800/50 card p-3.5 border ${n.is_read ? 'border-void-600' : 'border-amethyst-500/30'} cursor-pointer transition hover:border-amethyst-500/40" onclick="openNotification(${n.id}, ${n.teaching_id || 'null'})">
-      <p class="text-xs text-gray-300">${escapeHtml(n.message || 'New notification')}</p>
-      <p class="text-[10px] text-gray-600 mt-1.5">${relativeTime(n.created_at)}</p>
-    </div>
-  `).join('');
+  el.innerHTML = state.notifications.map(n => `<div class="bg-void-800/50 card p-3.5 border ${n.is_read ? 'border-void-600' : 'border-amethyst-500/30'} cursor-pointer transition hover:border-amethyst-500/40" onclick="openNotification(${n.id}, ${n.teaching_id || 'null'})"><p class="text-xs text-gray-300">${escapeHtml(n.message || 'New notification')}</p><p class="text-[10px] text-gray-600 mt-1.5">${relativeTime(n.created_at)}</p></div>`).join('');
 }
 
 function showNotifications() { document.getElementById('notifPanel').classList.remove('hidden'); renderNotifications(); }
 function closeNotifications() { document.getElementById('notifPanel').classList.add('hidden'); }
-async function markAllRead() {
-  await sb.from('notifications').update({ is_read: true }).eq('user_id', state.user.id).eq('is_read', false);
-  await loadNotifications(); renderNotifications();
-}
+async function markAllRead() { await sb.from('notifications').update({ is_read: true }).eq('user_id', state.user.id).eq('is_read', false); await loadNotifications(); renderNotifications(); }
 async function openNotification(notifId, teachingId) {
   await sb.from('notifications').update({ is_read: true }).eq('id', notifId);
   await loadNotifications();
   closeNotifications();
-  if (teachingId) {
-    switchTab('teachings');
-    setTimeout(() => {
-      const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
-      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 400);
-  }
+  if (teachingId) { switchTab('teachings'); setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${teachingId}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 400); }
 }
 
-// ===== SETTINGS =====
 function openSettings() {
   document.getElementById('setUsername').value = state.profile.username || '';
   document.getElementById('setBio').value = state.profile.bio || '';
@@ -1566,50 +1284,29 @@ function openSettings() {
   document.getElementById('settingsModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
-function closeSettings() {
-  document.getElementById('settingsModal').classList.add('hidden');
-  document.body.style.overflow = '';
-  applyTheme(state.profile.theme || 'amethyst');
-}
+function closeSettings() { document.getElementById('settingsModal').classList.add('hidden'); document.body.style.overflow = ''; applyTheme(state.profile.theme || 'amethyst'); }
 document.getElementById('setBio').addEventListener('input', (e) => { document.getElementById('bioCount').textContent = e.target.value.length; });
 
 async function saveSettings() {
-  const btn = document.getElementById('saveSettingsBtn');
-  const err = document.getElementById('setUsernameErr');
-  err.classList.add('hidden');
-  btn.textContent = 'Saving...'; btn.disabled = true;
-
+  const btn = document.getElementById('saveSettingsBtn'); const err = document.getElementById('setUsernameErr');
+  err.classList.add('hidden'); btn.textContent = 'Saving...'; btn.disabled = true;
   const newUsername = document.getElementById('setUsername').value.trim().toLowerCase();
-  if (!/^[a-z0-9_]{3,30}$/.test(newUsername)) {
-    err.textContent = 'Username: lowercase letters, numbers, underscores. 3-30 chars.';
-    err.classList.remove('hidden'); btn.textContent = 'Save'; btn.disabled = false; return;
-  }
+  if (!/^[a-z0-9_]{3,30}$/.test(newUsername)) { err.textContent = 'Username: lowercase letters, numbers, underscores. 3-30 chars.'; err.classList.remove('hidden'); btn.textContent = 'Save'; btn.disabled = false; return; }
   if (newUsername !== state.profile.username) {
     const { data: existing } = await sb.from('profiles').select('id').ilike('username', newUsername).neq('id', state.user.id).limit(1);
     if (existing && existing.length > 0) { err.textContent = 'That username is already taken.'; err.classList.remove('hidden'); btn.textContent = 'Save'; btn.disabled = false; return; }
   }
-
   const updates = {
-    username: newUsername,
-    bio: document.getElementById('setBio').value.trim() || null,
-    website: document.getElementById('setWebsite').value.trim() || null,
-    social_x: document.getElementById('setSocialX').value.trim() || null,
-    social_instagram: document.getElementById('setSocialInstagram').value.trim() || null,
-    social_youtube: document.getElementById('setSocialYoutube').value.trim() || null,
-    social_tiktok: document.getElementById('setSocialTiktok').value.trim() || null,
-    social_whatsapp: document.getElementById('setSocialWhatsapp').value.trim() || null,
-    social_linkedin: document.getElementById('setSocialLinkedin').value.trim() || null,
-    privacy_element: document.getElementById('privElement').checked,
-    privacy_stage: document.getElementById('privStage').checked,
-    privacy_wound: document.getElementById('privWound').checked,
-    privacy_gift: document.getElementById('privGift').checked,
-    theme: state.selectedTheme
+    username: newUsername, bio: document.getElementById('setBio').value.trim() || null, website: document.getElementById('setWebsite').value.trim() || null,
+    social_x: document.getElementById('setSocialX').value.trim() || null, social_instagram: document.getElementById('setSocialInstagram').value.trim() || null,
+    social_youtube: document.getElementById('setSocialYoutube').value.trim() || null, social_tiktok: document.getElementById('setSocialTiktok').value.trim() || null,
+    social_whatsapp: document.getElementById('setSocialWhatsapp').value.trim() || null, social_linkedin: document.getElementById('setSocialLinkedin').value.trim() || null,
+    privacy_element: document.getElementById('privElement').checked, privacy_stage: document.getElementById('privStage').checked,
+    privacy_wound: document.getElementById('privWound').checked, privacy_gift: document.getElementById('privGift').checked, theme: state.selectedTheme
   };
-
   const { error } = await sb.from('profiles').update(updates).eq('id', state.user.id);
   btn.textContent = 'Save'; btn.disabled = false;
   if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
-
   Object.assign(state.profile, updates);
   state.profileCache[state.user.id] = { username: newUsername, avatar_url: state.profile.avatar_url };
   applyTheme(state.selectedTheme);
@@ -1617,22 +1314,13 @@ async function saveSettings() {
   closeSettings();
 }
 
-// ===== PROFILE TABS =====
 function switchProfileTab(tab) {
-  const postsTab = document.getElementById('pTabPosts');
-  const aboutTab = document.getElementById('pTabAbout');
-  const postsEl = document.getElementById('profilePosts');
-  const aboutEl = document.getElementById('profileAbout');
-  if (tab === 'posts') {
-    postsTab.classList.add('active'); aboutTab.classList.remove('active');
-    postsEl.classList.remove('hidden'); aboutEl.classList.add('hidden');
-  } else {
-    aboutTab.classList.add('active'); postsTab.classList.remove('active');
-    aboutEl.classList.remove('hidden'); postsEl.classList.add('hidden');
-  }
+  const postsTab = document.getElementById('pTabPosts'); const aboutTab = document.getElementById('pTabAbout');
+  const postsEl = document.getElementById('profilePosts'); const aboutEl = document.getElementById('profileAbout');
+  if (tab === 'posts') { postsTab.classList.add('active'); aboutTab.classList.remove('active'); postsEl.classList.remove('hidden'); aboutEl.classList.add('hidden'); }
+  else { aboutTab.classList.add('active'); postsTab.classList.remove('active'); aboutEl.classList.remove('hidden'); postsEl.classList.add('hidden'); }
 }
 
-// ===== PUBLIC PROFILE =====
 async function openPublicProfile(userId) {
   if (userId === state.user.id) { switchTab('profile'); return; }
   const { data } = await sb.from('profiles').select('*').eq('id', userId).single();
@@ -1648,30 +1336,24 @@ async function openPublicProfileByUsername(username) {
   if (data) openPublicProfile(data.id);
 }
 
-function closePublicProfile() {
-  document.getElementById('publicProfileModal').classList.add('hidden');
-  document.body.style.overflow = '';
-  state.viewingUserId = null;
-}
+function closePublicProfile() { document.getElementById('publicProfileModal').classList.add('hidden'); document.body.style.overflow = ''; state.viewingUserId = null; }
 
 function renderPublicProfile(p) {
-  const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin']
-    .filter(k => p[k])
-    .map(k => `<a href="${escapeHtml(p[k])}" target="_blank" rel="noopener" class="social-icon">${SOCIAL_ICONS[k].svg}</a>`).join('');
-
+  const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin'].filter(k => p[k]).map(k => `<a href="${escapeHtml(p[k])}" target="_blank" rel="noopener" class="social-icon">${SOCIAL_ICONS[k].svg}</a>`).join('');
   const websiteHtml = p.website ? `<a href="${escapeHtml(p.website)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs text-amethyst-400 hover:underline mt-2"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>${escapeHtml(p.website)}</a>` : '';
-
-  const elementHtml = p.privacy_element !== false ? `<p class="text-sm font-medium ${p.element ? 'text-amethyst-400' : 'text-gray-400'}">${p.element || '—'}</p>` : `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
-  const stageHtml = p.privacy_stage !== false ? `<p class="text-sm font-medium ${p.stage ? 'text-amethyst-400' : 'text-gray-400'}">${p.stage || '—'}</p>` : `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
-  const woundHtml = p.privacy_wound !== false ? `<p class="text-sm font-medium ${p.wound ? 'text-amethyst-400' : 'text-gray-400'}">${p.wound || '—'}</p>` : `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
-  const giftHtml = p.privacy_gift !== false ? `<p class="text-sm font-medium ${p.gift ? 'text-amethyst-400' : 'text-gray-400'}">${p.gift || '—'}</p>` : `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
-
+  const privateHtml = `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
+  const elementHtml = p.privacy_element !== false ? `<p class="text-sm font-medium ${p.element ? 'text-amethyst-400' : 'text-gray-400'}">${p.element || '—'}</p>` : privateHtml;
+  const stageHtml = p.privacy_stage !== false ? `<p class="text-sm font-medium ${p.stage ? 'text-amethyst-400' : 'text-gray-400'}">${p.stage || '—'}</p>` : privateHtml;
+  const woundHtml = p.privacy_wound !== false ? `<p class="text-sm font-medium ${p.wound ? 'text-amethyst-400' : 'text-gray-400'}">${p.wound || '—'}</p>` : privateHtml;
+  const giftHtml = p.privacy_gift !== false ? `<p class="text-sm font-medium ${p.gift ? 'text-amethyst-400' : 'text-gray-400'}">${p.gift || '—'}</p>` : privateHtml;
   const avatarBig = p.avatar_url ? `<img src="${escapeHtml(p.avatar_url)}" class="avatar-lg mx-auto">` : `<div class="avatar-lg mx-auto">${(p.username || '?')[0].toUpperCase()}</div>`;
+  const streakHtml = (p.streak_count || 0) >= 2 ? `<div class="streak-badge mx-auto mt-3"><span>🔥</span><span>${p.streak_count}</span></div>` : '';
 
   document.getElementById('publicProfileContent').innerHTML = `
     <div class="glass card p-6 border border-void-600 mb-3 text-center">
       ${avatarBig}
       <h2 class="text-lg font-semibold mt-4">@${escapeHtml(p.username || 'architect')}</h2>
+      ${streakHtml}
       ${p.bio ? `<p class="text-sm text-gray-400 mt-2">${escapeHtml(p.bio)}</p>` : ''}
       ${websiteHtml}
       ${socials ? `<div class="flex flex-wrap justify-center gap-2 mt-4">${socials}</div>` : ''}
@@ -1688,26 +1370,15 @@ function renderPublicProfile(p) {
   `;
 }
 
-// ===== PROFILE RENDER =====
 function renderProfile() {
   document.getElementById('displayUsername').textContent = '@' + (state.profile.username || 'architect');
   document.getElementById('profileBio').textContent = state.profile.bio || 'Tap the settings icon to add a bio...';
   document.getElementById('profileBio').className = state.profile.bio ? 'text-sm text-gray-400 mt-2 line-clamp-3' : 'text-sm text-gray-600 mt-2 italic';
-
-  if (state.profile.joined_at) {
-    document.getElementById('profileJoined').textContent = 'Joined ' + new Date(state.profile.joined_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
-  } else {
-    document.getElementById('profileJoined').textContent = '';
-  }
-
-  // Socials
-  const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin']
-    .filter(k => state.profile[k])
-    .map(k => `<a href="${escapeHtml(state.profile[k])}" target="_blank" rel="noopener" class="social-icon" title="${SOCIAL_ICONS[k].name}">${SOCIAL_ICONS[k].svg}</a>`).join('');
+  if (state.profile.joined_at) document.getElementById('profileJoined').textContent = 'Joined ' + new Date(state.profile.joined_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+  else document.getElementById('profileJoined').textContent = '';
+  const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin'].filter(k => state.profile[k]).map(k => `<a href="${escapeHtml(state.profile[k])}" target="_blank" rel="noopener" class="social-icon" title="${SOCIAL_ICONS[k].name}">${SOCIAL_ICONS[k].svg}</a>`).join('');
   const websiteBtn = state.profile.website ? `<a href="${escapeHtml(state.profile.website)}" target="_blank" rel="noopener" class="social-icon" title="Website"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></a>` : '';
   document.getElementById('profileSocials').innerHTML = websiteBtn + socials;
-
-  // About tab stats (own profile shows real values regardless of privacy)
   document.getElementById('pElement').textContent = state.profile.element || '—';
   document.getElementById('pElement').className = state.profile.element ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
   document.getElementById('pStage').textContent = state.profile.stage || '—';
@@ -1716,11 +1387,10 @@ function renderProfile() {
   document.getElementById('pWound').className = state.profile.wound ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
   document.getElementById('pGift').textContent = state.profile.gift || '—';
   document.getElementById('pGift').className = state.profile.gift ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
-
   const gl = document.getElementById('goldenList');
   if (state.goldenStars.length === 0) gl.innerHTML = '<p class="text-xs text-gray-600">No golden moments yet.</p>';
   else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 card p-3.5"><p class="text-xs text-gold-200 prose-content">${formatResponse(s.text)}</p><p class="text-[10px] text-gray-600 mt-2">${s.date}</p></div>`).join('');
-
+  updateStreakUI();
   loadMyPosts();
 }
 
@@ -1728,52 +1398,31 @@ async function loadMyPosts() {
   const el = document.getElementById('profilePosts');
   el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading your posts...</p>';
   const { data } = await sb.from('teaching_comments').select('id, content, image_url, teaching_id, created_at').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(50);
-  if (!data || data.length === 0) {
-    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">You have not posted yet. Join a teaching and reply to start your journey.</p></div>';
-    return;
-  }
+  if (!data || data.length === 0) { el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">You have not posted yet. Join a teaching and reply to start your journey.</p></div>'; return; }
   el.innerHTML = data.map(c => {
     const t = state.teachings.find(x => x.id === c.teaching_id);
     const title = t ? (t.title || 'Untitled teaching') : 'Teaching';
-    return `
-      <div class="post-card">
-        <div class="flex items-center gap-2 mb-3 text-xs text-gray-500">
-          <span class="text-amethyst-400">Replying to</span>
-          <span class="text-gray-400 truncate">${escapeHtml(title)}</span>
-        </div>
-        ${c.content ? `<p class="text-sm text-gray-200 prose-content">${escapeHtml(c.content)}</p>` : ''}
-        ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
-        <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
-          <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
-          <div class="flex items-center gap-3">
-            <button onclick="jumpToComment(${c.teaching_id}, ${c.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">View thread</button>
-            <button onclick="shareComment(${c.id}, ${c.teaching_id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition flex items-center gap-1">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-              Share
-            </button>
-          </div>
+    return `<div class="post-card">
+      <div class="flex items-center gap-2 mb-3 text-xs text-gray-500"><span class="text-amethyst-400">Replying to</span><span class="text-gray-400 truncate">${escapeHtml(title)}</span></div>
+      ${c.content ? `<p class="text-sm text-gray-200 prose-content">${escapeHtml(c.content)}</p>` : ''}
+      ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
+      <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
+        <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
+        <div class="flex items-center gap-3">
+          <button onclick="jumpToComment(${c.teaching_id}, ${c.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">View thread</button>
+          <button onclick="shareComment(${c.id}, ${c.teaching_id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>Share</button>
         </div>
       </div>
-    `;
+    </div>`;
   }).join('');
 }
 
-function jumpToComment(teachingId, commentId) {
-  switchTab('teachings');
-  setTimeout(() => {
-    const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 300);
-}
-
-// ===== USERNAME (legacy - kept for compatibility) =====
+function jumpToComment(teachingId, commentId) { switchTab('teachings'); setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${teachingId}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300); }
 function openUsernameEditor() { openSettings(); }
 function closeUsernameEditor() { document.getElementById('usernameModal').classList.add('hidden'); }
 
-// ===== AVATAR =====
 async function handleAvatarUpload(e) {
-  const file = e.target.files[0];
-  if (!file) return;
+  const file = e.target.files[0]; if (!file) return;
   document.getElementById('avatarLoading').classList.remove('hidden');
   const ext = file.name.split('.').pop() || 'jpg';
   const path = `${state.user.id}/avatar-${Date.now()}.${ext}`;
@@ -1788,44 +1437,26 @@ async function handleAvatarUpload(e) {
   document.getElementById('avatarLoading').classList.add('hidden');
   document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
 }
-
 document.getElementById('avatarUpload').addEventListener('click', () => document.getElementById('avatarInput').click());
 document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
 
-// ===== TABS =====
 function switchTab(tab) {
-  ['chat','teachings','profile'].forEach(t => {
-    const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1));
-    if (panel) panel.classList.add('hidden');
-    const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
-    if (btn) btn.className = 'flex-1 py-2 text-[11px] font-medium rounded-xl text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5 transition';
-  });
-  const activePanel = document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1));
-  if (activePanel) activePanel.classList.remove('hidden');
-  const activeBtn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1));
-  if (activeBtn) activeBtn.className = 'flex-1 py-2 text-[11px] font-medium rounded-xl bg-amethyst-600/25 text-amethyst-300 border border-amethyst-500/25 flex items-center justify-center gap-1.5 transition';
-  if (tab === 'profile') { renderProfile(); }
+  ['chat','teachings','profile'].forEach(t => { const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1)); if (panel) panel.classList.add('hidden'); const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)); if (btn) btn.className = 'flex-1 py-2 text-[11px] font-medium rounded-xl text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5 transition'; });
+  const activePanel = document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)); if (activePanel) activePanel.classList.remove('hidden');
+  const activeBtn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)); if (activeBtn) activeBtn.className = 'flex-1 py-2 text-[11px] font-medium rounded-xl bg-amethyst-600/25 text-amethyst-300 border border-amethyst-500/25 flex items-center justify-center gap-1.5 transition';
+  if (tab === 'profile') renderProfile();
   if (tab === 'teachings') { renderTeachings(); }
 }
 
-// ===== CHAT =====
 function renderChat() {
   const c = document.getElementById('chatContainer');
-  if (state.messages.length === 0) {
-    c.innerHTML = `<div class="glass card p-5 border border-void-600 fade-in"><div class="flex items-start gap-3"><div class="w-8 h-8 rounded-xl bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-amethyst-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div><div><p class="text-sm text-gray-300">Welcome. I am the mirror.</p><p class="text-xs text-gray-500 mt-1">Speak your truth.</p></div></div></div>`;
-    return;
-  }
-  c.innerHTML = state.messages.map(m => {
-    if (m.role === 'user') return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-3xl rounded-br-lg px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`;
-    if (m.role === 'surprise') return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-3xl rounded-bl-lg px-4 py-3 max-w-[90%]"><div class="flex items-start gap-2.5"><svg class="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><p class="text-sm text-gold-200">${formatResponse(m.text)}</p></div></div></div>`;
-    return `<div class="flex justify-start fade-in"><div class="glass rounded-3xl rounded-bl-lg px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`;
-  }).join('');
+  if (state.messages.length === 0) { c.innerHTML = `<div class="glass card p-5 border border-void-600 fade-in"><div class="flex items-start gap-3"><div class="w-8 h-8 rounded-xl bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-amethyst-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div><div><p class="text-sm text-gray-300">Welcome. I am the mirror.</p><p class="text-xs text-gray-500 mt-1">Speak your truth.</p></div></div></div>`; return; }
+  c.innerHTML = state.messages.map(m => { if (m.role === 'user') return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-3xl rounded-br-lg px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`; if (m.role === 'surprise') return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-3xl rounded-bl-lg px-4 py-3 max-w-[90%]"><div class="flex items-start gap-2.5"><svg class="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><p class="text-sm text-gold-200">${formatResponse(m.text)}</p></div></div></div>`; return `<div class="flex justify-start fade-in"><div class="glass rounded-3xl rounded-bl-lg px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`; }).join('');
   c.scrollTop = c.scrollHeight;
 }
 
 async function processEntry() {
-  const input = document.getElementById('userInput');
-  const text = input.value.trim();
+  const input = document.getElementById('userInput'); const text = input.value.trim();
   if (!text || !state.user) return;
   state.messages.push({ role: 'user', text }); await saveMessage('user', text);
   input.value = ''; renderChat();
@@ -1834,20 +1465,12 @@ async function processEntry() {
   state.messages.push({ role: 'mirror', text: reflection }); await saveMessage('mirror', reflection);
   identifyProfile(text);
   const newStar = generateGoldenStar(text);
-  if (newStar) {
-    setTimeout(async () => {
-      state.messages.push({ role: 'surprise', text: newStar.text });
-      await saveMessage('surprise', newStar.text);
-      await saveGoldenStar(newStar.text, newStar.trait_type, newStar.trait_value);
-      renderChat(); renderProfile();
-    }, 1500);
-  }
+  if (newStar) { setTimeout(async () => { state.messages.push({ role: 'surprise', text: newStar.text }); await saveMessage('surprise', newStar.text); await saveGoldenStar(newStar.text, newStar.trait_type, newStar.trait_value); renderChat(); renderProfile(); }, 1500); }
   renderChat(); renderProfile(); checkGrounding(text); input.focus();
 }
 
 function identifyProfile(text) {
-  const l = text.toLowerCase();
-  let changed = false;
+  const l = text.toLowerCase(); let changed = false;
   if (!state.profile.element) {
     if (l.includes('anger')||l.includes('passion')||l.includes('burn')||l.includes('fire')) { state.profile.element='Fire'; changed=true; }
     else if (l.includes('sad')||l.includes('cry')||l.includes('deep')||l.includes('void')||l.includes('empty')) { state.profile.element='Water'; changed=true; }
@@ -1878,102 +1501,31 @@ function identifyProfile(text) {
 }
 
 function generateGoldenStar(text) {
-  if (state.profile.element && !state.goldenStars.some(s => s.trait_type === 'element')) {
-    const reward = TRAIT_REWARDS.element[state.profile.element];
-    if (reward) return { text: reward, trait_type: 'element', trait_value: state.profile.element };
-  }
-  if (state.profile.wound && !state.goldenStars.some(s => s.trait_type === 'wound')) {
-    const reward = TRAIT_REWARDS.wound[state.profile.wound];
-    if (reward) return { text: reward, trait_type: 'wound', trait_value: state.profile.wound };
-  }
-  if (state.profile.gift && !state.goldenStars.some(s => s.trait_type === 'gift')) {
-    const reward = TRAIT_REWARDS.gift[state.profile.gift];
-    if (reward) return { text: reward, trait_type: 'gift', trait_value: state.profile.gift };
-  }
+  if (state.profile.element && !state.goldenStars.some(s => s.trait_type === 'element')) { const reward = TRAIT_REWARDS.element[state.profile.element]; if (reward) return { text: reward, trait_type: 'element', trait_value: state.profile.element }; }
+  if (state.profile.wound && !state.goldenStars.some(s => s.trait_type === 'wound')) { const reward = TRAIT_REWARDS.wound[state.profile.wound]; if (reward) return { text: reward, trait_type: 'wound', trait_value: state.profile.wound }; }
+  if (state.profile.gift && !state.goldenStars.some(s => s.trait_type === 'gift')) { const reward = TRAIT_REWARDS.gift[state.profile.gift]; if (reward) return { text: reward, trait_type: 'gift', trait_value: state.profile.gift }; }
   return null;
 }
 
-function openDownloadModal() {
-  if (state.messages.length === 0) { alert('No reflections to download yet.'); return; }
-  document.getElementById('downloadFilename').value = 'moph-echo-journey';
-  document.getElementById('downloadModal').classList.remove('hidden');
-}
+function openDownloadModal() { if (state.messages.length === 0) { alert('No reflections to download yet.'); return; } document.getElementById('downloadFilename').value = 'moph-echo-journey'; document.getElementById('downloadModal').classList.remove('hidden'); }
 function closeDownloadModal() { document.getElementById('downloadModal').classList.add('hidden'); }
 
 function downloadAs(format) {
   const filename = (document.getElementById('downloadFilename').value.trim() || 'moph-echo-journey').replace(/[^a-z0-9-_]/gi, '_');
   let log = 'MOPH ECHO MIRROR — REFLECTION LOG\n' + `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
-  state.messages.forEach(m => {
-    const r = m.role === 'user' ? 'YOU' : m.role === 'surprise' ? 'GOLDEN' : 'MIRROR';
-    log += `[${r}] ${String(m.text).replace(/<[^>]*>/g, '')}\n${'-'.repeat(30)}\n`;
-  });
-
-  if (format === 'txt') {
-    const blob = new Blob([log], { type: 'text/plain' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = filename + '.txt';
-    a.click();
-    URL.revokeObjectURL(a.href);
-    closeDownloadModal();
-    return;
-  }
-
-  const htmlMessages = state.messages.map(m => {
-    if (m.role === 'user') return `<div class="msg user"><div class="bubble user">${escapeHtml(m.text)}</div></div>`;
-    if (m.role === 'surprise') return `<div class="msg mirror"><div class="bubble gold">${escapeHtml(String(m.text).replace(/<[^>]*>/g, ''))}</div></div>`;
-    return `<div class="msg mirror"><div class="bubble mirror">${String(m.text).replace(/<[^>]*>/g, '')}</div></div>`;
-  }).join('');
-
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(filename)}</title>
-    <style>
-      body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', Arial, sans-serif; background:#fff; color:#111; padding: 40px; max-width: 700px; margin: 0 auto; }
-      h1 { font-size: 22px; color: #7c3aed; margin-bottom: 4px; }
-      .meta { font-size: 12px; color: #666; margin-bottom: 32px; border-bottom: 1px solid #eee; padding-bottom: 16px; }
-      .msg { margin-bottom: 16px; display: flex; }
-      .msg.user { justify-content: flex-end; }
-      .bubble { padding: 10px 14px; border-radius: 14px; max-width: 80%; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
-      .bubble.user { background: #f3e8ff; border: 1px solid #e9d5ff; }
-      .bubble.mirror { background: #f9fafb; border: 1px solid #e5e7eb; }
-      .bubble.gold { background: #fefce8; border: 1px solid #fde68a; color: #854d0e; }
-      @media print { body { padding: 0; } .msg { page-break-inside: avoid; } }
-    </style>
-  </head><body>
-    <h1>⚡ Moph Echo Mirror</h1>
-    <div class="meta">Reflection log · Exported ${new Date().toLocaleString()}</div>
-    ${htmlMessages}
-    <script>window.onload = () => { setTimeout(() => window.print(), 300); }<\/script>
-  </body></html>`;
-
-  const win = window.open('', '_blank');
-  if (!win) { alert('Please allow popups to save as PDF.'); return; }
-  win.document.write(html);
-  win.document.close();
-  closeDownloadModal();
+  state.messages.forEach(m => { const r = m.role === 'user' ? 'YOU' : m.role === 'surprise' ? 'GOLDEN' : 'MIRROR'; log += `[${r}] ${String(m.text).replace(/<[^>]*>/g, '')}\n${'-'.repeat(30)}\n`; });
+  if (format === 'txt') { const blob = new Blob([log], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename + '.txt'; a.click(); URL.revokeObjectURL(a.href); closeDownloadModal(); return; }
+  const htmlMessages = state.messages.map(m => { if (m.role === 'user') return `<div class="msg user"><div class="bubble user">${escapeHtml(m.text)}</div></div>`; if (m.role === 'surprise') return `<div class="msg mirror"><div class="bubble gold">${escapeHtml(String(m.text).replace(/<[^>]*>/g, ''))}</div></div>`; return `<div class="msg mirror"><div class="bubble mirror">${String(m.text).replace(/<[^>]*>/g, '')}</div></div>`; }).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(filename)}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Inter',Arial,sans-serif;background:#fff;color:#111;padding:40px;max-width:700px;margin:0 auto;}h1{font-size:22px;color:#7c3aed;margin-bottom:4px;}.meta{font-size:12px;color:#666;margin-bottom:32px;border-bottom:1px solid #eee;padding-bottom:16px;}.msg{margin-bottom:16px;display:flex;}.msg.user{justify-content:flex-end;}.bubble{padding:10px 14px;border-radius:14px;max-width:80%;font-size:13px;line-height:1.6;white-space:pre-wrap;}.bubble.user{background:#f3e8ff;border:1px solid #e9d5ff;}.bubble.mirror{background:#f9fafb;border:1px solid #e5e7eb;}.bubble.gold{background:#fefce8;border:1px solid #fde68a;color:#854d0e;}@media print{body{padding:0;}.msg{page-break-inside:avoid;}}</style></head><body><h1>⚡ Moph Echo Mirror</h1><div class="meta">Reflection log · Exported ${new Date().toLocaleString()}</div>${htmlMessages}<script>window.onload = () => { setTimeout(() => window.print(), 300); }<\/script></body></html>`;
+  const win = window.open('', '_blank'); if (!win) { alert('Please allow popups to save as PDF.'); return; } win.document.write(html); win.document.close(); closeDownloadModal();
 }
 
-function checkGrounding(text) {
-  const l = text.toLowerCase();
-  const alert = document.getElementById('groundingAlert');
-  if (l.includes('hungry')||l.includes('floating')||l.includes('eat')) alert.classList.remove('hidden');
-  else alert.classList.add('hidden');
-}
+function checkGrounding(text) { const l = text.toLowerCase(); const alert = document.getElementById('groundingAlert'); if (l.includes('hungry')||l.includes('floating')||l.includes('eat')) alert.classList.remove('hidden'); else alert.classList.add('hidden'); }
 
-document.getElementById('panelTeachings')?.addEventListener('scroll', () => {
-  const panel = document.getElementById('panelTeachings');
-  const bar = document.getElementById('readingBar');
-  const scrollTop = panel.scrollTop;
-  const scrollHeight = panel.scrollHeight - panel.clientHeight;
-  bar.style.width = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 + '%' : '0%';
-});
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('textarea')) document.querySelectorAll('.mention-dropdown').forEach(d => d.classList.add('hidden'));
-});
-
+document.getElementById('panelTeachings')?.addEventListener('scroll', () => { const panel = document.getElementById('panelTeachings'); const bar = document.getElementById('readingBar'); const scrollTop = panel.scrollTop; const scrollHeight = panel.scrollHeight - panel.clientHeight; bar.style.width = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 + '%' : '0%'; });
+document.addEventListener('click', (e) => { if (!e.target.closest('textarea')) document.querySelectorAll('.mention-dropdown').forEach(d => d.classList.add('hidden')); });
 document.getElementById('userInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); processEntry(); } });
 
-// Init
 initConfig();
 </script>
 </body>
