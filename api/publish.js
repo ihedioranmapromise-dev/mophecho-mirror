@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
 // ============ CREATE ============
 async function createTeaching(body, supabaseUrl, serviceKey, res) {
-  const { title, content, cover_image, video_file, video_url, sendEmail, tags, pinned } = body;
+  const { title, content, cover_image, video_file, video_url, sendEmail, tags, pinned, featured } = body;
 
   if (!content || !content.trim()) return res.status(400).json({ error: 'Content is required' });
 
@@ -44,6 +44,21 @@ async function createTeaching(body, supabaseUrl, serviceKey, res) {
     if (!finalVideoUrl) return res.status(500).json({ error: 'Video upload failed' });
   }
 
+  const insertBody = {
+    title: title || null,
+    content,
+    cover_image: finalCoverUrl,
+    video_url: finalVideoUrl,
+    tags: tags || [],
+    pinned: pinned || false,
+    featured_date: featured ? new Date().toISOString().split('T')[0] : null
+  };
+
+  // If featuring, clear other featured_date for today
+  if (featured) {
+    await clearTodaysFeature(supabaseUrl, serviceKey);
+  }
+
   const insertRes = await fetch(`${supabaseUrl}/rest/v1/teachings`, {
     method: 'POST',
     headers: {
@@ -52,14 +67,7 @@ async function createTeaching(body, supabaseUrl, serviceKey, res) {
       'Content-Type': 'application/json',
       'Prefer': 'return=representation'
     },
-    body: JSON.stringify({
-      title: title || null,
-      content,
-      cover_image: finalCoverUrl,
-      video_url: finalVideoUrl,
-      tags: tags || [],
-      pinned: pinned || false
-    })
+    body: JSON.stringify(insertBody)
   });
 
   if (!insertRes.ok) {
@@ -76,7 +84,7 @@ async function createTeaching(body, supabaseUrl, serviceKey, res) {
 
 // ============ UPDATE ============
 async function updateTeaching(body, supabaseUrl, serviceKey, res) {
-  const { id, title, content, cover_image, video_file, video_url, tags, pinned } = body;
+  const { id, title, content, cover_image, video_file, video_url, tags, pinned, featured } = body;
 
   if (!id) return res.status(400).json({ error: 'Missing id' });
   if (!content || !content.trim()) return res.status(400).json({ error: 'Content is required' });
@@ -88,7 +96,15 @@ async function updateTeaching(body, supabaseUrl, serviceKey, res) {
     pinned: pinned || false
   };
 
-  // Cover: if new base64 uploaded, upload it. If it's a URL, keep. If null/empty, remove.
+  // If featuring, clear other featured_date for today
+  if (featured) {
+    await clearTodaysFeature(supabaseUrl, serviceKey);
+    update.featured_date = new Date().toISOString().split('T')[0];
+  } else {
+    update.featured_date = null;
+  }
+
+  // Cover
   if (cover_image && cover_image.startsWith('data:')) {
     const url = await uploadBase64ToStorage(cover_image, 'covers', supabaseUrl, serviceKey);
     if (url) update.cover_image = url;
@@ -96,7 +112,7 @@ async function updateTeaching(body, supabaseUrl, serviceKey, res) {
     update.cover_image = null;
   }
 
-  // Video: same logic
+  // Video
   if (video_file && video_file.startsWith('data:')) {
     const url = await uploadBase64ToStorage(video_file, 'videos', supabaseUrl, serviceKey);
     if (url) update.video_url = url;
@@ -146,6 +162,19 @@ async function deleteTeaching(body, supabaseUrl, serviceKey, res) {
 }
 
 // ============ HELPERS ============
+async function clearTodaysFeature(supabaseUrl, serviceKey) {
+  const today = new Date().toISOString().split('T')[0];
+  await fetch(`${supabaseUrl}/rest/v1/teachings?featured_date=eq.${today}`, {
+    method: 'PATCH',
+    headers: {
+      'apikey': serviceKey,
+      'Authorization': `Bearer ${serviceKey}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ featured_date: null })
+  });
+}
+
 async function uploadBase64ToStorage(dataUrl, folder, supabaseUrl, serviceKey) {
   const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
   if (!match) return null;
