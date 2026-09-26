@@ -1501,4 +1501,168 @@ function renderChat() {
     if (m.role === 'user') return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-2xl rounded-br-md px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`;
     if (m.role === 'surprise') return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%]"><div class="flex items-start gap-2"><svg class="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><p class="text-sm text-gold-200">${formatResponse(m.text)}</p></div></div></div>`;
     return `<div class="flex justify-start fade-in"><div class="glass rounded-2xl rounded-bl-md px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`;
-  }).
+  }).join('');
+  c.scrollTop = c.scrollHeight;
+}
+
+async function processEntry() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text || !state.user) return;
+  state.messages.push({ role: 'user', text }); await saveMessage('user', text);
+  input.value = ''; renderChat();
+  await new Promise(r => setTimeout(r, 400));
+  const reflection = generateReflection(text);
+  state.messages.push({ role: 'mirror', text: reflection }); await saveMessage('mirror', reflection);
+  identifyProfile(text);
+  const newStar = generateGoldenStar(text);
+  if (newStar) {
+    setTimeout(async () => {
+      state.messages.push({ role: 'surprise', text: newStar.text });
+      await saveMessage('surprise', newStar.text);
+      await saveGoldenStar(newStar.text, newStar.trait_type, newStar.trait_value);
+      renderChat(); renderProfile();
+    }, 1500);
+  }
+  renderChat(); renderProfile(); checkGrounding(text); input.focus();
+}
+
+function identifyProfile(text) {
+  const l = text.toLowerCase();
+  let changed = false;
+  if (!state.profile.element) {
+    if (l.includes('anger')||l.includes('passion')||l.includes('burn')||l.includes('fire')) { state.profile.element='Fire'; changed=true; }
+    else if (l.includes('sad')||l.includes('cry')||l.includes('deep')||l.includes('void')||l.includes('empty')) { state.profile.element='Water'; changed=true; }
+    else if (l.includes('heavy')||l.includes('grounded')||l.includes('money')||l.includes('debt')) { state.profile.element='Earth'; changed=true; }
+    else if (l.includes('think')||l.includes('curious')||l.includes('mind')||l.includes('question')) { state.profile.element='Air'; changed=true; }
+  }
+  if (!state.profile.wound) {
+    if (l.includes('alone')||l.includes('lonely')||l.includes('abandoned')) { state.profile.wound='Abandonment'; changed=true; }
+    else if (l.includes('betray')||l.includes('trust')||l.includes('liar')) { state.profile.wound='Betrayal'; changed=true; }
+    else if (l.includes('worthless')||l.includes('not enough')||l.includes('failure')) { state.profile.wound='Worthlessness'; changed=true; }
+    else if (l.includes('powerless')||l.includes('control')||l.includes('weak')) { state.profile.wound='Powerlessness'; changed=true; }
+    else if (l.includes('invisible')||l.includes('ignore')) { state.profile.wound='Invisibility'; changed=true; }
+  }
+  if (!state.profile.gift) {
+    if (l.includes('intuitive')||l.includes('know without knowing')) { state.profile.gift='Intuition'; changed=true; }
+    else if (l.includes('heal')||l.includes('comfort')||l.includes('nurture')) { state.profile.gift='Healing'; changed=true; }
+    else if (l.includes('teach')||l.includes('explain')||l.includes('guide')) { state.profile.gift='Teaching'; changed=true; }
+    else if (l.includes('create')||l.includes('build')||l.includes('design')) { state.profile.gift='Creation'; changed=true; }
+    else if (l.includes('protect')||l.includes('shield')||l.includes('guard')) { state.profile.gift='Protection'; changed=true; }
+  }
+  if (!state.profile.stage) {
+    if (l.includes('confused')||l.includes('what is happening')||l.includes('help')) { state.profile.stage='Seeking'; changed=true; }
+    else if (l.includes('sync')||l.includes('coincidence')||l.includes('pattern')) { state.profile.stage='Alignment'; changed=true; }
+    else if (l.includes('void')||l.includes('empty')||l.includes('flat')) { state.profile.stage='Flatness'; changed=true; }
+    else if (l.includes('build')||l.includes('create')||l.includes('work')) { state.profile.stage='Forging'; changed=true; }
+  }
+  if (changed) saveProfile();
+}
+
+function generateGoldenStar(text) {
+  if (state.profile.element && !state.goldenStars.some(s => s.trait_type === 'element')) {
+    const reward = TRAIT_REWARDS.element[state.profile.element];
+    if (reward) return { text: reward, trait_type: 'element', trait_value: state.profile.element };
+  }
+  if (state.profile.wound && !state.goldenStars.some(s => s.trait_type === 'wound')) {
+    const reward = TRAIT_REWARDS.wound[state.profile.wound];
+    if (reward) return { text: reward, trait_type: 'wound', trait_value: state.profile.wound };
+  }
+  if (state.profile.gift && !state.goldenStars.some(s => s.trait_type === 'gift')) {
+    const reward = TRAIT_REWARDS.gift[state.profile.gift];
+    if (reward) return { text: reward, trait_type: 'gift', trait_value: state.profile.gift };
+  }
+  return null;
+}
+
+// ===== DOWNLOAD =====
+function openDownloadModal() {
+  if (state.messages.length === 0) { alert('No reflections to download yet.'); return; }
+  document.getElementById('downloadFilename').value = 'moph-echo-journey';
+  document.getElementById('downloadModal').classList.remove('hidden');
+}
+function closeDownloadModal() { document.getElementById('downloadModal').classList.add('hidden'); }
+
+function downloadAs(format) {
+  const filename = (document.getElementById('downloadFilename').value.trim() || 'moph-echo-journey').replace(/[^a-z0-9-_]/gi, '_');
+
+  let log = 'MOPH ECHO MIRROR — REFLECTION LOG\n' + `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
+  state.messages.forEach(m => {
+    const r = m.role === 'user' ? 'YOU' : m.role === 'surprise' ? 'GOLDEN' : 'MIRROR';
+    log += `[${r}] ${String(m.text).replace(/<[^>]*>/g, '')}\n${'-'.repeat(30)}\n`;
+  });
+
+  if (format === 'txt') {
+    const blob = new Blob([log], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename + '.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    closeDownloadModal();
+    return;
+  }
+
+  // PDF via print window
+  const htmlMessages = state.messages.map(m => {
+    if (m.role === 'user') return `<div class="msg user"><div class="bubble user">${escapeHtml(m.text)}</div></div>`;
+    if (m.role === 'surprise') return `<div class="msg mirror"><div class="bubble gold">${escapeHtml(String(m.text).replace(/<[^>]*>/g, ''))}</div></div>`;
+    return `<div class="msg mirror"><div class="bubble mirror">${String(m.text).replace(/<[^>]*>/g, '')}</div></div>`;
+  }).join('');
+
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(filename)}</title>
+    <style>
+      body { font-family: -apple-system, BlinkMacSystemFont, 'Inter', Arial, sans-serif; background:#fff; color:#111; padding: 40px; max-width: 700px; margin: 0 auto; }
+      h1 { font-size: 22px; color: #7c3aed; margin-bottom: 4px; }
+      .meta { font-size: 12px; color: #666; margin-bottom: 32px; border-bottom: 1px solid #eee; padding-bottom: 16px; }
+      .msg { margin-bottom: 16px; display: flex; }
+      .msg.user { justify-content: flex-end; }
+      .bubble { padding: 10px 14px; border-radius: 12px; max-width: 80%; font-size: 13px; line-height: 1.6; white-space: pre-wrap; }
+      .bubble.user { background: #f3e8ff; border: 1px solid #e9d5ff; }
+      .bubble.mirror { background: #f9fafb; border: 1px solid #e5e7eb; }
+      .bubble.gold { background: #fefce8; border: 1px solid #fde68a; color: #854d0e; }
+      @media print { body { padding: 0; } .msg { page-break-inside: avoid; } }
+    </style>
+  </head><body>
+    <h1>⚡ Moph Echo Mirror</h1>
+    <div class="meta">Reflection log · Exported ${new Date().toLocaleString()}</div>
+    ${htmlMessages}
+    <script>window.onload = () => { setTimeout(() => window.print(), 300); }<\/script>
+  </body></html>`;
+
+  const win = window.open('', '_blank');
+  if (!win) { alert('Please allow popups to save as PDF.'); return; }
+  win.document.write(html);
+  win.document.close();
+  closeDownloadModal();
+}
+
+// ===== MISC =====
+function checkGrounding(text) {
+  const l = text.toLowerCase();
+  const alert = document.getElementById('groundingAlert');
+  if (l.includes('hungry')||l.includes('floating')||l.includes('eat')) alert.classList.remove('hidden');
+  else alert.classList.add('hidden');
+}
+
+// Reading progress
+document.getElementById('panelTeachings')?.addEventListener('scroll', () => {
+  const panel = document.getElementById('panelTeachings');
+  const bar = document.getElementById('readingBar');
+  const scrollTop = panel.scrollTop;
+  const scrollHeight = panel.scrollHeight - panel.clientHeight;
+  bar.style.width = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 + '%' : '0%';
+});
+
+// Close mention dropdown on outside click
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('textarea')) document.querySelectorAll('.mention-dropdown').forEach(d => d.classList.add('hidden'));
+});
+
+document.getElementById('userInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); processEntry(); } });
+
+// Init
+initConfig();
+</script>
+</body>
+</html>
