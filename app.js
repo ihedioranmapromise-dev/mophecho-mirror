@@ -1,7 +1,7 @@
 /* ============================================================
    app.js — Moph Echo Mirror
-   v2 — performance pass, focused teaching viewer, collapsed
-   replies at every depth, pull-to-refresh, overflow fixes.
+   v2.2 — read state, unified Q&A, poll tab, comments-focused
+   viewer, emoji toggle, pull-from-header, logout confirm.
    ============================================================ */
 
 import {
@@ -83,14 +83,12 @@ function dismissInstall() {
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/sw.js').then(reg => {
-      // Check for updates every load, and apply the new worker immediately
       reg.update().catch(() => {});
       reg.addEventListener('updatefound', () => {
         const nw = reg.installing;
         if (!nw) return;
         nw.addEventListener('statechange', () => {
           if (nw.state === 'installed' && navigator.serviceWorker.controller) {
-            // New version is ready — activate and reload once
             if (window.__moph_reloading) return;
             window.__moph_reloading = true;
             nw.postMessage({ type: 'SKIP_WAITING' });
@@ -141,15 +139,14 @@ const state = {
   activeSubTab: 'all',
   myPostsSearch: '',
 
-  // Delivery 2 + v2
-  expandedCommentTeachingIds: new Set(),   // teaching ids with comments open (in feed)
-  expandedReplies: new Set(),              // comment ids whose children are shown
+  expandedCommentTeachingIds: new Set(),
+  expandedReplies: new Set(),
   openReplyCommentId: null,
   quoteTarget: null,
-  teachingViewerId: null,                  // focused teaching viewer
+  teachingViewerId: null,
   teachingsLoaded: false,
-  commentsLoadedByTeaching: {},            // teachingId -> true after first load
-  loadingTeachingComments: new Set()
+  readTeachingIds: new Set(),
+  viewerOpenedAt: 0
 };
 
 const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
@@ -204,7 +201,7 @@ function selectTheme(theme) {
 
 function readingTime(content) {
   const words = (content || '').trim().split(/\s+/).length;
-  return Math.max(1, Math.round(words / 200)) + ' min read';
+  return Math.max(1, Math.round(words / 200));
 }
 
 function relativeTime(dateStr) {
@@ -380,7 +377,11 @@ function backToAuth() {
   document.getElementById('otpInput').value = '';
 }
 
-async function signOut() {
+function confirmSignOut() {
+  const ok = window.confirm('Sign out of the Mirror? You will need your email to return.');
+  if (ok) performSignOut();
+}
+async function performSignOut() {
   if (notifPoll) { clearInterval(notifPoll); notifPoll = null; }
   await sb.auth.signOut();
   location.reload();
@@ -414,13 +415,14 @@ async function enterApp(user) {
     loadNotifications(),
     loadFollowing(),
     loadBookmarks(),
-    loadFollowers()
+    loadFollowers(),
+    loadReadState()
   ]).then(() => {
     renderProfile(); renderTeachings(); renderNotifications();
     const savedTab = localStorage.getItem('moph_active_tab');
     if (savedTab && ['chat','teachings','profile'].includes(savedTab) && savedTab !== 'chat') switchTab(savedTab);
     const savedSub = localStorage.getItem('moph_active_subtab');
-    if (savedSub && ['all','following','qa'].includes(savedSub)) switchSubTab(savedSub);
+    if (savedSub && ['all','following','qa','polls'].includes(savedSub)) switchSubTab(savedSub);
   }).catch(err => console.error('Load error:', err));
 
   updateStreak();
@@ -433,56 +435,82 @@ async function enterApp(user) {
 }
 
 /* ============================================================
-   PULL TO REFRESH
+   PULL TO REFRESH — from header zone, on all three panels
    ============================================================ */
 
 function attachPullToRefresh() {
-  const targets = [
-    { el: document.getElementById('chatContainer'), onRefresh: async () => { state.messages = []; await loadMessages(); renderChat(); } },
-    { el: document.getElementById('panelTeachings'), onRefresh: async () => { await loadTeachings(true); renderTeachings(); } },
-    { el: document.getElementById('panelProfile'), onRefresh: async () => { await refreshProfileData(); renderProfile(); } }
-  ];
+  const app = document.getElementById('mainApp');
+  if (!app) return;
 
-  targets.forEach(({ el, onRefresh }) => {
-    if (!el) return;
-    let startY = 0, pulling = false, indicator = null;
+  let startY = 0, pulling = false, indicator = null;
+  let currentPanel = null;
 
-    el.addEventListener('touchstart', (e) => {
-      if (el.scrollTop <= 0) {
-        startY = e.touches[0].clientY;
-        pulling = true;
-      }
-    }, { passive: true });
+  function getActiveScrollContainer() {
+    if (!document.getElementById('panelChat').classList.contains('hidden')) {
+      return { panel: 'chat', el: document.getElementById('chatContainer') };
+    }
+    if (!document.getElementById('panelTeachings').classList.contains('hidden')) {
+      return { panel: 'teachings', el: document.getElementById('panelTeachings') };
+    }
+    if (!document.getElementById('panelProfile').classList.contains('hidden')) {
+      return { panel: 'profile', el: document.getElementById('panelProfile') };
+    }
+    return null;
+  }
 
-    el.addEventListener('touchmove', (e) => {
-      if (!pulling) return;
-      const dy = e.touches[0].clientY - startY;
-      if (dy <= 0) { pulling = false; if (indicator) { indicator.remove(); indicator = null; } return; }
-      if (dy > 20 && !indicator) {
-        indicator = document.createElement('div');
-        indicator.style.cssText = 'position:absolute;top:8px;left:50%;transform:translateX(-50%);z-index:20;padding:8px 14px;border-radius:20px;background:rgba(16,16,28,0.9);border:1px solid rgba(var(--accent-rgb),0.4);color:#d0d0e8;font-size:11px;display:flex;align-items:center;gap:8px;';
-        indicator.innerHTML = '<div class="spinner" style="width:12px;height:12px;"></div><span>Release to refresh</span>';
-        if (getComputedStyle(el).position === 'static') el.style.position = 'relative';
-        el.appendChild(indicator);
-      }
-      if (indicator) indicator.style.opacity = Math.min(1, dy / 80);
-    }, { passive: true });
+  async function doRefresh(panel) {
+    try {
+      if (panel === 'chat') { state.messages = []; await loadMessages(); renderChat(); }
+      else if (panel === 'teachings') { await loadTeachings(true); await loadReadState(); renderTeachings(); }
+      else if (panel === 'profile') { await Promise.all([loadFollowing(), loadFollowers(), loadBookmarks(), loadMyPosts(), loadGoldenStars()]); renderProfile(); }
+    } catch (e) { console.error('refresh error', e); }
+  }
 
-    el.addEventListener('touchend', async () => {
-      if (!pulling) return;
+  app.addEventListener('touchstart', (e) => {
+    // Ignore drags that start inside an input/textarea
+    if (e.target.closest('input, textarea, [contenteditable="true"]')) return;
+    const active = getActiveScrollContainer();
+    if (!active) return;
+    // Only begin pull when the active panel is at the top
+    if (active.el.scrollTop <= 0) {
+      startY = e.touches[0].clientY;
+      pulling = true;
+      currentPanel = active.panel;
+    }
+  }, { passive: true });
+
+  app.addEventListener('touchmove', (e) => {
+    if (!pulling) return;
+    const dy = e.touches[0].clientY - startY;
+    if (dy <= 0) {
       pulling = false;
-      if (indicator) {
-        indicator.innerHTML = '<div class="spinner" style="width:12px;height:12px;"></div><span>Refreshing…</span>';
-        try { await onRefresh(); } catch (e) { console.error(e); }
-        indicator.remove();
-        indicator = null;
-      }
-    });
-  });
-}
+      if (indicator) { indicator.remove(); indicator = null; }
+      return;
+    }
+    if (dy > 20 && !indicator) {
+      indicator = document.createElement('div');
+      indicator.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:35;padding:8px 14px;border-radius:20px;background:rgba(16,16,28,0.9);border:1px solid rgba(var(--accent-rgb),0.4);color:#d0d0e8;font-size:11px;display:flex;align-items:center;gap:8px;pointer-events:none;';
+      indicator.innerHTML = '<div class="spinner" style="width:12px;height:12px;"></div><span>Release to refresh</span>';
+      document.body.appendChild(indicator);
+    }
+    if (indicator) indicator.style.opacity = Math.min(1, dy / 80);
+  }, { passive: true });
 
-async function refreshProfileData() {
-  await Promise.all([loadFollowing(), loadFollowers(), loadBookmarks(), loadMyPosts()]);
+  app.addEventListener('touchend', async () => {
+    if (!pulling) return;
+    pulling = false;
+    if (indicator && currentPanel) {
+      indicator.innerHTML = '<div class="spinner" style="width:12px;height:12px;"></div><span>Refreshing…</span>';
+      await doRefresh(currentPanel);
+      setTimeout(() => {
+        if (indicator) { indicator.remove(); indicator = null; }
+      }, 300);
+    } else if (indicator) {
+      indicator.remove();
+      indicator = null;
+    }
+    currentPanel = null;
+  });
 }
 
 /* ============================================================
@@ -530,6 +558,28 @@ async function loadActivityCalendar() {
     const sbk = document.getElementById('statBookmarks'); if (sbk) sbk.textContent = by('bookmark');
     const sqa = document.getElementById('statQA'); if (sqa) sqa.textContent = by('qa_answer');
     const sv = document.getElementById('statVotes'); if (sv) sv.textContent = by('poll_vote');
+  } catch (e) { /* silent */ }
+}
+
+/* ============================================================
+   READ STATE
+   ============================================================ */
+
+async function loadReadState() {
+  if (!state.user) return;
+  try {
+    const { data, error } = await sb.from('teachings_read').select('teaching_id').eq('user_id', state.user.id);
+    if (error) return;
+    state.readTeachingIds = new Set((data || []).map(r => r.teaching_id));
+  } catch (e) { /* silent */ }
+}
+
+async function markTeachingRead(teachingId) {
+  if (!state.user) return;
+  if (state.readTeachingIds.has(teachingId)) return;
+  state.readTeachingIds.add(teachingId);
+  try {
+    await sb.from('teachings_read').insert({ user_id: state.user.id, teaching_id: teachingId });
   } catch (e) { /* silent */ }
 }
 
@@ -719,7 +769,6 @@ async function toggleBookmark(teachingId, btn) {
     if (btn) btn.classList.add('active');
     logActivity('bookmark');
   }
-  // Update only this bookmark button across any visible card/viewer
   document.querySelectorAll(`[data-bookmark-btn="${teachingId}"]`).forEach(b => {
     b.classList.toggle('active', state.myBookmarkedIds.has(teachingId));
     b.querySelector('svg')?.setAttribute('fill', state.myBookmarkedIds.has(teachingId) ? 'currentColor' : 'none');
@@ -728,7 +777,7 @@ async function toggleBookmark(teachingId, btn) {
 }
 
 /* ============================================================
-   TEACHINGS LOADING (cached)
+   TEACHINGS LOADING
    ============================================================ */
 
 async function loadTeachings(force = false) {
@@ -807,7 +856,6 @@ function renderFeaturedBanner() {
 
 function renderTagFilters() {
   const el = document.getElementById('tagFilters');
-  // Only show on All tab
   if (state.activeSubTab !== 'all') {
     el.innerHTML = '';
     el.classList.add('hidden');
@@ -828,7 +876,7 @@ function switchSubTab(tab) {
   document.getElementById('subTabAll').classList.toggle('active', tab === 'all');
   document.getElementById('subTabFollowing').classList.toggle('active', tab === 'following');
   document.getElementById('subTabQA').classList.toggle('active', tab === 'qa');
-  // Search & tags only on All
+  document.getElementById('subTabPolls').classList.toggle('active', tab === 'polls');
   const searchWrap = document.getElementById('searchWrap');
   if (searchWrap) searchWrap.classList.toggle('hidden', tab !== 'all');
   renderTagFilters();
@@ -837,23 +885,20 @@ function switchSubTab(tab) {
 
 function filterTeachings() {
   if (state.activeSubTab === 'following') { renderFollowingFeed(); return; }
+  if (state.activeSubTab === 'qa') { renderQaFeed(); return; }
+  if (state.activeSubTab === 'polls') { renderPollsFeed(); return; }
+
   const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
   let filtered = state.teachings;
-  if (state.activeSubTab === 'qa') filtered = filtered.filter(t => t.is_question === true);
-  if (state.activeSubTab === 'all' && state.activeTag) filtered = filtered.filter(t => (t.tags || []).includes(state.activeTag));
-  if (state.activeSubTab === 'all' && q) filtered = filtered.filter(t => ((t.title || '') + ' ' + (t.content || '')).toLowerCase().includes(q));
+  if (state.activeTag) filtered = filtered.filter(t => (t.tags || []).includes(state.activeTag));
+  if (q) filtered = filtered.filter(t => ((t.title || '') + ' ' + (t.content || '')).toLowerCase().includes(q));
   const el = document.getElementById('teachingsFeed');
   if (filtered.length === 0) {
-    const msg = state.activeSubTab === 'qa' ? 'No questions have been asked yet.' : 'Nothing matches.';
-    el.innerHTML = `<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">${msg}</p></div>`;
+    el.innerHTML = `<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Nothing matches.</p></div>`;
     return;
   }
   el.innerHTML = filtered.map(t => renderTeachingPost(t)).join('');
 }
-
-/* ============================================================
-   FOLLOWING FEED (clean — no tags, no search)
-   ============================================================ */
 
 function renderFollowingFeed() {
   const el = document.getElementById('teachingsFeed');
@@ -882,7 +927,7 @@ function renderFollowPost(c, t) {
       <button onclick="openPublicProfile('${c.user_id}')" class="text-amethyst-300 font-medium hover:underline truncate max-w-[120px]">@${escapeHtml(info.username)}</button>
       <span>·</span><span class="flex-shrink-0">${relativeTime(c.created_at)}</span>
     </div>
-    <button onclick="openTeachingViewer(${t.id})" class="text-[10px] px-3 py-1.5 rounded-full bg-void-800 border border-void-600 text-gray-400 hover:border-amethyst-500/40 hover:text-amethyst-400 transition mb-2 inline-flex items-center gap-1.5 max-w-full">
+    <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true})" class="text-[10px] px-3 py-1.5 rounded-full bg-void-800 border border-void-600 text-gray-400 hover:border-amethyst-500/40 hover:text-amethyst-400 transition mb-2 inline-flex items-center gap-1.5 max-w-full">
       <span class="truncate">Replying on: ${escapeHtml(t.title || 'Untitled')}</span>
     </button>
     ${c.content ? `<p class="text-sm text-gray-200 prose-content">${escapeHtml(c.content)}</p>` : ''}
@@ -890,9 +935,96 @@ function renderFollowPost(c, t) {
     <div class="mt-3" onclick="event.stopPropagation()">${reactionTriggerHtml(c, 'comment')}</div>
     <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
       <button onclick="openTeachingViewer(${t.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Read full teaching</button>
-      <button onclick="openTeachingViewer(${t.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Show comments (${t.comments.length})</button>
+      <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Show comments (${t.comments.length})</button>
     </div>
   </article>`;
+}
+
+/* ============================================================
+   UNIFIED Q&A FEED
+   ============================================================ */
+
+function renderQaFeed() {
+  const el = document.getElementById('teachingsFeed');
+  const items = [];
+
+  // Q&A teachings
+  state.teachings.forEach(t => {
+    if (t.is_question === true) {
+      items.push({ type: 'teaching', date: t.created_at, payload: t });
+    }
+  });
+
+  // Q&A comments
+  state.teachings.forEach(t => {
+    t.comments.forEach(c => {
+      if (c.is_question === true) {
+        items.push({ type: 'comment', date: c.created_at, payload: { comment: c, teaching: t } });
+      }
+    });
+  });
+
+  if (items.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No questions have been asked yet.</p></div>';
+    return;
+  }
+
+  items.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  el.innerHTML = items.map(item => {
+    if (item.type === 'teaching') return renderTeachingPost(item.payload);
+    return renderQaCommentCard(item.payload.comment, item.payload.teaching);
+  }).join('');
+}
+
+function renderQaCommentCard(c, t) {
+  const info = state.profileCache[c.user_id] || { username: 'architect', avatar_url: null };
+  const isOwner = c.user_id === state.user.id;
+  const isAnon = c.is_anonymous === true;
+  const isAccepted = c.accepted_answer_id;
+  const acceptedText = isAccepted ? '✓ Accepted' : '';
+  const kids = t.comments.filter(x => x.parent_id === c.id);
+  const acceptedReply = isAccepted ? t.comments.find(x => x.id === isAccepted) : null;
+
+  return `<article class="glass card-lg border border-void-600 overflow-hidden fade-in">
+    <div class="p-5">
+      <div class="flex items-center gap-2 mb-2 flex-wrap">
+        <span class="q-badge">Q&amp;A</span>
+        <button onclick="openPublicProfile('${c.user_id}')" class="text-xs font-medium text-amethyst-300 hover:underline truncate max-w-[140px]">@${escapeHtml(isAnon ? 'anonymous' : info.username)}</button>
+        <span class="text-[10px] text-gray-600 flex-shrink-0">${relativeTime(c.created_at)}</span>
+      </div>
+      <div class="text-sm text-gray-300 prose-content break-words">${escapeHtml(c.content || '')}</div>
+      <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true})" class="mt-3 text-[10px] px-3 py-1.5 rounded-full bg-void-800 border border-void-600 text-gray-400 hover:border-amethyst-500/40 hover:text-amethyst-400 transition inline-flex items-center gap-1.5 max-w-full">
+        <span class="truncate">On: ${escapeHtml(t.title || 'Untitled')}</span>
+      </button>
+      ${acceptedReply ? `<div class="mt-3 accepted-comment-body" style="padding:10px 12px; border-radius:12px;">
+        <div class="flex items-center gap-2 mb-1">
+          <span class="accepted-badge">✓ Accepted</span>
+          <span class="text-xs text-amethyst-300">@${escapeHtml(state.profileCache[acceptedReply.user_id]?.username || 'seeker')}</span>
+        </div>
+        <p class="text-sm text-gray-300 prose-content break-words">${escapeHtml(acceptedReply.content || '')}</p>
+      </div>` : ''}
+      <div class="flex items-center gap-4 mt-3.5 flex-wrap">
+        <span class="text-[10px] text-gray-500">${kids.length} ${kids.length === 1 ? 'answer' : 'answers'}</span>
+        <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true, focusCommentId: ${c.id}})" class="text-[10px] text-amethyst-400 hover:text-amethyst-300 transition font-medium">View answers →</button>
+        ${isOwner && !isAccepted && kids.length > 0 ? `<span class="text-[10px] text-gray-600">Open to mark an answer</span>` : ''}
+      </div>
+    </div>
+  </article>`;
+}
+
+/* ============================================================
+   POLLS FEED
+   ============================================================ */
+
+function renderPollsFeed() {
+  const el = document.getElementById('teachingsFeed');
+  const withPolls = state.teachings.filter(t => t.poll);
+  if (withPolls.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No polls have been posted yet.</p></div>';
+    return;
+  }
+  el.innerHTML = withPolls.map(t => renderTeachingPost(t)).join('');
 }
 
 function renderTeachings() { filterTeachings(); renderFeaturedBanner(); }
@@ -928,9 +1060,15 @@ function updateReactionButton(type, id, reactions) {
 
 function toggleReactionPicker(event, type, id) {
   event.stopPropagation();
-  document.querySelectorAll('.reaction-picker').forEach(p => p.remove());
   const btn = event.currentTarget;
   const wrap = btn.parentElement;
+  const existing = wrap.querySelector('.reaction-picker');
+  // If a picker for THIS trigger is already open, close it.
+  if (existing) { existing.remove(); return; }
+
+  // Close any other open pickers first
+  document.querySelectorAll('.reaction-picker').forEach(p => p.remove());
+
   const picker = document.createElement('div');
   picker.className = 'reaction-picker';
   const reactions = type === 'teaching'
@@ -939,10 +1077,11 @@ function toggleReactionPicker(event, type, id) {
   const myReaction = reactions.find(r => r.user_id === state.user.id);
   picker.innerHTML = EMOJIS.map(e => `<button class="${myReaction && myReaction.emoji === e ? 'is-selected' : ''}" onclick="selectReaction(event, '${type}', ${id}, '${e}')">${e}</button>`).join('');
   wrap.appendChild(picker);
-  // Clamp to viewport on both sides
+
   requestAnimationFrame(() => {
     const rect = picker.getBoundingClientRect();
-    picker.classList.remove('right-anchor');
+    picker.style.left = '';
+    picker.style.right = '';
     if (rect.left < 8) {
       picker.style.left = 'auto';
       picker.style.right = '0';
@@ -954,6 +1093,7 @@ function toggleReactionPicker(event, type, id) {
       picker.style.right = 'auto';
     }
   });
+
   setTimeout(() => {
     const closer = (ev) => { if (!picker.contains(ev.target) && ev.target !== btn) { picker.remove(); document.removeEventListener('click', closer); } };
     document.addEventListener('click', closer);
@@ -1003,7 +1143,7 @@ async function votePoll(pollId, optionIndex, teachingId) {
     logActivity('poll_vote');
     await loadTeachings(true);
     renderTeachings();
-    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, true);
+    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
   } catch (e) { alert('Could not record vote.'); }
 }
 
@@ -1051,17 +1191,17 @@ function setQuote(teachingId, comment) {
   };
   state.expandedCommentTeachingIds.add(teachingId);
   state.openReplyCommentId = null;
-  if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, true);
+  if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
   else renderTeachings();
 }
 function clearQuote() {
   state.quoteTarget = null;
-  if (state.teachingViewerId) openTeachingViewer(state.teachingViewerId, true);
+  if (state.teachingViewerId) openTeachingViewer(state.teachingViewerId, { keepScroll: true });
   else renderTeachings();
 }
 
 /* ============================================================
-   TEACHING CARD (in feed)
+   TEACHING CARD
    ============================================================ */
 
 function renderTeachingPost(t) {
@@ -1069,7 +1209,9 @@ function renderTeachingPost(t) {
   const pinnedHtml = t.pinned ? `<span class="text-[10px] px-2.5 py-1 rounded-full bg-gold-400/20 border border-gold-400/40 text-gold-300">📌 Pinned</span>` : '';
   const featuredHtml = (state.featuredTeaching && state.featuredTeaching.id === t.id) ? `<span class="text-[10px] px-2.5 py-1 rounded-full bg-amethyst-600/30 border border-amethyst-500/40 text-amethyst-300">⭐ Today's Teaching</span>` : '';
   const qBadge = t.is_question ? `<span class="q-badge">Q&amp;A</span>` : '';
+  const pollBadge = t.poll ? `<span class="q-badge" style="background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.45); color:#4ade80;">POLL</span>` : '';
   const isBookmarked = state.myBookmarkedIds.has(t.id);
+  const isRead = state.readTeachingIds.has(t.id);
 
   let mediaHtml = '';
   if (t.video_url) {
@@ -1082,7 +1224,9 @@ function renderTeachingPost(t) {
   return `<article class="glass card-lg border border-void-600 overflow-hidden fade-in" data-teaching-id="${t.id}">
     <div class="p-5">
       <div class="flex items-start justify-between gap-2 mb-2.5">
-        <div class="flex flex-wrap gap-1.5 flex-1 items-center min-w-0">${featuredHtml}${pinnedHtml}${qBadge}${tagHtml}</div>
+        <div class="flex flex-wrap gap-1.5 flex-1 items-center min-w-0">
+          ${featuredHtml}${pinnedHtml}${qBadge}${pollBadge}${tagHtml}
+        </div>
         <button data-bookmark-btn="${t.id}" onclick="toggleBookmark(${t.id}, this)" class="bookmark-btn ${isBookmarked ? 'active' : ''} flex-shrink-0">
           <svg class="w-4 h-4" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
         </button>
@@ -1092,11 +1236,12 @@ function renderTeachingPost(t) {
       <div class="text-sm text-gray-300 prose-content">${formatResponse(t.content)}</div>
       ${renderPollHtml(t)}
       <div class="flex items-center gap-3 mt-3.5 text-[10px] text-gray-600">
-        <span>${relativeTime(t.created_at)}</span><span>·</span><span class="read-time">${readingTime(t.content)}</span>
+        <span>${relativeTime(t.created_at)}</span><span>·</span>
+        ${isRead ? `<span class="read-badge">✓ Read · ${readingTime(t.content)} min</span>` : `<span class="unread-dot" title="Unread"></span>`}
       </div>
       <div class="mt-3.5">${reactionTriggerHtml(t, 'teaching')}</div>
       <div class="flex items-center justify-between mt-3.5 border-b border-void-600 pb-3.5">
-        <button onclick="openTeachingViewer(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
+        <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
           ${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}
         </button>
@@ -1110,7 +1255,7 @@ function renderTeachingPost(t) {
 }
 
 /* ============================================================
-   FOCUSED TEACHING VIEWER (modal)
+   FOCUSED TEACHING VIEWER
    ============================================================ */
 
 function ensureTeachingViewer() {
@@ -1135,14 +1280,19 @@ function ensureTeachingViewer() {
   return modal;
 }
 
-function openTeachingViewer(id, keepScroll = false) {
+function openTeachingViewer(id, opts = {}) {
   const t = state.teachings.find(x => x.id === id);
   if (!t) return;
+  const wasOpen = state.teachingViewerId === id;
   state.teachingViewerId = id;
+  state.viewerOpenedAt = Date.now();
+
   const modal = ensureTeachingViewer();
+  const scroller = modal.firstElementChild;
   const content = document.getElementById('teachingViewerContent');
-  const scrollPos = keepScroll ? modal.querySelector('div > div').scrollTop : 0;
+  const prevScroll = (opts.keepScroll || wasOpen) ? scroller.scrollTop : 0;
   const isBookmarked = state.myBookmarkedIds.has(t.id);
+  const isRead = state.readTeachingIds.has(t.id);
 
   let mediaHtml = '';
   if (t.video_url) {
@@ -1168,15 +1318,18 @@ function openTeachingViewer(id, keepScroll = false) {
       <div class="text-sm text-gray-300 prose-content">${formatResponse(t.content)}</div>
       ${renderPollHtml(t)}
       <div class="flex items-center gap-3 mt-3.5 text-[10px] text-gray-600">
-        <span>${relativeTime(t.created_at)}</span><span>·</span><span class="read-time">${readingTime(t.content)}</span>
+        <span>${relativeTime(t.created_at)}</span><span>·</span>
+        ${isRead ? `<span class="read-badge">✓ Read · ${readingTime(t.content)} min</span>` : ''}
       </div>
       <div class="mt-3.5">${reactionTriggerHtml(t, 'teaching')}</div>
       <div class="flex items-center justify-between mt-3.5 pt-3.5 border-t border-void-600">
-        <span class="text-xs text-gray-500">${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}</span>
+        <button id="viewer-comments-toggle-${t.id}" onclick="toggleViewerComments(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition">
+          ${state.expandedCommentTeachingIds.has(t.id) ? 'Hide comments' : `${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}`}
+        </button>
         <button onclick="shareTeaching(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition">Share</button>
       </div>
     </div>
-    <div class="mt-3">
+    <div class="mt-3" id="viewer-comments-wrap-${t.id}" ${state.expandedCommentTeachingIds.has(t.id) ? '' : 'style="display:none"'}>
       <div class="glass card p-4 border border-void-600">
         ${renderComposer(t.id, null)}
       </div>
@@ -1185,11 +1338,34 @@ function openTeachingViewer(id, keepScroll = false) {
       </div>
     </div>
   `;
+
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
-  if (keepScroll) {
-    requestAnimationFrame(() => { modal.querySelector('div > div').scrollTop = scrollPos; });
-  }
+
+  requestAnimationFrame(() => {
+    if (opts.scrollToComments) {
+      state.expandedCommentTeachingIds.add(t.id);
+      openTeachingViewer(id, { keepScroll: false, scrollToComments: false, _secondPass: true });
+      requestAnimationFrame(() => {
+        const cw = document.getElementById('viewer-comments-wrap-' + t.id);
+        if (cw) cw.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    } else if (opts.focusCommentId) {
+      requestAnimationFrame(() => {
+        const el = document.getElementById('comment-' + opts.focusCommentId);
+        if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    } else if (opts.keepScroll || wasOpen) {
+      scroller.scrollTop = prevScroll;
+    }
+  });
+
+  // Mark read after 3 seconds of the viewer being open on this teaching
+  setTimeout(() => {
+    if (state.teachingViewerId === id && Date.now() - state.viewerOpenedAt >= 2900) {
+      markTeachingRead(id);
+    }
+  }, 3000);
 }
 
 function closeTeachingViewer() {
@@ -1199,8 +1375,17 @@ function closeTeachingViewer() {
   state.teachingViewerId = null;
 }
 
+function toggleViewerComments(teachingId) {
+  if (state.expandedCommentTeachingIds.has(teachingId)) {
+    state.expandedCommentTeachingIds.delete(teachingId);
+  } else {
+    state.expandedCommentTeachingIds.add(teachingId);
+  }
+  openTeachingViewer(teachingId, { keepScroll: true });
+}
+
 /* ============================================================
-   COMMENT TREE (replies collapsed at every depth)
+   COMMENT TREE
    ============================================================ */
 
 function renderCommentsFor(t) {
@@ -1275,6 +1460,10 @@ function renderCommentNode(c, teaching, depth) {
     ? `<button onclick="toggleReplies(${c.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Hide replies</button>`
     : '';
 
+  // Accept as answer for Q&A-flagged comments (comment author only)
+  const isCommentAuthor = c.user_id === state.user.id;
+  const canAcceptOnComment = isQuestion && isCommentAuthor && !c.accepted_answer_id;
+
   return `<div class="mb-3 ${pendingClass} ${depthClass} min-w-0" id="comment-${c.id}">
     <div class="flex gap-2.5 min-w-0">
       ${isAnon ? `<div>${avatarHtml('__anon__', 'sm')}</div>` : `<button onclick="openPublicProfile('${c.user_id}')" class="flex-shrink-0">${avatarHtml(c.user_id, 'sm')}</button>`}
@@ -1308,7 +1497,7 @@ function renderCommentNode(c, teaching, depth) {
 function toggleReplies(commentId) {
   if (state.expandedReplies.has(commentId)) state.expandedReplies.delete(commentId);
   else state.expandedReplies.add(commentId);
-  if (state.teachingViewerId) openTeachingViewer(state.teachingViewerId, true);
+  if (state.teachingViewerId) openTeachingViewer(state.teachingViewerId, { keepScroll: true });
 }
 
 /* ============================================================
@@ -1454,18 +1643,32 @@ function avatarHtml(userId, size) {
 
 async function acceptAnswer(commentId, teachingId) {
   try {
-    await sb.from('teachings').update({ accepted_answer_id: commentId }).eq('id', teachingId);
+    // Try to set on the teaching first. If the comment itself is a Q&A with an
+    // accepted_answer_id, we set it there instead.
     const t = state.teachings.find(x => x.id === teachingId);
-    if (t) t.accepted_answer_id = commentId;
-    const comment = t ? t.comments.find(c => c.id === commentId) : null;
-    if (comment && comment.user_id !== state.user.id) {
+    if (!t) return;
+    const targetComment = t.comments.find(c => c.id === commentId);
+    if (!targetComment) return;
+
+    // If the comment we are accepting is a reply under a Q&A comment, use the
+    // comment-level accepted_answer_id. Otherwise use the teaching-level one.
+    if (targetComment.parent_id) {
+      await sb.from('teaching_comments').update({ accepted_answer_id: commentId }).eq('id', targetComment.parent_id);
+      const parent = t.comments.find(c => c.id === targetComment.parent_id);
+      if (parent) parent.accepted_answer_id = commentId;
+    } else {
+      await sb.from('teachings').update({ accepted_answer_id: commentId }).eq('id', teachingId);
+      t.accepted_answer_id = commentId;
+    }
+
+    if (targetComment.user_id !== state.user.id) {
       await sb.from('notifications').insert({
-        user_id: comment.user_id, type: 'accepted',
+        user_id: targetComment.user_id, type: 'accepted',
         actor_id: state.user.id, actor_username: state.profile.username,
         teaching_id: teachingId, message: 'Your answer was accepted.'
       });
     }
-    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, true);
+    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
     else renderTeachings();
   } catch (e) { alert('Could not mark as accepted.'); }
 }
@@ -1523,7 +1726,7 @@ async function editComment(commentId, teachingId) {
   if (newText === null || newText === comment.content) return;
   await sb.from('teaching_comments').update({ content: newText, updated_at: new Date().toISOString() }).eq('id', commentId);
   await loadTeachings(true);
-  if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, true);
+  if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
   else renderTeachings();
 }
 
@@ -1552,7 +1755,7 @@ function askDeleteComment(commentId, teachingId) {
     if (t) t.remove();
     delete pendingDeletes[commentId];
     await loadTeachings(true);
-    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, true);
+    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
     else renderTeachings();
   }, 5000);
 }
@@ -1637,7 +1840,7 @@ async function submitComment(teachingId, parentId, uid) {
   const t = state.teachings.find(x => x.id === teachingId);
   if (t) {
     t.comments.push(optimistic);
-    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, true);
+    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
     else renderTeachings();
     if (parentId) { const rb = document.getElementById('reply-box-' + parentId); if (rb) rb.classList.add('hidden'); }
   }
@@ -1673,7 +1876,6 @@ async function submitComment(teachingId, parentId, uid) {
       const idx = t.comments.findIndex(c => c.id === tempId);
       if (idx >= 0) t.comments[idx] = { ...inserted, reactions: [] };
     }
-    // Auto-expand the parent comment's replies so the new reply is visible
     if (parentId) state.expandedReplies.add(parentId);
 
     if (parentId) {
@@ -1711,21 +1913,21 @@ async function submitComment(teachingId, parentId, uid) {
     if (quotedId) state.quoteTarget = null;
     state.openReplyCommentId = null;
 
-    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, true);
+    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
     else renderTeachings();
   } catch (e) {
     console.error(e);
     if (t) {
       const idx = t.comments.findIndex(c => c.id === tempId);
       if (idx >= 0) t.comments[idx]._error = true;
-      if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, true);
+      if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
       else renderTeachings();
     }
   }
 }
 
 /* ============================================================
-   REACTIONS (targeted update)
+   REACTIONS
    ============================================================ */
 
 async function toggleTeachingReaction(teachingId, emoji) {
@@ -1735,7 +1937,6 @@ async function toggleTeachingReaction(teachingId, emoji) {
   if (ex) t.reactions = t.reactions.filter(r => r.id !== ex.id);
   else t.reactions = t.reactions.filter(r => r.user_id !== state.user.id).concat([{ id: 'temp-' + Date.now(), teaching_id: teachingId, user_id: state.user.id, emoji, _pending: true }]);
 
-  // Targeted DOM update — no full re-render
   updateReactionButton('teaching', teachingId, t.reactions);
 
   if (ex) {
@@ -1743,12 +1944,7 @@ async function toggleTeachingReaction(teachingId, emoji) {
   } else {
     await sb.from('teaching_reactions').delete().eq('teaching_id', teachingId).eq('user_id', state.user.id);
     const { error } = await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
-    if (error) {
-      console.error(error);
-      await loadTeachings(true);
-      if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, true);
-      else renderTeachings();
-    }
+    if (error) { console.error(error); await loadTeachings(true); renderTeachings(); }
   }
 }
 
@@ -1763,7 +1959,6 @@ async function toggleCommentReaction(commentId, emoji) {
   if (ex) comment.reactions = comment.reactions.filter(r => r.id !== ex.id);
   else comment.reactions = (comment.reactions || []).filter(r => r.user_id !== state.user.id).concat([{ id: 'temp-' + Date.now(), comment_id: commentId, user_id: state.user.id, emoji, _pending: true }]);
 
-  // Targeted DOM update
   updateReactionButton('comment', commentId, comment.reactions);
 
   if (ex) {
@@ -1771,13 +1966,7 @@ async function toggleCommentReaction(commentId, emoji) {
   } else {
     await sb.from('comment_reactions').delete().eq('comment_id', commentId).eq('user_id', state.user.id);
     const { error } = await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
-    if (error) {
-      console.error(error);
-      await loadTeachings(true);
-      if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, true);
-      else renderTeachings();
-      return;
-    }
+    if (error) { console.error(error); await loadTeachings(true); renderTeachings(); return; }
     if (comment.user_id !== state.user.id) {
       await sb.from('notifications').insert({
         user_id: comment.user_id, type: 'reaction',
@@ -1866,7 +2055,7 @@ async function openNotification(notifId, teachingId) {
   closeNotifications();
   if (teachingId) {
     switchTab('teachings');
-    openTeachingViewer(teachingId);
+    openTeachingViewer(teachingId, { scrollToComments: true });
   }
 }
 
@@ -2111,7 +2300,7 @@ function renderMyPosts() {
       <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
         <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
         <div class="flex items-center gap-3">
-          <button onclick="openTeachingViewer(${c.teaching_id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">View thread</button>
+          <button onclick="openTeachingViewer(${c.teaching_id}, {scrollToComments: true, focusCommentId: ${c.id}})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">View thread</button>
           <button onclick="shareComment(${c.id}, ${c.teaching_id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Share</button>
         </div>
       </div>
@@ -2140,7 +2329,7 @@ async function loadMySaved() {
   el.innerHTML = saved.map(t => `<div class="post-card cursor-pointer min-w-0" onclick="openTeachingViewer(${t.id})">
     <h4 class="text-sm font-semibold text-gray-200 mb-1.5 break-words">${escapeHtml(t.title || 'Untitled')}</h4>
     <p class="text-xs text-gray-500 line-clamp-2">${escapeHtml((t.content || '').replace(/<[^>]*>/g,'').substring(0, 120))}...</p>
-    <p class="text-[10px] text-gray-600 mt-2">${readingTime(t.content)} · Saved</p>
+    <p class="text-[10px] text-gray-600 mt-2">${readingTime(t.content)} min read · Saved</p>
   </div>`).join('');
 }
 
@@ -2335,7 +2524,8 @@ function downloadAs(format) {
 
 Object.assign(window, {
   retryConnection, handleInstall, dismissInstall,
-  togglePass, toggleSignupMode, signIn, verifyOtp, resendOtp, backToAuth, signOut,
+  togglePass, toggleSignupMode, signIn, verifyOtp, resendOtp, backToAuth,
+  confirmSignOut,
   nextOnboarding, skipOnboarding, selectTheme,
   openDownloadModal, closeDownloadModal, downloadAs,
   showNotifications, closeNotifications, markAllRead, openNotification,
@@ -2351,7 +2541,7 @@ Object.assign(window, {
   insertMention, submitComment, previewCommentImage, removeCommentImage, autoGrow, autoGrowChat,
   handleMention, showReplyBox, cancelReply, sendPoke, acceptAnswer,
   setQuote, clearQuote, toggleSmartFlag, updateSmartToggles,
-  openTeachingViewer, closeTeachingViewer, toggleReplies, shareTeaching
+  openTeachingViewer, closeTeachingViewer, toggleReplies, toggleViewerComments, shareTeaching
 });
 
 /* ============================================================
