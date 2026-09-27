@@ -2045,4 +2045,69 @@ function downloadAs(format) {
   const hms = state.messages.map(m => {
     if (m.role === 'user') return `<div class="msg user"><div class="bubble user">${escapeHtml(m.text)}</div></div>`;
     if (m.role === 'surprise') return `<div class="msg mirror"><div class="bubble gold">${escapeHtml(String(m.text).replace(/<[^>]*>/g, ''))}</div></div>`;
-    return `<div class="msg mirror"><div class="bubble mirror">${String(m
+    return `<div class="msg mirror"><div class="bubble mirror">${String(m.text).replace(/<[^>]*>/g, '')}</div></div>`;
+  }).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(filename)}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Inter',Arial,sans-serif;background:#fff;color:#111;padding:40px;max-width:700px;margin:0 auto;}h1{font-size:22px;color:#7c3aed;margin-bottom:4px;}.meta{font-size:12px;color:#666;margin-bottom:32px;border-bottom:1px solid #eee;padding-bottom:16px;}.msg{margin-bottom:16px;display:flex;}.msg.user{justify-content:flex-end;}.bubble{padding:10px 14px;border-radius:14px;max-width:80%;font-size:13px;line-height:1.6;white-space:pre-wrap;}.bubble.user{background:#f3e8ff;border:1px solid #e9d5ff;}.bubble.mirror{background:#f9fafb;border:1px solid #e5e7eb;}.bubble.gold{background:#fefce8;border:1px solid #fde68a;color:#854d0e;}@media print{body{padding:0;}.msg{page-break-inside:avoid;}}</style></head><body><h1>⚡ Moph Echo Mirror</h1><div class="meta">Reflection log · ${new Date().toLocaleString()}</div>${hms}<script>window.onload = () => { setTimeout(() => window.print(), 300); }<\/script></body></html>`;
+  const win = window.open('', '_blank');
+  if (!win) { alert('Allow popups.'); return; }
+  win.document.write(html);
+  win.document.close();
+  closeDownloadModal();
+}
+
+/* ============================================================
+   RELATIVE TIME
+   ============================================================ */
+
+function relativeTime(dateStr) {
+  const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (diff < 60) return 'just now';
+  if (diff < 3600) return Math.floor(diff / 60) + 'm';
+  if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+  if (diff < 604800) return Math.floor(diff / 86400) + 'd';
+  if (diff < 2592000) return Math.floor(diff / 604800) + 'w';
+  return new Date(dateStr).toLocaleDateString();
+}
+
+/* ============================================================
+   EXPOSE TO WINDOW (for inline onclick/oninput in HTML)
+   ============================================================ */
+
+Object.assign(window, {
+  retryConnection, handleInstall, dismissInstall,
+  togglePass, toggleSignupMode, signIn, verifyOtp, resendOtp, backToAuth, signOut,
+  nextOnboarding, skipOnboarding, selectTheme,
+  openDownloadModal, closeDownloadModal, downloadAs,
+  showNotifications, closeNotifications, markAllRead, openNotification,
+  openSettings, closeSettings, saveSettings, switchProfileTab,
+  openPublicProfile, openPublicProfileByUsername, closePublicProfile,
+  switchTab, switchSubTab, switchProfileTab,
+  openImageViewer, closeImageViewer, openVideoViewer, closeVideoViewer,
+  processEntry, enablePush, handleAvatarUpload,
+  toggleFollow, toggleBookmark,
+  filterTeachings, filterMyPosts, setTag, scrollToTeaching, scrollToFeatured, jumpToTeachingComments, jumpToComment,
+  toggleTeachingComments, focusCommentBox, shareTeaching,
+  toggleReactionPicker, selectReaction, votePoll,
+  openCommentMenu, quoteComment, editComment, shareComment, askDeleteComment, undoDelete,
+  insertMention, submitComment, previewCommentImage, removeCommentImage, autoGrow, autoGrowChat,
+  handleMention, showReplyBox, cancelReply, sendPoke, acceptAnswer,
+  setQuote, clearQuote, toggleSmartFlag, updateSmartToggles
+});
+
+/* ============================================================
+   BOOT
+   ============================================================ */
+
+document.getElementById('rememberMe').addEventListener('change', (e) => localStorage.setItem('moph_remember', e.target.checked ? 'true' : 'false'));
+document.getElementById('rememberMe').checked = localStorage.getItem('moph_remember') !== 'false';
+document.getElementById('setBio').addEventListener('input', (e) => { document.getElementById('bioCount').textContent = e.target.value.length; });
+document.getElementById('avatarUpload').addEventListener('click', () => document.getElementById('avatarInput').click());
+document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
+document.getElementById('userInput').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); processEntry(); }
+});
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('textarea')) document.querySelectorAll('.mention-dropdown').forEach(d => d.classList.add('hidden'));
+});
+
+initConfig();
