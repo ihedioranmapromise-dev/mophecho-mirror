@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Moph Echo">
-<meta name="app-version" content="v2">
+<meta name="app-version" content="v2.2">
 <title>Moph Echo Mirror</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icon.svg">
@@ -106,7 +106,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .network-error.show { transform: translateY(0); }
 .retry-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 11px; cursor: pointer; font-weight: 600; }
 
-/* Delivery 2 */
 .q-badge { display:inline-flex; align-items:center; justify-content:center; padding:1px 6px; background:rgba(var(--accent-rgb),0.22); border:1px solid rgba(var(--accent-rgb),0.45); color:var(--accent-400); border-radius:6px; font-size:9px; font-weight:700; letter-spacing:.4px; }
 .accepted-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.45); color:#4ade80; padding:2px 8px; border-radius:10px; font-size:9px; font-weight:700; letter-spacing:.3px; }
 .accepted-comment-body { border:1px solid rgba(34,197,94,0.35) !important; background:rgba(34,197,94,0.04) !important; }
@@ -146,6 +145,10 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .push-btn:hover { background: rgba(var(--accent-rgb),0.2); }
 .push-btn.enabled { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.1); color: #4ade80; cursor: default; }
 .comment-thread { position: relative; padding-left: 20px; border-left: 1.5px solid rgba(var(--accent-rgb),0.22); margin-left: 8px; }
+.read-badge { display:inline-flex; align-items:center; gap:3px; color:#4ade80; font-size:10px; font-weight:600; }
+.unread-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent-500); flex-shrink:0; }
+.danger-btn { padding: 11px 16px; border-radius: 14px; font-size: 12px; font-weight: 600; border: 1px solid rgba(239,68,68,0.4); background: rgba(239,68,68,0.08); color: #f87171; cursor: pointer; transition: all .18s; width: 100%; }
+.danger-btn:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.6); }
 </style>
 </head>
 <body class="font-sans text-gray-200" data-theme="amethyst">
@@ -269,9 +272,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           <span id="notifBadge" class="notification-badge hidden">0</span>
         </button>
         <div class="text-[10px] px-3 py-1.5 rounded-full bg-green-900/30 border border-green-500/30 text-green-300 ml-1">Free</div>
-        <button onclick="signOut()" class="btn p-2 text-gray-500 hover:text-red-400 rounded-xl transition ml-0.5">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-        </button>
       </div>
     </div>
     <nav class="px-3 pb-2.5 flex gap-1.5">
@@ -314,6 +314,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
         <div class="sub-tab active" id="subTabAll" onclick="switchSubTab('all')">All</div>
         <div class="sub-tab" id="subTabFollowing" onclick="switchSubTab('following')">Following</div>
         <div class="sub-tab" id="subTabQA" onclick="switchSubTab('qa')">Q&amp;A</div>
+        <div class="sub-tab" id="subTabPolls" onclick="switchSubTab('polls')">Polls</div>
       </div>
     </div>
 
@@ -481,6 +482,11 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           <div class="flex flex-col items-center gap-1.5"><div class="theme-swatch" data-theme="crimson" style="background:linear-gradient(135deg,#fb7185,#e11d48)" onclick="selectTheme('crimson')"></div><span class="text-[10px] text-gray-500">Crimson</span></div>
           <div class="flex flex-col items-center gap-1.5"><div class="theme-swatch" data-theme="gold" style="background:linear-gradient(135deg,#fcd34d,#d97706)" onclick="selectTheme('gold')"></div><span class="text-[10px] text-gray-500">Gold</span></div>
         </div>
+      </div>
+      <div class="glass card p-5 border border-red-500/20">
+        <h3 class="text-sm font-semibold mb-1 text-red-300">Account</h3>
+        <p class="text-[10px] text-gray-500 mb-4">Sign out of the Mirror on this device.</p>
+        <button class="danger-btn" onclick="confirmSignOut()">Sign out</button>
       </div>
     </div>
   </div>
