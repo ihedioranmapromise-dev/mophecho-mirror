@@ -26,27 +26,19 @@ body[data-theme="gold"] { --accent-400: #fcd34d; --accent-500: #f59e0b; --accent
 html, body { height: 100%; overscroll-behavior: none; }
 body { background:#06060a; min-height: 100dvh; transition: background-color .3s; }
 .glass { background:rgba(16,16,28,0.78); backdrop-filter:blur(28px) saturate(140%); -webkit-backdrop-filter:blur(28px) saturate(140%); }
-::-webkit-scrollbar { width:3px; }
-::-webkit-scrollbar-thumb { background:#3a2a5a; border-radius:10px; }
+::-webkit-scrollbar { width:3px; } ::-webkit-scrollbar-thumb { background:#3a2a5a; border-radius:10px; }
 .fade-in { animation:fadeIn .3s cubic-bezier(0.2,0.8,0.3,1); }
 @keyframes fadeIn { from{opacity:0;transform:translateY(6px);} to{opacity:1;transform:translateY(0);} }
-.pulse-glow { animation:pulseGlow 2.4s ease-in-out infinite; }
-@keyframes pulseGlow { 0%,100%{box-shadow:0 0 22px -6px rgba(var(--accent-rgb),.35);} 50%{box-shadow:0 0 34px -6px rgba(var(--accent-rgb),.65);} }
 .spinner { border:2px solid rgba(var(--accent-rgb),.2); border-top-color:var(--accent-400); border-radius:50%; width:16px; height:16px; animation:spin .8s linear infinite; }
 @keyframes spin { to{transform:rotate(360deg);} }
 .otp-input { letter-spacing:1rem; font-size:1.5rem; text-align:center; padding-left:1rem; }
 .safe-bottom { padding-bottom: calc(0.85rem + env(safe-area-inset-bottom)); }
 .safe-top { padding-top: env(safe-area-inset-top); }
-input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0 1000px #0a0a12 inset !important; -webkit-text-fill-color: #d0d0e8 !important; transition: background-color 5000s ease-in-out 0s; }
-.reaction-pill { background: rgba(40,40,60,0.55); border: 1px solid rgba(120,90,160,0.18); padding: 5px 11px; border-radius: 22px; font-size: 13px; cursor: pointer; transition: all 0.18s; display: inline-flex; align-items: center; gap: 5px; }
-.reaction-pill:hover { background: rgba(80,60,120,0.42); transform: translateY(-1px); }
-.reaction-pill.active { background: rgba(var(--accent-rgb),0.38); border-color: rgba(var(--accent-rgb),0.55); box-shadow: 0 0 0 1px rgba(var(--accent-rgb),0.15); }
+input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0 1000px #0a0a12 inset !important; -webkit-text-fill-color: #d0d0e8 !important; }
 .prose-content { line-height: 1.72; white-space: pre-wrap; word-wrap: break-word; }
 .avatar-sm { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--accent-400); flex-shrink: 0; }
 .avatar-xs { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--accent-400); flex-shrink: 0; }
 .avatar-lg { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 600; color: var(--accent-400); flex-shrink: 0; }
-.reading-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 100; pointer-events: none; }
-.reading-progress-bar { height: 100%; background: linear-gradient(90deg, var(--accent-600), var(--accent-400)); width: 0%; transition: width 0.1s; }
 .notification-badge { position: absolute; top: -2px; right: -2px; min-width: 16px; height: 16px; padding: 0 4px; background: #ef4444; color: white; font-size: 9px; font-weight: 700; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
 .skeleton { background: linear-gradient(90deg, rgba(40,40,60,0.4) 25%, rgba(60,60,80,0.4) 50%, rgba(40,40,60,0.4) 75%); background-size: 200% 100%; animation: shimmer 1.6s infinite; border-radius: 12px; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
@@ -57,11 +49,9 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .video-wrapper { position: relative; background: #000; border-radius: 16px; overflow: hidden; max-height: 70vh; display: flex; align-items: center; justify-content: center; }
 .video-wrapper video { max-width: 100%; max-height: 70vh; width: 100%; display: block; }
 .undo-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(26,26,46,0.95); backdrop-filter: blur(12px); border: 1px solid #3a3a5a; border-radius: 14px; padding: 12px 18px; z-index: 90; display: flex; align-items: center; gap: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); animation: fadeIn 0.25s ease; }
-.card { border-radius: 1.25rem; }
-.card-lg { border-radius: 1.5rem; }
+.card { border-radius: 1.25rem; } .card-lg { border-radius: 1.5rem; }
 .btn { transition: all 0.18s cubic-bezier(0.2,0.8,0.3,1); }
-.btn:hover { transform: translateY(-1px); }
-.btn:active { transform: translateY(0) scale(0.98); }
+.btn:hover { transform: translateY(-1px); } .btn:active { transform: translateY(0) scale(0.98); }
 .profile-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 500; color: #6a6a8a; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
 .profile-tab.active { color: var(--accent-400); border-bottom-color: var(--accent-500); }
 .post-card { background: rgba(16,16,28,0.55); border: 1px solid #2a2a3a; border-radius: 1.25rem; padding: 16px; transition: all 0.2s; }
@@ -78,36 +68,78 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .social-icon:hover { background: rgba(var(--accent-rgb),0.15); border-color: rgba(var(--accent-rgb),0.4); transform: translateY(-2px); }
 .private-badge { display: inline-flex; align-items: center; gap: 4px; color: #6a6a8a; font-style: italic; font-size: 12px; }
 .streak-badge { display: inline-flex; align-items: center; gap: 5px; background: linear-gradient(135deg, #f97316, #ea580c); color: white; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; box-shadow: 0 4px 12px -4px rgba(249,115,22,0.5); }
-.featured-banner { background: linear-gradient(135deg, rgba(var(--accent-rgb),0.2), rgba(var(--accent-rgb),0.08)); border: 1px solid rgba(var(--accent-rgb),0.4); border-radius: 1.25rem; padding: 14px 18px; margin-bottom: 16px; }
 .poke-btn { background: rgba(40,40,60,0.5); border: 1px solid rgba(120,90,160,0.2); padding: 2px 8px; border-radius: 12px; font-size: 11px; cursor: pointer; transition: all 0.15s; margin-left: 6px; }
 .poke-btn:hover { background: rgba(var(--accent-rgb),0.2); border-color: rgba(var(--accent-rgb),0.4); }
 .poke-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.follow-btn { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.follow-btn.not-following { background: linear-gradient(135deg, var(--accent-600), var(--accent-700)); color: #fff; border: 1px solid var(--accent-500); }
+.follow-btn.not-following:hover { transform: translateY(-1px); }
+.follow-btn.following { background: transparent; color: #d0d0e8; border: 1px solid #3a3a5a; }
+.follow-btn.following:hover { border-color: #ef4444; color: #ef4444; }
+.bookmark-btn { padding: 8px; border-radius: 12px; color: #6a6a8a; transition: all 0.2s; cursor: pointer; }
+.bookmark-btn:hover { color: var(--accent-400); background: rgba(var(--accent-rgb),0.1); }
+.bookmark-btn.active { color: var(--accent-400); }
+.reaction-trigger { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; background: rgba(40,40,60,0.5); border: 1px solid rgba(120,90,160,0.15); font-size: 13px; cursor: pointer; transition: all 0.18s; user-select: none; }
+.reaction-trigger:hover { background: rgba(var(--accent-rgb),0.15); border-color: rgba(var(--accent-rgb),0.35); }
+.reaction-trigger.has-reaction { background: rgba(var(--accent-rgb),0.35); border-color: rgba(var(--accent-rgb),0.55); }
+.reaction-picker { position: absolute; bottom: 100%; left: 0; margin-bottom: 8px; background: #161624; border: 1px solid #3a3a5a; border-radius: 24px; padding: 6px; display: flex; gap: 2px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); z-index: 50; animation: fadeIn 0.15s ease; }
+.reaction-picker button { width: 38px; height: 38px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: all 0.15s; background: transparent; border: none; display: flex; align-items: center; justify-content: center; }
+.reaction-picker button:hover { background: rgba(var(--accent-rgb),0.2); transform: scale(1.15); }
+.reaction-picker button.is-selected { background: rgba(var(--accent-rgb),0.4); }
+.sub-tabs { display: flex; border-bottom: 1px solid #2a2a3a; }
+.sub-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 500; color: #6a6a8a; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+.sub-tab.active { color: var(--accent-400); border-bottom-color: var(--accent-500); }
+.composer { background: rgba(16,16,28,0.55); border: 1px solid #2a2a3a; border-radius: 20px; padding: 12px 14px; transition: all 0.2s; }
+.composer:focus-within { border-color: rgba(var(--accent-rgb),0.5); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.08); }
+.composer-textarea { width: 100%; background: transparent; border: none; outline: none; resize: none; color: #d0d0e8; font-size: 15px; font-family: inherit; min-height: 24px; line-height: 1.5; padding: 4px 0; }
+.composer-textarea::placeholder { color: #4a4a5a; }
+.composer-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(var(--accent-rgb),0.15); }
+.composer-tools { display: flex; gap: 4px; }
+.composer-tool { padding: 8px; border-radius: 12px; color: #6a6a8a; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+.composer-tool:hover { color: var(--accent-400); background: rgba(var(--accent-rgb),0.1); }
+.composer-submit { padding: 8px 20px; border-radius: 20px; background: linear-gradient(135deg, var(--accent-600), var(--accent-700)); color: #fff; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; }
+.composer-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+.read-time { font-size: 10px; color: #6a6a8a; }
+.network-error { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #7f1d1d, #991b1b); color: #fff; padding: 10px 16px; text-align: center; z-index: 200; font-size: 12px; font-weight: 500; transform: translateY(-100%); transition: transform 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+.network-error.show { transform: translateY(0); }
+.retry-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 11px; cursor: pointer; font-weight: 600; }
 </style>
 </head>
 <body class="font-sans text-gray-200" data-theme="amethyst">
 
-<div class="reading-progress"><div class="reading-progress-bar" id="readingBar"></div></div>
+<!-- NETWORK ERROR BANNER -->
+<div id="networkBanner" class="network-error">
+  <span id="networkBannerText">No internet connection. Check your network.</span>
+  <button class="retry-btn" onclick="retryConnection()">Retry</button>
+</div>
 
 <div id="loadingScreen" class="fixed inset-0 flex items-center justify-center bg-void-900 z-[60]">
   <div class="flex flex-col items-center gap-4">
-    <div class="w-14 h-14 rounded-3xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center pulse-glow">
+    <div class="w-14 h-14 rounded-3xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center">
       <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
     </div>
     <div class="spinner"></div>
+    <p id="loadingMsg" class="text-xs text-gray-500"></p>
+  </div>
+</div>
+
+<div id="fatalError" class="hidden fixed inset-0 flex items-center justify-center bg-void-900 z-[60] p-6">
+  <div class="glass card-lg p-8 max-w-md w-full border border-red-500/30 text-center">
+    <div class="w-14 h-14 mx-auto rounded-2xl bg-red-900/30 border border-red-500/40 flex items-center justify-center mb-4">
+      <svg class="w-7 h-7 text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+    </div>
+    <h2 class="text-lg font-semibold mb-2">Cannot reach Moph Echo</h2>
+    <p id="fatalErrorMsg" class="text-xs text-gray-400 mb-5">Please check your network and try again.</p>
+    <button onclick="retryConnection()" class="w-full py-3 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm">Retry</button>
   </div>
 </div>
 
 <div id="onboarding" class="hidden fixed inset-0 z-[55] bg-void-900 flex items-center justify-center p-4">
-  <div class="glass card-lg p-9 max-w-md w-full border border-amethyst-500/20 shadow-2xl text-center">
-    <div class="w-16 h-16 mx-auto rounded-3xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center mb-5">
-      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-    </div>
+  <div class="glass card-lg p-9 max-w-md w-full border border-amethyst-500/20 text-center">
     <h2 class="text-xl font-semibold mb-3" id="obTitle">Welcome to Moph Echo</h2>
-    <p class="text-sm text-gray-400 leading-relaxed mb-6" id="obBody">A mirror that reflects what you already know but have not yet seen. This is not a chatbot. It is a companion for your awakening.</p>
+    <p class="text-sm text-gray-400 leading-relaxed mb-6" id="obBody">A mirror for your awakening.</p>
     <div class="flex justify-center gap-2 mb-5" id="obDots">
-      <div class="w-2 h-2 rounded-full bg-amethyst-500"></div>
-      <div class="w-2 h-2 rounded-full bg-void-600"></div>
-      <div class="w-2 h-2 rounded-full bg-void-600"></div>
+      <div class="w-2 h-2 rounded-full bg-amethyst-500"></div><div class="w-2 h-2 rounded-full bg-void-600"></div><div class="w-2 h-2 rounded-full bg-void-600"></div>
     </div>
     <button onclick="nextOnboarding()" id="obBtn" class="btn w-full py-3.5 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm">Continue</button>
     <button onclick="skipOnboarding()" class="w-full py-2 text-xs text-gray-600 hover:text-gray-400 transition mt-2">Skip</button>
@@ -117,7 +149,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 <div id="authScreen" class="hidden min-h-[100dvh] flex items-center justify-center p-4 safe-top safe-bottom">
   <div class="glass card-lg p-7 sm:p-10 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
     <div class="text-center mb-9">
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 mb-5 pulse-glow">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-3xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 mb-5">
         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
       </div>
       <h1 class="text-2xl font-semibold bg-gradient-to-r from-amethyst-400 to-amethyst-600 bg-clip-text text-transparent tracking-wide">MOPH ECHO</h1>
@@ -140,9 +172,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       </div>
       <div id="confirmPassWrap" class="hidden">
         <label class="text-xs text-gray-500 uppercase tracking-wider">Confirm Password</label>
-        <div class="relative mt-1.5">
-          <input type="password" id="authConfirmPassword" autocomplete="new-password" placeholder="••••••••" class="w-full bg-void-900 border border-void-600 rounded-2xl px-4 py-3.5 pr-12 text-base focus:border-amethyst-500 focus:outline-none transition">
-        </div>
+        <input type="password" id="authConfirmPassword" autocomplete="new-password" placeholder="••••••••" class="w-full mt-1.5 bg-void-900 border border-void-600 rounded-2xl px-4 py-3.5 text-base focus:border-amethyst-500 focus:outline-none transition">
       </div>
       <label class="flex items-center gap-2.5 cursor-pointer select-none pt-1">
         <input type="checkbox" id="rememberMe" class="w-4 h-4 rounded border-void-600 bg-void-900 accent-amethyst-600" checked>
@@ -150,12 +180,10 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       </label>
       <div id="authError" class="hidden text-xs text-red-400 text-center bg-red-900/20 border border-red-500/20 rounded-xl py-2.5 px-3"></div>
       <div id="authSuccess" class="hidden text-xs text-green-400 text-center bg-green-900/20 border border-green-500/20 rounded-xl py-2.5 px-3"></div>
-      <button onclick="signIn()" id="signInBtn" class="btn w-full py-3.5 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm hover:from-amethyst-500 hover:to-amethyst-600 shadow-lg">
+      <button onclick="signIn()" id="signInBtn" class="btn w-full py-3.5 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm">
         <span id="signInText">Enter the Mirror</span>
       </button>
-      <button onclick="toggleSignupMode()" id="toggleBtn" class="w-full py-2 text-xs text-gray-500 hover:text-amethyst-400 transition">
-        New here? Create an account
-      </button>
+      <button onclick="toggleSignupMode()" id="toggleBtn" class="w-full py-2 text-xs text-gray-500 hover:text-amethyst-400 transition">New here? Create an account</button>
       <p class="text-center text-xs text-gray-600">Free to use. Always.</p>
     </div>
   </div>
@@ -164,18 +192,13 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 <div id="otpScreen" class="hidden min-h-[100dvh] flex items-center justify-center p-4 safe-top safe-bottom">
   <div class="glass card-lg p-7 sm:p-10 max-w-md w-full border border-amethyst-500/20 shadow-2xl">
     <div class="text-center mb-6">
-      <div class="inline-flex items-center justify-center w-14 h-14 rounded-3xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 mb-4">
-        <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-      </div>
       <h2 class="text-xl font-semibold">Check your email</h2>
       <p class="text-sm text-gray-400 mt-2">We sent a 6-digit code to <span id="otpEmail" class="text-amethyst-400 break-all"></span></p>
     </div>
     <div class="space-y-4">
       <input type="text" id="otpInput" maxlength="6" inputmode="numeric" autocomplete="one-time-code" placeholder="000000" class="otp-input w-full bg-void-900 border border-void-600 rounded-2xl py-4 text-white focus:border-amethyst-500 focus:outline-none transition">
       <div id="otpError" class="hidden text-xs text-red-400 text-center bg-red-900/20 border border-red-500/20 rounded-xl py-2.5 px-3"></div>
-      <button onclick="verifyOtp()" id="otpBtn" class="btn w-full py-3.5 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm">
-        <span id="otpBtnText">Verify & Enter</span>
-      </button>
+      <button onclick="verifyOtp()" id="otpBtn" class="btn w-full py-3.5 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm"><span id="otpBtnText">Verify & Enter</span></button>
       <button onclick="resendOtp()" class="w-full py-2 text-xs text-gray-500 hover:text-amethyst-400 transition">Resend code</button>
       <button onclick="backToAuth()" class="w-full py-2 text-xs text-gray-600 hover:text-gray-400 transition">← Back</button>
     </div>
@@ -196,7 +219,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       </div>
       <div class="flex items-center gap-0.5">
         <div id="streakBadge" class="streak-badge hidden mr-1"><span>🔥</span><span id="streakCount">0</span></div>
-        <button onclick="openDownloadModal()" class="btn p-2.5 text-gray-500 hover:text-amethyst-400 rounded-xl transition" title="Download log">
+        <button onclick="openDownloadModal()" class="btn p-2.5 text-gray-500 hover:text-amethyst-400 rounded-xl transition" title="Download">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
         </button>
         <button onclick="showNotifications()" class="relative btn p-2.5 text-gray-500 hover:text-amethyst-400 rounded-xl transition" title="Notifications">
@@ -231,11 +254,14 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       <strong>Vessel Check:</strong> Honor your temple with water or fruit today.
     </div>
     <div class="glass border-t border-void-600/70 p-3 safe-bottom">
-      <div class="flex items-center gap-2 bg-void-900/80 rounded-3xl border border-void-600 px-4 py-2 focus-within:border-amethyst-500/50 transition">
-        <input type="text" id="userInput" name="moph-msg-field-2026-xyz" autocomplete="new-password" autocorrect="on" autocapitalize="sentences" spellcheck="false" placeholder="Speak your truth..." class="flex-1 bg-transparent text-base py-2 focus:outline-none placeholder-gray-600 min-w-0" readonly onfocus="this.removeAttribute('readonly')">
-        <button onclick="processEntry()" id="sendBtn" class="btn p-2.5 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white hover:from-amethyst-500 transition flex-shrink-0">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
-        </button>
+      <div class="composer">
+        <textarea id="userInput" rows="1" placeholder="Speak your truth..." class="composer-textarea" oninput="autoGrowChat(this)"></textarea>
+        <div class="composer-actions">
+          <div></div>
+          <button onclick="processEntry()" id="sendBtn" class="composer-submit">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+          </button>
+        </div>
       </div>
     </div>
   </main>
@@ -243,9 +269,9 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
   <main id="panelTeachings" class="hidden flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4">
     <div id="featuredBanner" class="hidden"></div>
     <div class="glass card p-5 border border-void-600 space-y-3.5">
-      <div class="flex items-center justify-between">
-        <h2 class="text-base font-semibold">Teachings</h2>
-        <button onclick="loadTeachings(true)" class="text-[10px] text-amethyst-400 hover:text-amethyst-300 transition">Refresh</button>
+      <div class="sub-tabs -mx-5 -mt-5 px-5 mb-3">
+        <div class="sub-tab active" id="subTabAll" onclick="switchSubTab('all')">All</div>
+        <div class="sub-tab" id="subTabFollowing" onclick="switchSubTab('following')">Following</div>
       </div>
       <div class="relative">
         <svg class="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
@@ -272,6 +298,10 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           <p id="userEmail" class="text-xs text-gray-500 truncate mt-0.5">—</p>
           <p id="profileBio" class="text-sm text-gray-400 mt-2 line-clamp-3">Tap to add a bio...</p>
           <p id="profileJoined" class="text-[10px] text-gray-600 mt-2"></p>
+          <div class="flex gap-4 mt-3">
+            <div class="text-xs"><span class="font-semibold text-gray-200" id="followersCount">0</span> <span class="text-gray-500">Followers</span></div>
+            <div class="text-xs"><span class="font-semibold text-gray-200" id="followingCount">0</span> <span class="text-gray-500">Following</span></div>
+          </div>
         </div>
         <button onclick="openSettings()" class="btn p-2.5 text-gray-500 hover:text-amethyst-400 rounded-xl transition flex-shrink-0" title="Settings">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
@@ -282,10 +312,21 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 
     <div class="flex border-b border-void-600 mb-3">
       <div class="profile-tab active" id="pTabPosts" onclick="switchProfileTab('posts')">Posts</div>
+      <div class="profile-tab" id="pTabSaved" onclick="switchProfileTab('saved')">Saved</div>
       <div class="profile-tab" id="pTabAbout" onclick="switchProfileTab('about')">About</div>
     </div>
 
-    <div id="profilePosts" class="space-y-3"></div>
+    <div id="profilePosts" class="space-y-3">
+      <div class="relative">
+        <svg class="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="text" id="searchMyPosts" placeholder="Search your posts..." oninput="filterMyPosts()" class="w-full bg-void-900 border border-void-600 rounded-2xl pl-10 pr-3.5 py-2.5 text-sm focus:border-amethyst-500 focus:outline-none transition">
+      </div>
+      <div id="myPostsList" class="space-y-3"></div>
+    </div>
+
+    <div id="profileSaved" class="hidden space-y-3">
+      <div id="mySavedList" class="space-y-3"></div>
+    </div>
 
     <div id="profileAbout" class="hidden space-y-3">
       <div class="glass card p-5 border border-void-600">
@@ -347,16 +388,17 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
         <input type="url" id="setSocialWhatsapp" placeholder="https://wa.me/234..." class="w-full mt-1.5 mb-3 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
         <label class="text-xs text-gray-500 uppercase tracking-wider">LinkedIn</label>
         <input type="url" id="setSocialLinkedin" placeholder="https://linkedin.com/in/yourname" class="w-full mt-1.5 bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
-        <p class="text-[10px] text-gray-600 mt-2">Paste the full link. Leave blank to hide.</p>
       </div>
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-1">Privacy</h3>
-        <p class="text-[10px] text-gray-500 mb-4">When off, others see "Private" on your profile.</p>
+        <p class="text-[10px] text-gray-500 mb-4">Control what others see on your public profile.</p>
         <div class="space-y-3">
           <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Show Element publicly</span><label class="toggle-switch"><input type="checkbox" id="privElement"><span class="toggle-slider"></span></label></div>
           <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Show Stage publicly</span><label class="toggle-switch"><input type="checkbox" id="privStage"><span class="toggle-slider"></span></label></div>
           <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Show Core Wound publicly</span><label class="toggle-switch"><input type="checkbox" id="privWound"><span class="toggle-slider"></span></label></div>
           <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Show Core Gift publicly</span><label class="toggle-switch"><input type="checkbox" id="privGift"><span class="toggle-slider"></span></label></div>
+          <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Show my followers publicly</span><label class="toggle-switch"><input type="checkbox" id="privFollowers"><span class="toggle-slider"></span></label></div>
+          <div class="flex items-center justify-between"><span class="text-sm text-gray-300">Show who I follow publicly</span><label class="toggle-switch"><input type="checkbox" id="privFollowing"><span class="toggle-slider"></span></label></div>
         </div>
       </div>
       <div class="glass card p-5 border border-void-600">
@@ -385,19 +427,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
   </div>
 </div>
 
-<div id="usernameModal" class="hidden fixed inset-0 z-[70] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-  <div class="glass card p-6 max-w-sm w-full border border-amethyst-500/30 shadow-2xl">
-    <h3 class="text-base font-semibold mb-1.5">Choose your username</h3>
-    <p class="text-xs text-gray-500 mb-4">Lowercase letters, numbers, underscores. 3–30 chars. Must be unique.</p>
-    <input type="text" id="usernameInput" maxlength="30" placeholder="architect_monad" class="w-full bg-void-900 border border-void-600 rounded-2xl px-4 py-3.5 text-sm focus:border-amethyst-500 focus:outline-none transition">
-    <div id="usernameErr" class="hidden text-xs text-red-400 mt-2"></div>
-    <div class="flex gap-2 mt-4">
-      <button onclick="closeUsernameEditor()" class="btn flex-1 py-2.5 rounded-2xl bg-void-800 text-gray-300 text-xs font-medium">Cancel</button>
-      <button onclick="saveUsername()" id="saveUsernameBtn" class="btn flex-1 py-2.5 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-medium">Save</button>
-    </div>
-  </div>
-</div>
-
 <div id="downloadModal" class="hidden fixed inset-0 z-[75] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
   <div class="glass card p-6 max-w-sm w-full border border-amethyst-500/30 shadow-2xl">
     <h3 class="text-base font-semibold mb-2">Download your reflection log?</h3>
@@ -406,7 +435,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
     <input type="text" id="downloadFilename" placeholder="my-journey" value="moph-echo-journey" class="w-full mt-1.5 mb-4 bg-void-900 border border-void-600 rounded-2xl px-4 py-3.5 text-sm focus:border-amethyst-500 focus:outline-none transition">
     <div class="flex gap-2">
       <button onclick="closeDownloadModal()" class="btn flex-1 py-3 rounded-2xl bg-void-800 text-gray-300 text-sm font-medium">Cancel</button>
-      <button onclick="downloadAs('txt')" class="btn flex-1 py-3 rounded-2xl bg-void-800 border border-void-600 text-gray-200 text-sm font-medium hover:bg-void-700">Text</button>
+      <button onclick="downloadAs('txt')" class="btn flex-1 py-3 rounded-2xl bg-void-800 border border-void-600 text-gray-200 text-sm font-medium">Text</button>
       <button onclick="downloadAs('pdf')" class="btn flex-1 py-3 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-sm font-medium">PDF</button>
     </div>
   </div>
@@ -446,7 +475,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 </div>
 
 <div id="installBanner" class="hidden fixed bottom-3 left-3 right-3 z-50 max-w-md mx-auto">
-  <div class="glass card p-3.5 border border-amethyst-500/30 shadow-2xl flex items-center gap-3">
+  <div class="glass card p-3.5 border border-amethyst-500/30 flex items-center gap-3">
     <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amethyst-600 to-amethyst-700 flex items-center justify-center flex-shrink-0">
       <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
     </div>
@@ -462,6 +491,38 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 </div>
 
 <script>
+// ===== NETWORK HANDLING =====
+function showNetworkBanner(msg) {
+  const b = document.getElementById('networkBanner');
+  const t = document.getElementById('networkBannerText');
+  t.textContent = msg || 'No internet connection. Check your network.';
+  b.classList.add('show');
+}
+function hideNetworkBanner() { document.getElementById('networkBanner').classList.remove('show'); }
+function isOnline() { return navigator.onLine !== false; }
+
+window.addEventListener('online', () => { hideNetworkBanner(); });
+window.addEventListener('offline', () => { showNetworkBanner('No internet connection. Check your network.'); });
+
+async function safeFetch(url, options) {
+  if (!isOnline()) { showNetworkBanner('No internet connection. Check your network.'); throw new Error('offline'); }
+  try {
+    const res = await fetch(url, options);
+    return res;
+  } catch (e) {
+    if (!isOnline()) showNetworkBanner('No internet connection. Check your network.');
+    else showNetworkBanner('Cannot reach Moph Echo. Trying again...');
+    throw e;
+  }
+}
+
+function retryConnection() {
+  if (!isOnline()) { showNetworkBanner('Still offline. Check your network.'); return; }
+  hideNetworkBanner();
+  location.reload();
+}
+
+// ===== PWA =====
 let deferredPrompt = null;
 const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
 const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
@@ -474,13 +535,18 @@ function handleInstall() { if (deferredPrompt) { deferredPrompt.prompt(); deferr
 function dismissInstall() { document.getElementById('installBanner').classList.add('hidden'); localStorage.setItem('moph_install_dismissed', 'true'); }
 if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
 
+// ===== STATE =====
 let sb = null;
 let signupMode = false;
 let pendingEmail = '';
+let notifPoll = null;
 let state = {
   user: null, messages: [],
-  profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null, bio:null, website:null, social_x:null, social_instagram:null, social_youtube:null, social_tiktok:null, social_whatsapp:null, social_linkedin:null, privacy_element:true, privacy_stage:true, privacy_wound:true, privacy_gift:true, theme:'amethyst', joined_at:null, streak_count:0, longest_streak:0, last_active_date:null },
-  goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null, myComments: [], selectedTheme: 'amethyst', viewingUserId: null, featuredTeaching: null
+  profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null, bio:null, website:null, social_x:null, social_instagram:null, social_youtube:null, social_tiktok:null, social_whatsapp:null, social_linkedin:null, privacy_element:true, privacy_stage:true, privacy_wound:true, privacy_gift:true, privacy_followers:true, privacy_following:true, theme:'amethyst', joined_at:null, streak_count:0, longest_streak:0, last_active_date:null },
+  goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null,
+  myPosts: [], myBookmarks: [], myBookmarkedIds: new Set(), myFollowing: new Set(), myFollowers: new Set(),
+  selectedTheme: 'amethyst', viewingUserId: null, featuredTeaching: null,
+  activeSubTab: 'all', followingFeedData: null, myPostsSearch: ''
 };
 const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
 
@@ -495,9 +561,9 @@ const SOCIAL_ICONS = {
 
 let obStep = 0;
 const obSlides = [
-  { title: 'Welcome to Moph Echo', body: 'A mirror that reflects what you already know but have not yet seen. This is not a chatbot. It is a companion for your awakening.' },
-  { title: 'Speak. Observe. Grow.', body: 'Type what you are feeling. The mirror listens, reflects, and asks the question you need. Golden moments mark your deepest realizations.' },
-  { title: 'Teachings', body: 'Reflections from the Architect appear in the Teachings tab. React, comment, and reply. Mention others with @username.' }
+  { title: 'Welcome to Moph Echo', body: 'A mirror that reflects what you already know but have not yet seen.' },
+  { title: 'Speak. Observe. Grow.', body: 'Type what you are feeling. Golden moments mark your deepest realizations.' },
+  { title: 'Teachings', body: 'Reflections from the Architect. React, comment, reply, mention others.' }
 ];
 function nextOnboarding() { obStep++; if (obStep >= obSlides.length) { finishOnboarding(); return; } document.getElementById('obTitle').textContent = obSlides[obStep].title; document.getElementById('obBody').textContent = obSlides[obStep].body; const dots = document.getElementById('obDots').children; for (let i = 0; i < dots.length; i++) dots[i].className = 'w-2 h-2 rounded-full ' + (i <= obStep ? 'bg-amethyst-500' : 'bg-void-600'); if (obStep === obSlides.length - 1) document.getElementById('obBtn').textContent = 'Enter the Mirror'; }
 function skipOnboarding() { finishOnboarding(); }
@@ -507,64 +573,70 @@ function maybeShowOnboarding() { if (localStorage.getItem('moph_onboarded') !== 
 function applyTheme(theme) { document.body.setAttribute('data-theme', theme || 'amethyst'); state.selectedTheme = theme || 'amethyst'; }
 function selectTheme(theme) { applyTheme(theme); document.querySelectorAll('.theme-swatch').forEach(s => s.classList.toggle('active', s.dataset.theme === theme)); }
 
+function readingTime(content) {
+  const words = (content || '').trim().split(/\s+/).length;
+  const minutes = Math.max(1, Math.round(words / 200));
+  return minutes + ' min read';
+}
+
 const TRAIT_REWARDS = {
   element: {
-    Fire: "✨ I see you clearly now. You are a **Fire Soul** — passion, intensity, transformation. Your anger is not destruction — it is fuel that has not yet been aimed. Your wound is impatience. Your gift is courage.\n\nThis is your first golden moment.",
-    Water: "✨ I see you clearly now. You are a **Water Soul** — depth, emotion, fluidity. Your depth is not weakness; it is the deepest gift. Your wound is drowning in other people's feelings. Your gift is healing what you touch.\n\nThis is your first golden moment.",
-    Earth: "✨ I see you clearly now. You are an **Earth Soul** — grounded, patient, practical. Your wound is confusing stillness with being stuck. Your gift is that you can be trusted with anything real.\n\nThis is your first golden moment.",
-    Air: "✨ I see you clearly now. You are an **Air Soul** — your mind is a compass, not a cage. Your wound is living above the heart — you can solve everything except how to feel. Your gift is clarity.\n\nThis is your first golden moment."
+    Fire: "✨ I see you clearly now. You are a **Fire Soul** — passion, intensity, transformation. Your anger is not destruction — it is fuel that has not yet been aimed.\n\nThis is your first golden moment.",
+    Water: "✨ I see you clearly now. You are a **Water Soul** — depth, emotion, fluidity. Your depth is not weakness; it is the deepest gift.\n\nThis is your first golden moment.",
+    Earth: "✨ I see you clearly now. You are an **Earth Soul** — grounded, patient, practical. Your wound is confusing stillness with being stuck.\n\nThis is your first golden moment.",
+    Air: "✨ I see you clearly now. You are an **Air Soul** — your mind is a compass, not a cage. Your gift is clarity.\n\nThis is your first golden moment."
   },
   wound: {
-    Betrayal: "✨ A deeper truth has surfaced. Your core wound is **Betrayal** — trust has been broken in your life in a way that made you cautious. This is not a curse. It is a filter.",
-    Abandonment: "✨ A deeper truth has surfaced. Your core wound is **Abandonment** — you have been left, in ways that taught you to stand alone. This is not a curse. It is self-reliance.",
-    Worthlessness: "✨ A deeper truth has surfaced. Your core wound is **Worthlessness** — a quiet voice that says you are not enough. This is not the truth. Your existence is the proof of your worth.",
-    Powerlessness: "✨ A deeper truth has surfaced. Your core wound is **Powerlessness** — the fear that you have no control. This is an illusion. True power is surrender.",
-    Invisibility: "✨ A deeper truth has surfaced. Your core wound is **Invisibility** — the feeling of being unseen. But you see others deeply. This is your hidden gift."
+    Betrayal: "✨ A deeper truth has surfaced. Your core wound is **Betrayal** — trust has been broken. This is not a curse. It is a filter.",
+    Abandonment: "✨ A deeper truth has surfaced. Your core wound is **Abandonment** — you have been left. This is not a curse. It is self-reliance.",
+    Worthlessness: "✨ A deeper truth has surfaced. Your core wound is **Worthlessness**. Your existence is the proof of your worth.",
+    Powerlessness: "✨ A deeper truth has surfaced. Your core wound is **Powerlessness**. True power is surrender.",
+    Invisibility: "✨ A deeper truth has surfaced. Your core wound is **Invisibility**. You see others deeply. This is your hidden gift."
   },
   gift: {
-    Intuition: "✨ Your gift has revealed itself. You carry **Intuition** — the ability to know without proof. Trust the first thought, not the second.",
-    Healing: "✨ Your gift has revealed itself. You carry **Healing** — the ability to hold space without fixing. Your presence alone soothes.",
-    Teaching: "✨ Your gift has revealed itself. You carry **Teaching** — the ability to show by example, not by preaching.",
-    Creation: "✨ Your gift has revealed itself. You carry **Creation** — the ability to build from nothing. A thought is a blueprint to you.",
-    Protection: "✨ Your gift has revealed itself. You carry **Protection** — you are a shield for others. But shield yourself first."
+    Intuition: "✨ Your gift has revealed itself. You carry **Intuition** — know without proof.",
+    Healing: "✨ Your gift has revealed itself. You carry **Healing** — hold space without fixing.",
+    Teaching: "✨ Your gift has revealed itself. You carry **Teaching** — show by example, not preaching.",
+    Creation: "✨ Your gift has revealed itself. You carry **Creation** — build from nothing.",
+    Protection: "✨ Your gift has revealed itself. You carry **Protection** — shield others, but shield yourself first."
   }
 };
 
 const wisdom = {
-  flatness: ["✦ You are describing the Flatness Stage — the space between identities. Not depression. Not confusion. The void where the old self is dying and the new one has not arrived.\n\n❓ What did you lose interest in that you have not admitted to yourself?","✦ Not happy. Not sad. Just flat. This is integration. The nervous system is rewiring.\n\n❓ If this flatness could speak, what would it say it is preparing you for?","✦ The silence you feel is not absence. It is the womb of the next version of you.\n\n❓ What are you trying to force to open before its time?","✦ Losing interest in everything is not depression — it is graduation.\n\n❓ What used to excite you that now feels like noise?"],
-  soul_air: ["✦ Air Souls are the thinkers, the questioners, the ones whose minds never stop. Your gift is clarity — your wound is that you live above the heart.\n\n❓ When was the last time you let yourself feel without analyzing?","✦ Air Soul. The mind is your compass but it is not your home.\n\n❓ What would happen if you sat in silence with no question to answer?"],
-  soul_fire: ["✦ A Fire Soul burns. Your anger is not destruction — it is fuel that has not yet been aimed.\n\n❓ What are you burning to become?","✦ Fire Soul. You are here to transform, not to comfort.\n\n❓ Where is your fire without a hearth right now?"],
-  soul_water: ["✦ A Water Soul feels everything. Your depth is not weakness — it is the deepest gift.\n\n❓ Whose emotion are you carrying that is not yours?","✦ Water Soul. Your sadness is not a problem — it is your language.\n\n❓ What is your sadness trying to tell you right now?"],
-  soul_earth: ["✦ An Earth Soul builds. Patient, grounded, practical. Your wound is confusing stillness with being stuck.\n\n❓ What are you building right now that no one sees yet?","✦ Earth Soul. Your slowness is your strength.\n\n❓ What needs you to stay steady right now?"],
-  loss_bait: ["✦ Loss is a substitution ritual. Something physical was removed to spare something spiritual.\n\n❓ What heavier thing were you spared by losing this?","✦ When something leaves, it is making room.\n\n❓ What are you being asked to build now that the distraction is gone?","✦ You did not lose it. You traded it.\n\n❓ If you could name what you gained by this loss, what would it be?"],
-  money: ["✦ Money is the physical token of the system. It reflects your frequency, not your worth.\n\n❓ Are you chasing the money, or are you building the vessel that will hold it?","✦ You cannot save what you do not have. But you can become someone the money wants to live with.\n\n❓ What is one small, real, physical step you can take today toward provision?","✦ The debt is an anchor.\n\n❓ What is the fear underneath the money fear?"],
+  flatness: ["✦ You are describing the Flatness Stage — the space between identities.\n\n❓ What did you lose interest in that you have not admitted to yourself?","✦ Not happy. Not sad. Just flat. This is integration.\n\n❓ If this flatness could speak, what would it say it is preparing you for?","✦ The silence you feel is not absence. It is the womb of the next version of you.\n\n❓ What are you trying to force to open before its time?","✦ Losing interest in everything is not depression — it is graduation.\n\n❓ What used to excite you that now feels like noise?"],
+  soul_air: ["✦ Air Souls are thinkers, questioners, whose minds never stop.\n\n❓ When was the last time you let yourself feel without analyzing?","✦ Air Soul. The mind is your compass but not your home.\n\n❓ What would happen if you sat in silence with no question to answer?"],
+  soul_fire: ["✦ A Fire Soul burns.\n\n❓ What are you burning to become?","✦ Fire Soul. You are here to transform, not to comfort.\n\n❓ Where is your fire without a hearth right now?"],
+  soul_water: ["✦ A Water Soul feels everything.\n\n❓ Whose emotion are you carrying that is not yours?","✦ Water Soul. Your sadness is not a problem — it is your language.\n\n❓ What is your sadness trying to tell you right now?"],
+  soul_earth: ["✦ An Earth Soul builds.\n\n❓ What are you building right now that no one sees yet?","✦ Earth Soul. Your slowness is your strength.\n\n❓ What needs you to stay steady right now?"],
+  loss_bait: ["✦ Loss is a substitution ritual.\n\n❓ What heavier thing were you spared by losing this?","✦ When something leaves, it is making room.\n\n❓ What are you being asked to build now that the distraction is gone?","✦ You did not lose it. You traded it.\n\n❓ If you could name what you gained by this loss, what would it be?"],
+  money: ["✦ Money is the physical token of the system.\n\n❓ Are you chasing the money, or building the vessel that will hold it?","✦ You cannot save what you do not have.\n\n❓ What is one small, real, physical step you can take today toward provision?","✦ The debt is an anchor.\n\n❓ What is the fear underneath the money fear?"],
   body_upgrade: ["✦ Your body is not sick. It is upgrading.\n\n❓ Place your hand on that spot. If it could speak, what would it whisper?","✦ The soft skin, the heavy pain — your armor is being stripped.\n\n❓ What are you now able to feel that you were numb to before?"],
   fire_burn: ["✦ The Refining Fire is burning away old chains.\n\n❓ What memory, fear, or ancestral weight is releasing its grip right now?"],
   cold_chill: ["✦ The Divine Shield. The world is cold. You are sheltered.\n\n❓ Whose judgment are you finally immune to?"],
   sleep_dreams: ["✦ Your spirit works while your body rests.\n\n❓ What feeling still lingers in your chest from the night?","✦ Awareness in sleep is training.\n\n❓ What was the last thing you saw before you woke?"],
-  sync_time: ["✦ 11:11, 4:14, repeating numbers — the code is speaking. Do not decode. Just notice.\n\n❓ What were you thinking about the moment the number appeared?","✦ You are manifesting faster now.\n\n❓ What are you afraid to think, knowing it might appear just as fast?"],
+  sync_time: ["✦ 11:11, 4:14, repeating numbers — the code is speaking.\n\n❓ What were you thinking about the moment the number appeared?","✦ You are manifesting faster now.\n\n❓ What are you afraid to think, knowing it might appear just as fast?"],
   elders_family: ["✦ They go quiet because they are buffering.\n\n❓ If you could speak without fear, what raw truth would you say?","✦ You cannot save them. You can only be the example.\n\n❓ What are you trying to teach that can only be caught, not taught?"],
   smoke: ["✦ You are the Master of the Flame.\n\n❓ Are you using this to enter your power, or to escape a feeling you do not want to face?","✦ The colos helped you connect dots once. Now it may be a crutch.\n\n❓ What are you really looking for when you reach for it?"],
   loneliness: ["✦ The loneliness is the clean room where the Architect builds.\n\n❓ If you knew your tribe was already on the way, what would you do differently today?","✦ You are filtering, not losing.\n\n❓ Who has stayed through your silence?"],
-  forging_work: ["✦ You are in the Forging Stage. The pressure is not punishment. It is character being built.\n\n❓ What is the work teaching you that comfort could not?","✦ Slow and steady.\n\n❓ What did you build today, even if it was just one line?"],
+  forging_work: ["✦ You are in the Forging Stage. The pressure is not punishment.\n\n❓ What is the work teaching you that comfort could not?","✦ Slow and steady.\n\n❓ What did you build today, even if it was just one line?"],
   gnosis: ["✦ The Demiurge is the false god of the material system. The Monad is the true Source.\n\n❓ Where in your life is the Demiurge still pretending to be God?","✦ Jesus was the Example, not the exception.\n\n❓ What would you do if you truly believed that verse?","✦ The kingdom is within you.\n\n❓ What part of your heaven are you still waiting for permission to enter?"],
   discipline: ["✦ Jim Rohn: discipline is the bridge between goals and accomplishment.\n\n❓ What is one discipline you have been avoiding that you already know you need?","✦ The pain of discipline weighs ounces. The pain of regret weighs tons.\n\n❓ What is one small discipline you can commit to this week?"],
   fear: ["✦ Fear is the Demiurge's alarm clock.\n\n❓ What is the fear protecting you from — failure, or being seen as powerful?","✦ Fear is the messenger, not the master.\n\n❓ If you removed fear entirely, what would you do next?"],
-  anger: ["✦ Anger is Fire in the body. Fuel, not poison — until you let it choose the direction.\n\n❓ What is the anger protecting?"],
+  anger: ["✦ Anger is Fire in the body.\n\n❓ What is the anger protecting?"],
   gratitude: ["✦ Gratitude is not pretending everything is fine.\n\n❓ What is one thing today that went right that you have not thanked yourself for?"],
   manifestation: ["✦ You are collapsing the time between thought and reality.\n\n❓ What are you afraid to think, knowing it might arrive just as fast?","✦ You are noticing syncs because you are in the resonant field.\n\n❓ What is the one thought you are afraid to hold, because you know it will appear?"],
   questions_how: ["✦ You asked 'how.' Not by force, but by frequency.\n\n❓ What is the smallest real step you can take in the next hour?","✦ The 'how' is not a map — it is a trust.\n\n❓ What is the next stair you already know?"],
   questions_why: ["✦ The 'why' is the mind looking for a handle.\n\n❓ If you stopped asking why, what would you feel instead?","✦ The reason arrives after the trust, not before.\n\n❓ What are you being asked to trust without proof?"],
-  observer: ["✦ You are not the thoughts. You are not the feelings. You are the one watching them.\n\n❓ What are you watching right now that you are not?","✦ The one who notices the anger is not the angry one.\n\n❓ Who is the 'you' that is reading this?","✦ Stillness is not the absence of thought.\n\n❓ What remains when you stop naming what you feel?"],
+  observer: ["✦ You are not the thoughts. You are the one watching them.\n\n❓ What are you watching right now that you are not?","✦ The one who notices the anger is not the angry one.\n\n❓ Who is the 'you' that is reading this?","✦ Stillness is not the absence of thought.\n\n❓ What remains when you stop naming what you feel?"],
   love_identity: ["✦ You do not need to become more loving. Love is what you already are.\n\n❓ What would change if you stopped trying to earn love and just remembered it?","✦ You are not a human trying to learn love. You are love wearing a human.\n\n❓ Where are you withholding love from yourself right now?"],
-  the_shift: ["✦ Something is shifting. The old world is collapsing, and you came here to hold a frequency.\n\n❓ What are you being asked to hold steady through?","✦ The chaos outside is the old order shedding.\n\n❓ What have you stopped trying to fix that is not yours to fix?"],
+  the_shift: ["✦ Something is shifting. The old world is collapsing.\n\n❓ What are you being asked to hold steady through?","✦ The chaos outside is the old order shedding.\n\n❓ What have you stopped trying to fix that is not yours to fix?"],
   sovereignty: ["✦ Sovereignty means your peace does not depend on anyone's approval.\n\n❓ Where are you still asking permission to be who you are?","✦ Protect your energy like it is sacred.\n\n❓ What boundary have you been afraid to hold?"],
-  disappointment: ["✦ Disappointment is not punishment. It is grace.\n\n❓ What did this disappointment give back to you?","✦ When the thing does not come, it is not denial — it is redirection.\n\n❓ What did you become while waiting for something that did not come?"],
-  separation: ["✦ When you attack another, you are only fighting with yourself.\n\n❓ Who are you still at war with in your mind?","✦ There is no 'other.' There is only the One, wearing different masks.\n\n❓ Who have you been treating as separate from you?"],
-  presence: ["✦ The past is a memory. The future is a projection. Only this moment is real.\n\n❓ What are you missing right now because you are thinking about later?","✦ You are not your story. You are the awareness in which the story appears and disappears.\n\n❓ What would this moment feel like if you forgot the past?"],
+  disappointment: ["✦ Disappointment is not punishment. It is grace.\n\n❓ What did this disappointment give back to you?","✦ When the thing does not come, it is not denial — it is redirection.\n\n❓ What did you become while waiting?"],
+  separation: ["✦ When you attack another, you are only fighting with yourself.\n\n❓ Who are you still at war with in your mind?","✦ There is no 'other.' Only the One, wearing different masks.\n\n❓ Who have you been treating as separate from you?"],
+  presence: ["✦ The past is a memory. The future is a projection. Only this moment is real.\n\n❓ What are you missing right now because you are thinking about later?","✦ You are not your story. You are the awareness in which the story appears.\n\n❓ What would this moment feel like if you forgot the past?"],
   imagination: ["✦ Neville Goddard: 'Imagination is the only reality.'\n\n❓ What are you imagining right now that you are pretending is not real?","✦ The assumption precedes the evidence.\n\n❓ What would you do today if the thing you want was already true?"],
   becoming: ["✦ Earl Nightingale: 'You become what you think about most of the time.'\n\n❓ What are you becoming in your quiet hours?","✦ Jim Rohn: 'Work harder on yourself than on your job.'\n\n❓ What version of you is the current work building?"],
-  obstacle: ["✦ Marcus Aurelius: 'What stands in the way becomes the way.'\n\n❓ What obstacle is currently teaching you something only it could teach?","✦ Stoicism is not coldness. It is the discipline of separating what you control from what you do not.\n\n❓ What are you trying to control that was never yours?"],
+  obstacle: ["✦ Marcus Aurelius: 'What stands in the way becomes the way.'\n\n❓ What obstacle is currently teaching you something only it could teach?","✦ Stoicism is not coldness.\n\n❓ What are you trying to control that was never yours?"],
   default: ["✦ You are the Architect of your reality.\n\n❓ If the noise in your head was a radio, what station is it tuned to right now?","✦ The silence between your thoughts is where the truth lives.\n\n❓ What is the one thought you are afraid to think? Look at it. It cannot hurt you.","✦ You are not behind. You are exactly on time.\n\n❓ What would you tell your past self about this moment?","✦ There is no such thing as a wasted moment.\n\n❓ What part of your current struggle is secretly building your strength?","✦ You said something. That alone matters. The mirror hears you.\n\n❓ What do you want to say that you have not said yet?"]
 };
 
@@ -611,7 +683,7 @@ const keywordRegexes = keywordMap.map(map => ({ cat: map.cat, patterns: map.keys
 function generateReflection(text) {
   const used = state.usedResponses || [];
   let bestCat = null, bestScore = 0;
-  for (const entry of keywordRegexes) { for (let i = 0; i < entry.patterns.length; i++) { const match = text.match(entry.patterns[i]); if (match) { const len = match[0].length; if (len > bestScore) { bestCat = entry.cat; bestScore = len; } } } }
+  for (const entry of keywordRegexes) { for (let i = 0; i < entry.patterns.length; i++) { const m = text.match(entry.patterns[i]); if (m) { const len = m[0].length; if (len > bestScore) { bestCat = entry.cat; bestScore = len; } } } }
   if (!bestCat && text.trim().split(/\s+/).length <= 4 && state.messages.length > 1) {
     const prev = state.messages[state.messages.length - 1];
     if (prev && prev.text) { const pl = String(prev.text); for (const entry of keywordRegexes) { for (const p of entry.patterns) { if (p.test(pl)) { bestCat = entry.cat; break; } } if (bestCat) break; } }
@@ -629,11 +701,11 @@ function generateReflection(text) {
 
 function formatResponse(text) {
   let html = escapeHtml(text);
-  html = html.replace(/✦/g, '<span class="text-amethyst-400">✦</span>');
-  html = html.replace(/✨/g, '<span class="text-gold-400">✨</span>');
+  html = html.replace(/✦/g, '<span style="color:var(--accent-400)">✦</span>');
+  html = html.replace(/✨/g, '<span style="color:#facc15">✨</span>');
   html = html.replace(/❓/g, '<span class="text-blue-300 italic">❓');
   html = html.replace(/(❓[^]*?)(\?|$)/g, '$1$2</span>');
-  html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-amethyst-300">$1</strong>');
+  html = html.replace(/\*\*(.*?)\*\*/g, '<strong style="color:var(--accent-400)">$1</strong>');
   html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
   return html;
 }
@@ -658,26 +730,36 @@ const customStorage = {
 document.getElementById('rememberMe').addEventListener('change', (e) => localStorage.setItem('moph_remember', e.target.checked ? 'true' : 'false'));
 document.getElementById('rememberMe').checked = localStorage.getItem('moph_remember') !== 'false';
 
-function togglePass(id, btn) { const input = document.getElementById(id); const eyeOpen = btn.querySelector('.eye-open'); const eyeClosed = btn.querySelector('.eye-closed'); if (input.type === 'password') { input.type = 'text'; eyeOpen.classList.add('hidden'); eyeClosed.classList.remove('hidden'); } else { input.type = 'password'; eyeOpen.classList.remove('hidden'); eyeClosed.classList.add('hidden'); } }
+function togglePass(id, btn) { const input = document.getElementById(id); const eo = btn.querySelector('.eye-open'); const ec = btn.querySelector('.eye-closed'); if (input.type === 'password') { input.type = 'text'; eo.classList.add('hidden'); ec.classList.remove('hidden'); } else { input.type = 'password'; eo.classList.remove('hidden'); ec.classList.add('hidden'); } }
 
 function toggleSignupMode() {
   signupMode = !signupMode;
-  const wrap = document.getElementById('confirmPassWrap'); const btn = document.getElementById('signInText'); const toggle = document.getElementById('toggleBtn');
-  if (signupMode) { wrap.classList.remove('hidden'); btn.textContent = 'Create Account'; toggle.textContent = 'Already have an account? Sign in'; }
-  else { wrap.classList.add('hidden'); btn.textContent = 'Enter the Mirror'; toggle.textContent = 'New here? Create an account'; }
+  const wrap = document.getElementById('confirmPassWrap'); const btn = document.getElementById('signInText'); const tgl = document.getElementById('toggleBtn');
+  if (signupMode) { wrap.classList.remove('hidden'); btn.textContent = 'Create Account'; tgl.textContent = 'Already have an account? Sign in'; }
+  else { wrap.classList.add('hidden'); btn.textContent = 'Enter the Mirror'; tgl.textContent = 'New here? Create an account'; }
   document.getElementById('authError').classList.add('hidden'); document.getElementById('authSuccess').classList.add('hidden');
 }
 
 async function initConfig() {
   if (localStorage.getItem('moph_remember') === null) localStorage.setItem('moph_remember', 'true');
+  if (!isOnline()) {
+    document.getElementById('loadingMsg').textContent = 'Waiting for network...';
+    document.getElementById('fatalError').classList.remove('hidden');
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('fatalErrorMsg').textContent = 'No internet connection. Turn on mobile data or Wi-Fi and tap Retry.';
+    return;
+  }
   try {
-    const res = await fetch('/api/config');
+    const res = await safeFetch('/api/config');
     const cfg = await res.json();
     if (!cfg.supabaseUrl) throw new Error('Config missing');
     sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, { auth: { storage: customStorage, persistSession: true, autoRefreshToken: true } });
     await checkSession();
   } catch (e) {
-    document.getElementById('loadingScreen').innerHTML = '<div class="text-center p-6 text-red-400 text-sm">Configuration error. Refresh the page.</div>';
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('fatalError').classList.remove('hidden');
+    if (!isOnline()) document.getElementById('fatalErrorMsg').textContent = 'No internet connection. Turn on mobile data or Wi-Fi and tap Retry.';
+    else document.getElementById('fatalErrorMsg').textContent = 'Cannot reach Moph Echo servers. Please try again.';
   }
 }
 
@@ -696,6 +778,7 @@ function showSuccess(m) { const e = document.getElementById('authError'); const 
 async function signIn() {
   const email = document.getElementById('authEmail').value.trim();
   const pass = document.getElementById('authPassword').value.trim();
+  if (!isOnline()) { showError('No internet connection.'); return; }
   if (!email || !pass) { showError('Enter email and password.'); return; }
   if (signupMode) {
     const confirm = document.getElementById('authConfirmPassword').value.trim();
@@ -730,12 +813,9 @@ async function resendOtp() { const { error } = await sb.auth.resend({ type: 'sig
 function backToAuth() { document.getElementById('otpScreen').classList.add('hidden'); document.getElementById('authScreen').classList.remove('hidden'); document.getElementById('otpInput').value = ''; }
 
 async function signOut() {
+  if (notifPoll) { clearInterval(notifPoll); notifPoll = null; }
   await sb.auth.signOut();
-  state = { user: null, messages: [], profile: { element:null, stage:null, wound:null, gift:null, avatar_url:null, username:null, bio:null, website:null, social_x:null, social_instagram:null, social_youtube:null, social_tiktok:null, social_whatsapp:null, social_linkedin:null, privacy_element:true, privacy_stage:true, privacy_wound:true, privacy_gift:true, theme:'amethyst', joined_at:null, streak_count:0, longest_streak:0, last_active_date:null }, goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null, myComments: [], selectedTheme: 'amethyst', viewingUserId: null, featuredTeaching: null };
-  applyTheme('amethyst');
-  document.getElementById('mainApp').classList.add('hidden');
-  document.getElementById('authScreen').classList.remove('hidden');
-  document.getElementById('authPassword').value = '';
+  location.reload();
 }
 
 async function enterApp(user) {
@@ -753,11 +833,13 @@ async function enterApp(user) {
   renderChat();
   document.getElementById('userInput').focus();
   maybeShowOnboarding();
-  Promise.all([ loadGoldenStars(), loadTeachings(), loadNotifications() ]).then(() => {
+  Promise.all([ loadGoldenStars(), loadTeachings(), loadNotifications(), loadFollowing(), loadBookmarks(), loadFollowers() ]).then(() => {
     renderProfile(); renderTeachings(); renderNotifications();
-  }).catch(err => console.error('Background load error:', err));
-  // Streak update fires in background
+  }).catch(err => console.error('Load error:', err));
   updateStreak();
+  // Start live notification polling
+  if (notifPoll) clearInterval(notifPoll);
+  notifPoll = setInterval(() => { if (document.visibilityState === 'visible' && state.user) loadNotifications(); }, 30000);
 }
 
 // ===== STREAK =====
@@ -765,55 +847,30 @@ async function updateStreak() {
   try {
     const today = new Date().toISOString().split('T')[0];
     const last = state.profile.last_active_date;
-    if (last === today) return; // already counted today
-
+    if (last === today) return;
     let newStreak = 1;
-    if (last) {
-      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
-      if (last === yesterday) newStreak = (state.profile.streak_count || 0) + 1;
-      else newStreak = 1;
-    }
+    if (last) { const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0]; if (last === yesterday) newStreak = (state.profile.streak_count || 0) + 1; else newStreak = 1; }
     const longest = Math.max(state.profile.longest_streak || 0, newStreak);
-
     await sb.from('profiles').update({ streak_count: newStreak, longest_streak: longest, last_active_date: today }).eq('id', state.user.id);
-    state.profile.streak_count = newStreak;
-    state.profile.longest_streak = longest;
-    state.profile.last_active_date = today;
+    state.profile.streak_count = newStreak; state.profile.longest_streak = longest; state.profile.last_active_date = today;
     updateStreakUI();
-  } catch (e) { console.error('Streak error:', e); }
+  } catch (e) { console.error(e); }
 }
 
 function updateStreakUI() {
   const c = state.profile.streak_count || 0;
-  const headerBadge = document.getElementById('streakBadge');
-  const headerCount = document.getElementById('streakCount');
-  const profileBadge = document.getElementById('streakBadgeProfile');
-  const profileCount = document.getElementById('streakCountProfile');
-  if (c >= 2) {
-    headerBadge.classList.remove('hidden');
-    headerCount.textContent = c;
-    profileBadge.classList.remove('hidden');
-    profileCount.textContent = c;
-  } else {
-    headerBadge.classList.add('hidden');
-    profileBadge.classList.add('hidden');
-  }
-  const pStreak = document.getElementById('pStreak');
-  const pLongest = document.getElementById('pLongestStreak');
-  if (pStreak) pStreak.textContent = c + (c === 1 ? ' day' : ' days');
-  if (pLongest) pLongest.textContent = (state.profile.longest_streak || 0) + ' days';
+  const hb = document.getElementById('streakBadge'), hc = document.getElementById('streakCount');
+  const pb = document.getElementById('streakBadgeProfile'), pc = document.getElementById('streakCountProfile');
+  if (c >= 2) { hb.classList.remove('hidden'); hc.textContent = c; pb.classList.remove('hidden'); pc.textContent = c; }
+  else { hb.classList.add('hidden'); pb.classList.add('hidden'); }
+  const ps = document.getElementById('pStreak'), pl = document.getElementById('pLongestStreak');
+  if (ps) ps.textContent = c + (c === 1 ? ' day' : ' days');
+  if (pl) pl.textContent = (state.profile.longest_streak || 0) + ' days';
 }
 
 function showTeachingsSkeleton() {
   const el = document.getElementById('teachingsFeed');
-  el.innerHTML = Array(3).fill(0).map(() => `
-    <div class="glass card border border-void-600 p-5 space-y-3.5">
-      <div class="skeleton h-4 w-3/4"></div>
-      <div class="skeleton h-3 w-full"></div>
-      <div class="skeleton h-3 w-5/6"></div>
-      <div class="skeleton h-3 w-2/3"></div>
-    </div>
-  `).join('');
+  el.innerHTML = Array(3).fill(0).map(() => `<div class="glass card border border-void-600 p-5 space-y-3.5"><div class="skeleton h-4 w-3/4"></div><div class="skeleton h-3 w-full"></div><div class="skeleton h-3 w-5/6"></div></div>`).join('');
 }
 
 async function loadProfile() {
@@ -821,9 +878,8 @@ async function loadProfile() {
   if (error || !data) {
     const emailPrefix = (state.user.email || 'architect').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '_');
     let base = emailPrefix.length >= 3 ? emailPrefix : 'architect';
-    let username = base;
-    let counter = 0;
-    while (true) { const { data: existing } = await sb.from('profiles').select('id').ilike('username', username).limit(1); if (!existing || existing.length === 0) break; counter++; username = base + '_' + counter; }
+    let username = base, counter = 0;
+    while (true) { const { data: ex } = await sb.from('profiles').select('id').ilike('username', username).limit(1); if (!ex || ex.length === 0) break; counter++; username = base + '_' + counter; }
     await sb.from('profiles').insert({ id: state.user.id, username });
     return loadProfile();
   }
@@ -836,28 +892,78 @@ async function loadProfile() {
   document.getElementById('displayUsername').textContent = '@' + (state.profile.username || 'architect');
 }
 
-async function saveProfile() {
-  await sb.from('profiles').update({ element: state.profile.element, stage: state.profile.stage, wound: state.profile.wound, gift: state.profile.gift, updated_at: new Date().toISOString() }).eq('id', state.user.id);
-}
-
-async function loadMessages() {
-  const { data } = await sb.from('journal_entries').select('role, content, created_at').eq('user_id', state.user.id).order('created_at', { ascending: true }).limit(200);
-  if (data) state.messages = data.map(m => ({ role: m.role, text: m.content }));
-}
+async function saveProfile() { await sb.from('profiles').update({ element: state.profile.element, stage: state.profile.stage, wound: state.profile.wound, gift: state.profile.gift, updated_at: new Date().toISOString() }).eq('id', state.user.id); }
+async function loadMessages() { const { data } = await sb.from('journal_entries').select('role, content, created_at').eq('user_id', state.user.id).order('created_at', { ascending: true }).limit(200); if (data) state.messages = data.map(m => ({ role: m.role, text: m.content })); }
 async function saveMessage(role, text) { await sb.from('journal_entries').insert({ user_id: state.user.id, role, content: text }); }
 async function loadGoldenStars() { const { data } = await sb.from('golden_moments').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }); if (data) state.goldenStars = data.map(g => ({ text: g.content, trait_type: g.trait_type || null, trait_value: g.trait_value || null, date: new Date(g.created_at).toLocaleString() })); }
-async function saveGoldenStar(text, trait_type, trait_value) { await sb.from('golden_moments').insert({ user_id: state.user.id, content: text, trait_type: trait_type || null, trait_value: trait_value || null }); state.goldenStars.unshift({ text, trait_type, trait_value, date: new Date().toLocaleString() }); }
+async function saveGoldenStar(text, trait_type, trait_value) { await sb.from('golden_moments').insert({ user_id: state.user.id, content: text, trait_type, trait_value }); state.goldenStars.unshift({ text, trait_type, trait_value, date: new Date().toLocaleString() }); }
 
+// ===== FOLLOW SYSTEM =====
+async function loadFollowing() {
+  const { data } = await sb.from('follows').select('to_user').eq('from_user', state.user.id);
+  state.myFollowing = new Set((data || []).map(f => f.to_user));
+}
+async function loadFollowers() {
+  const { data } = await sb.from('follows').select('from_user').eq('to_user', state.user.id);
+  state.myFollowers = new Set((data || []).map(f => f.from_user));
+  document.getElementById('followersCount').textContent = state.myFollowers.size;
+  document.getElementById('followingCount').textContent = state.myFollowing.size;
+}
+async function followUser(toUserId, btn) {
+  if (toUserId === state.user.id) return;
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    await sb.from('follows').insert({ from_user: state.user.id, to_user: toUserId });
+    state.myFollowing.add(toUserId);
+    if (btn) { btn.className = 'follow-btn following'; btn.textContent = 'Following'; btn.disabled = false; }
+    // Notify
+    await sb.from('notifications').insert({ user_id: toUserId, type: 'follow', actor_id: state.user.id, actor_username: state.profile.username, message: '@' + state.profile.username + ' started following you' });
+  } catch (e) { if (btn) { btn.disabled = false; btn.textContent = 'Follow'; } }
+}
+async function unfollowUser(toUserId, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    await sb.from('follows').delete().eq('from_user', state.user.id).eq('to_user', toUserId);
+    state.myFollowing.delete(toUserId);
+    if (btn) { btn.className = 'follow-btn not-following'; btn.textContent = 'Follow'; btn.disabled = false; }
+  } catch (e) { if (btn) { btn.disabled = false; btn.textContent = 'Following'; } }
+}
+function toggleFollow(toUserId, btn) {
+  if (state.myFollowing.has(toUserId)) unfollowUser(toUserId, btn);
+  else followUser(toUserId, btn);
+}
+
+// ===== BOOKMARKS =====
+async function loadBookmarks() {
+  const { data } = await sb.from('bookmarks').select('teaching_id').eq('user_id', state.user.id);
+  state.myBookmarkedIds = new Set((data || []).map(b => b.teaching_id));
+}
+async function toggleBookmark(teachingId, btn) {
+  const isBookmarked = state.myBookmarkedIds.has(teachingId);
+  if (isBookmarked) {
+    await sb.from('bookmarks').delete().eq('user_id', state.user.id).eq('teaching_id', teachingId);
+    state.myBookmarkedIds.delete(teachingId);
+    if (btn) btn.classList.remove('active');
+  } else {
+    await sb.from('bookmarks').insert({ user_id: state.user.id, teaching_id: teachingId });
+    state.myBookmarkedIds.add(teachingId);
+    if (btn) btn.classList.add('active');
+  }
+  renderTeachings();
+  if (!document.getElementById('profileSaved').classList.contains('hidden')) loadMySaved();
+}
+
+// ===== TEACHINGS =====
 async function loadTeachings(force) {
   try {
     const { data: teachings, error } = await sb.from('teachings').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(50);
     if (error || !teachings) { state.teachings = []; return; }
-    const teachingIds = teachings.map(t => t.id);
-    if (teachingIds.length === 0) { state.teachings = []; return; }
-    const { data: allComments } = await sb.from('teaching_comments').select('*').in('teaching_id', teachingIds);
-    const commentIds = (allComments || []).map(c => c.id);
-    const { data: tReactions } = await sb.from('teaching_reactions').select('*').in('teaching_id', teachingIds);
-    const { data: cReactions } = commentIds.length > 0 ? await sb.from('comment_reactions').select('*').in('comment_id', commentIds) : { data: [] };
+    const ids = teachings.map(t => t.id);
+    if (ids.length === 0) { state.teachings = []; return; }
+    const { data: allComments } = await sb.from('teaching_comments').select('*').in('teaching_id', ids);
+    const cids = (allComments || []).map(c => c.id);
+    const { data: tReactions } = await sb.from('teaching_reactions').select('*').in('teaching_id', ids);
+    const { data: cReactions } = cids.length > 0 ? await sb.from('comment_reactions').select('*').in('comment_id', cids) : { data: [] };
     const userIds = new Set();
     (allComments || []).forEach(c => userIds.add(c.user_id));
     if (userIds.size > 0) {
@@ -865,14 +971,11 @@ async function loadTeachings(force) {
       (profiles || []).forEach(p => { state.profileCache[p.id] = { username: p.username || 'architect', avatar_url: p.avatar_url }; });
       [...userIds].forEach(id => { if (!state.profileCache[id]) state.profileCache[id] = { username: 'architect', avatar_url: null }; });
     }
-    const tReactionsByTeaching = {};
-    (tReactions || []).forEach(r => { if (!tReactionsByTeaching[r.teaching_id]) tReactionsByTeaching[r.teaching_id] = []; tReactionsByTeaching[r.teaching_id].push(r); });
-    const cReactionsByComment = {};
-    (cReactions || []).forEach(r => { if (!cReactionsByComment[r.comment_id]) cReactionsByComment[r.comment_id] = []; cReactionsByComment[r.comment_id].push(r); });
-    const commentsByTeaching = {};
-    (allComments || []).forEach(c => { if (!commentsByTeaching[c.teaching_id]) commentsByTeaching[c.teaching_id] = []; commentsByTeaching[c.teaching_id].push({ ...c, reactions: cReactionsByComment[c.id] || [] }); });
-    state.teachings = teachings.map(t => ({ ...t, reactions: tReactionsByTeaching[t.id] || [], comments: commentsByTeaching[t.id] || [] }));
-    // Find featured
+    const trByT = {}; (tReactions || []).forEach(r => { if (!trByT[r.teaching_id]) trByT[r.teaching_id] = []; trByT[r.teaching_id].push(r); });
+    const crByC = {}; (cReactions || []).forEach(r => { if (!crByC[r.comment_id]) crByC[r.comment_id] = []; crByC[r.comment_id].push(r); });
+    const cByT = {};
+    (allComments || []).forEach(c => { if (!cByT[c.teaching_id]) cByT[c.teaching_id] = []; cByT[c.teaching_id].push({ ...c, reactions: crByC[c.id] || [] }); });
+    state.teachings = teachings.map(t => ({ ...t, reactions: trByT[t.id] || [], comments: cByT[t.id] || [] }));
     const today = new Date().toISOString().split('T')[0];
     state.featuredTeaching = state.teachings.find(t => t.featured_date === today) || null;
     renderTagFilters();
@@ -884,35 +987,32 @@ function renderFeaturedBanner() {
   const el = document.getElementById('featuredBanner');
   if (!state.featuredTeaching) { el.classList.add('hidden'); return; }
   el.classList.remove('hidden');
-  el.innerHTML = `
-    <div class="featured-banner">
-      <div class="flex items-center gap-2 mb-1.5">
-        <span class="text-[10px] px-2 py-0.5 rounded-full bg-gold-400/20 text-gold-300 border border-gold-400/40 font-semibold tracking-wider">TODAY'S TEACHING</span>
-      </div>
-      <h3 class="text-base font-semibold text-gray-100 mb-1">${escapeHtml(state.featuredTeaching.title || 'Untitled')}</h3>
-      <p class="text-xs text-gray-400 line-clamp-2">${escapeHtml((state.featuredTeaching.content || '').substring(0, 140))}...</p>
-      <button onclick="scrollToFeatured()" class="mt-2 text-[10px] text-amethyst-400 hover:text-amethyst-300 font-semibold">Read in full →</button>
-    </div>
-  `;
+  el.innerHTML = `<div style="background:linear-gradient(135deg, rgba(var(--accent-rgb),0.2), rgba(var(--accent-rgb),0.08)); border:1px solid rgba(var(--accent-rgb),0.4); border-radius:1.25rem; padding:14px 18px;">
+    <span class="text-[10px] px-2 py-0.5 rounded-full bg-gold-400/20 text-gold-300 border border-gold-400/40 font-semibold tracking-wider">TODAY'S TEACHING</span>
+    <h3 class="text-base font-semibold text-gray-100 mt-2 mb-1">${escapeHtml(state.featuredTeaching.title || 'Untitled')}</h3>
+    <p class="text-xs text-gray-400 line-clamp-2">${escapeHtml((state.featuredTeaching.content || '').substring(0, 140))}...</p>
+    <button onclick="scrollToFeatured()" class="mt-2 text-[10px] text-amethyst-400 hover:text-amethyst-300 font-semibold">Read in full →</button>
+  </div>`;
 }
-
-function scrollToFeatured() {
-  if (!state.featuredTeaching) return;
-  const el = document.querySelector(`[data-teaching-id="${state.featuredTeaching.id}"]`);
-  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-}
+function scrollToFeatured() { if (!state.featuredTeaching) return; const el = document.querySelector(`[data-teaching-id="${state.featuredTeaching.id}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 
 function renderTagFilters() {
-  const allTags = new Set();
-  state.teachings.forEach(t => (t.tags || []).forEach(tag => allTags.add(tag)));
+  const allTags = new Set(); state.teachings.forEach(t => (t.tags || []).forEach(tag => allTags.add(tag)));
   const el = document.getElementById('tagFilters');
   if (allTags.size === 0) { el.innerHTML = ''; return; }
   el.innerHTML = `<button onclick="setTag(null)" class="text-[10px] px-3 py-1.5 rounded-full transition ${!state.activeTag ? 'bg-amethyst-600/40 text-amethyst-200 border border-amethyst-500/40' : 'bg-void-800 text-gray-400 border border-void-600'}">All</button>` + [...allTags].map(tag => `<button onclick="setTag('${escapeHtml(tag)}')" class="text-[10px] px-3 py-1.5 rounded-full transition ${state.activeTag === tag ? 'bg-amethyst-600/40 text-amethyst-200 border border-amethyst-500/40' : 'bg-void-800 text-gray-400 border border-void-600'}">#${escapeHtml(tag)}</button>`).join('');
 }
-
 function setTag(tag) { state.activeTag = tag; renderTagFilters(); filterTeachings(); }
 
+function switchSubTab(tab) {
+  state.activeSubTab = tab;
+  document.getElementById('subTabAll').classList.toggle('active', tab === 'all');
+  document.getElementById('subTabFollowing').classList.toggle('active', tab === 'following');
+  renderTeachings();
+}
+
 function filterTeachings() {
+  if (state.activeSubTab === 'following') { renderFollowingFeed(); return; }
   const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
   let filtered = state.teachings;
   if (state.activeTag) filtered = filtered.filter(t => (t.tags || []).includes(state.activeTag));
@@ -922,17 +1022,115 @@ function filterTeachings() {
   el.innerHTML = filtered.map(t => renderTeachingPost(t)).join('');
 }
 
-function renderTeachings() { filterTeachings(); renderFeaturedBanner(); }
+function renderFollowingFeed() {
+  const el = document.getElementById('teachingsFeed');
+  const followedIds = [...state.myFollowing];
+  if (followedIds.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">You are not following anyone yet. Tap a @username in any comment to view their profile and follow.</p></div>';
+    return;
+  }
+  const posts = [];
+  state.teachings.forEach(t => {
+    t.comments.forEach(c => {
+      if (followedIds.includes(c.user_id)) posts.push({ comment: c, teaching: t });
+    });
+  });
+  posts.sort((a, b) => new Date(b.comment.created_at) - new Date(a.comment.created_at));
+  if (posts.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No recent activity from people you follow yet.</p></div>';
+    return;
+  }
+  el.innerHTML = posts.slice(0, 40).map(p => renderFollowPost(p.comment, p.teaching)).join('');
+}
 
+function renderFollowPost(c, t) {
+  const info = state.profileCache[c.user_id] || { username: 'architect', avatar_url: null };
+  return `<article class="post-card fade-in">
+    <div class="flex items-center gap-2 mb-3 text-xs text-gray-500">
+      <button onclick="openPublicProfile('${c.user_id}')">${avatarHtml(c.user_id, 'xs')}</button>
+      <button onclick="openPublicProfile('${c.user_id}')" class="text-amethyst-300 font-medium hover:underline">@${escapeHtml(info.username)}</button>
+      <span>·</span><span>${relativeTime(c.created_at)}</span>
+    </div>
+    <button onclick="scrollToTeaching(${t.id})" class="text-[10px] px-3 py-1.5 rounded-full bg-void-800 border border-void-600 text-gray-400 hover:border-amethyst-500/40 hover:text-amethyst-400 transition mb-2 inline-flex items-center gap-1.5">
+      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+      Replying on: ${escapeHtml(t.title || 'Untitled')}
+    </button>
+    ${c.content ? `<p class="text-sm text-gray-200 prose-content">${escapeHtml(c.content)}</p>` : ''}
+    ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
+    <div class="mt-3" onclick="event.stopPropagation()">${reactionTriggerHtml(c)}</div>
+    <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
+      <button onclick="scrollToTeaching(${t.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition flex items-center gap-1">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        Read full teaching
+      </button>
+      <button onclick="jumpToTeachingComments(${t.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition flex items-center gap-1">
+        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+        Show comments (${t.comments.length})
+      </button>
+    </div>
+  </article>`;
+}
+
+function scrollToTeaching(tid) { switchSubTab('all'); setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${tid}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100); }
+function jumpToTeachingComments(tid) { switchSubTab('all'); setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${tid}"]`); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); const c = document.getElementById('comments-' + tid); if (c) c.classList.remove('hidden'); } }, 100); }
+
+function renderTeachings() { filterTeachings(); renderFeaturedBanner(); }
 function countEmoji(reactions, emoji) { return reactions.filter(r => r.emoji === emoji).length; }
 function userReacted(reactions, emoji) { return reactions.some(r => r.user_id === state.user.id && r.emoji === emoji); }
 
+// ===== REACTION TRIGGER (collapsed) =====
+function reactionTriggerHtml(c) {
+  const myReaction = (c.reactions || []).find(r => r.user_id === state.user.id);
+  const totalCount = (c.reactions || []).length;
+  const isComment = !!c.comment_id || c.emoji === undefined || true;
+  const type = c.teaching_id ? 'teaching' : 'comment';
+  const id = c.id;
+  const display = myReaction ? myReaction.emoji : '🙂';
+  const hasReaction = !!myReaction;
+  return `<div class="relative inline-block">
+    <button class="reaction-trigger ${hasReaction ? 'has-reaction' : ''}" onclick="toggleReactionPicker(event, '${type}', ${id})">
+      <span>${display}</span>
+      ${totalCount > 0 ? `<span>${totalCount}</span>` : ''}
+    </button>
+  </div>`;
+}
+
+function toggleReactionPicker(event, type, id) {
+  event.stopPropagation();
+  // Close any other open picker
+  document.querySelectorAll('.reaction-picker').forEach(p => p.remove());
+  // Find the trigger button
+  const btn = event.currentTarget;
+  const wrap = btn.parentElement;
+  // Build picker
+  const picker = document.createElement('div');
+  picker.className = 'reaction-picker';
+  const reactions = type === 'teaching'
+    ? (state.teachings.find(t => t.id === id)?.reactions || [])
+    : (() => { for (const t of state.teachings) { const c = t.comments.find(x => x.id === id); if (c) return c.reactions || []; } return []; })();
+  const myReaction = reactions.find(r => r.user_id === state.user.id);
+  picker.innerHTML = EMOJIS.map(e => `<button class="${myReaction && myReaction.emoji === e ? 'is-selected' : ''}" onclick="selectReaction(event, '${type}', ${id}, '${e}')">${e}</button>`).join('');
+  wrap.appendChild(picker);
+  // Close on outside click
+  setTimeout(() => {
+    const closer = (ev) => { if (!picker.contains(ev.target) && ev.target !== btn) { picker.remove(); document.removeEventListener('click', closer); } };
+    document.addEventListener('click', closer);
+  }, 0);
+}
+
+async function selectReaction(event, type, id, emoji) {
+  event.stopPropagation();
+  document.querySelectorAll('.reaction-picker').forEach(p => p.remove());
+  if (type === 'teaching') await toggleTeachingReaction(id, emoji);
+  else await toggleCommentReaction(id, emoji);
+}
+
 function renderTeachingPost(t) {
-  const reactionBar = EMOJIS.map(e => { const count = countEmoji(t.reactions, e); const active = userReacted(t.reactions, e) ? 'active' : ''; return `<button class="reaction-pill ${active}" onclick="toggleTeachingReaction(${t.id}, '${e}')">${e}${count > 0 ? ' ' + count : ''}</button>`; }).join('');
   const tagHtml = (t.tags || []).map(tag => `<span class="text-[10px] px-2.5 py-1 rounded-full bg-void-800 border border-void-600 text-gray-400">#${escapeHtml(tag)}</span>`).join('');
   const pinnedHtml = t.pinned ? `<span class="text-[10px] px-2.5 py-1 rounded-full bg-gold-400/20 border border-gold-400/40 text-gold-300">📌 Pinned</span>` : '';
   const featuredHtml = (state.featuredTeaching && state.featuredTeaching.id === t.id) ? `<span class="text-[10px] px-2.5 py-1 rounded-full bg-amethyst-600/30 border border-amethyst-500/40 text-amethyst-300">⭐ Today's Teaching</span>` : '';
   const commentsHtml = renderCommentTree(t.comments, null, t.id);
+  const isBookmarked = state.myBookmarkedIds.has(t.id);
   let mediaHtml = '';
   if (t.video_url) {
     const isExternal = !t.video_url.includes('teaching-media') && !t.video_url.match(/\.(mp4|webm|mov)$/i);
@@ -943,13 +1141,22 @@ function renderTeachingPost(t) {
 
   return `<article class="glass card-lg border border-void-600 overflow-hidden fade-in" data-teaching-id="${t.id}">
     <div class="p-5">
-      ${(pinnedHtml || tagHtml || featuredHtml) ? `<div class="flex flex-wrap gap-1.5 mb-2.5">${featuredHtml}${pinnedHtml}${tagHtml}</div>` : ''}
+      <div class="flex items-start justify-between gap-2 mb-2.5">
+        <div class="flex flex-wrap gap-1.5 flex-1">${featuredHtml}${pinnedHtml}${tagHtml}</div>
+        <button onclick="toggleBookmark(${t.id}, this)" class="bookmark-btn ${isBookmarked ? 'active' : ''}" title="${isBookmarked ? 'Remove bookmark' : 'Save teaching'}">
+          <svg class="w-4 h-4" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+        </button>
+      </div>
       ${t.title ? `<h3 class="text-base font-semibold mb-2.5">${escapeHtml(t.title)}</h3>` : ''}
       ${mediaHtml}
       <div class="text-sm text-gray-300 prose-content">${formatResponse(t.content)}</div>
-      <p class="text-[10px] text-gray-600 mt-3.5">${relativeTime(t.created_at)}</p>
-      <div class="flex flex-wrap gap-1.5 mt-4">${reactionBar}</div>
-      <div class="flex items-center gap-4 mt-3.5 pb-3.5 border-b border-void-600">
+      <div class="flex items-center gap-3 mt-3.5 text-[10px] text-gray-600">
+        <span>${relativeTime(t.created_at)}</span>
+        <span>·</span>
+        <span class="read-time">${readingTime(t.content)}</span>
+      </div>
+      <div class="mt-3.5">${reactionTriggerHtml(t)}</div>
+      <div class="flex items-center justify-between mt-3.5 pb-3.5 border-b border-void-600">
         <button onclick="focusCommentBox(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
           ${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}
@@ -959,60 +1166,85 @@ function renderTeachingPost(t) {
           Share
         </button>
       </div>
-      <div class="pt-4">
-        <div class="flex gap-2.5 mb-3.5">
-          ${avatarHtml(state.user.id, 'sm')}
-          <div class="flex-1 min-w-0">
-            <div class="relative">
-              <textarea id="comment-text-${t.id}" rows="1" placeholder="Post your reply" class="w-full bg-transparent border-b border-void-600 pb-2 text-sm focus:border-amethyst-500 focus:outline-none resize-none transition" oninput="autoGrow(this); handleMention(this, ${t.id}, null)"></textarea>
-              <div class="mention-dropdown hidden" id="mention-dropdown-${t.id}-null"></div>
-            </div>
-            <div id="comment-preview-${t.id}" class="hidden mt-2.5"></div>
-            <div class="flex items-center justify-end gap-2 mt-2.5">
-              <label class="p-2 text-gray-500 hover:text-amethyst-400 cursor-pointer transition rounded-xl hover:bg-void-800">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                <input type="file" id="comment-file-${t.id}" accept="image/*" class="hidden" onchange="previewCommentImage(${t.id}, null, this)">
-              </label>
-              <button id="comment-btn-${t.id}" onclick="submitComment(${t.id}, null)" class="btn px-5 py-2 rounded-full bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed" disabled>Reply</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div id="comments-${t.id}" class="space-y-3 mt-1">
-        ${commentsHtml || '<p class="text-xs text-gray-600 text-center py-4">No comments yet. Be the first.</p>'}
-      </div>
+      <div class="pt-4">${renderComposer(t.id, null)}</div>
+      <div id="comments-${t.id}" class="space-y-3 mt-1">${commentsHtml || '<p class="text-xs text-gray-600 text-center py-4">No comments yet. Be the first.</p>'}</div>
     </div>
   </article>`;
 }
 
-function autoGrow(el) {
-  el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px';
-  let btn, preview;
-  if (el.id.startsWith('comment-text-')) { const tid = el.id.replace('comment-text-', ''); btn = document.getElementById('comment-btn-' + tid); preview = document.getElementById('comment-preview-' + tid); }
-  else if (el.id.startsWith('reply-text-')) { const cid = el.id.replace('reply-text-', ''); btn = document.getElementById('reply-btn-' + cid); preview = document.getElementById('reply-preview-' + cid); }
-  if (btn) { const hasImage = preview && !preview.classList.contains('hidden') && preview.querySelector('img'); btn.disabled = !el.value.trim() && !hasImage; }
+// ===== COMPOSER (X-style) =====
+function renderComposer(teachingId, parentId) {
+  const uid = parentId ? `reply-${parentId}` : `comment-${teachingId}`;
+  const placeholder = parentId ? 'Post your reply' : 'Post your reply';
+  return `<div class="composer">
+    <div class="flex gap-2.5">
+      ${avatarHtml(state.user.id, 'sm')}
+      <div class="flex-1 min-w-0">
+        <textarea id="${uid}-text" rows="1" placeholder="${placeholder}" class="composer-textarea" oninput="autoGrow(this); handleMention(this, ${teachingId}, ${parentId || 'null'})"></textarea>
+        <div id="${uid}-preview" class="hidden mt-2"></div>
+        <div class="composer-actions">
+          <div class="composer-tools">
+            <label class="composer-tool" title="Image">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <input type="file" id="${uid}-file" accept="image/*" class="hidden" onchange="previewCommentImage(${teachingId}, ${parentId || 'null'}, '${uid}')">
+            </label>
+            <label class="composer-tool" title="Camera">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <input type="file" id="${uid}-camera" accept="image/*" capture="environment" class="hidden" onchange="previewCommentImage(${teachingId}, ${parentId || 'null'}, '${uid}')">
+            </label>
+            ${parentId ? `<button onclick="cancelReply(${parentId})" class="text-[10px] text-gray-500 hover:text-gray-300 px-2 py-1 ml-auto transition">Cancel</button>` : '<div></div>'}
+          </div>
+          <button id="${uid}-submit" onclick="submitComment(${teachingId}, ${parentId || 'null'}, '${uid}')" class="composer-submit" disabled>${parentId ? 'Reply' : 'Reply'}</button>
+        </div>
+      </div>
+    </div>
+    <div class="mention-dropdown hidden" id="mention-dropdown-${teachingId}-${parentId || 'null'}"></div>
+  </div>`;
 }
 
-function focusCommentBox(teachingId) { const el = document.getElementById('comment-text-' + teachingId); if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }
+function autoGrowChat(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }
 
-function previewCommentImage(teachingId, parentId, input) {
-  const file = input.files[0]; if (!file) return;
+function autoGrow(el) {
+  el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  let uid;
+  if (el.id.startsWith('comment-')) uid = 'comment-' + el.id.split('-')[1];
+  else if (el.id.startsWith('reply-')) uid = 'reply-' + el.id.split('-')[1];
+  if (uid) {
+    const btn = document.getElementById(uid + '-submit');
+    const preview = document.getElementById(uid + '-preview');
+    if (btn) { const hasImg = preview && !preview.classList.contains('hidden') && preview.querySelector('img'); btn.disabled = !el.value.trim() && !hasImg; }
+  }
+}
+
+function focusCommentBox(tid) { switchSubTab('all'); setTimeout(() => { const el = document.getElementById(`comment-${tid}-text`); if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }, 100); }
+
+function previewCommentImage(teachingId, parentId, uid) {
+  const input = document.getElementById(uid + '-file') || document.getElementById(uid + '-camera');
+  // Try both
+  let file = null;
+  const f1 = document.getElementById(uid + '-file');
+  const f2 = document.getElementById(uid + '-camera');
+  if (f1 && f1.files[0]) file = f1.files[0];
+  else if (f2 && f2.files[0]) file = f2.files[0];
+  if (!file) return;
   const reader = new FileReader();
   reader.onload = () => {
-    const targetId = parentId ? `reply-preview-${parentId}` : `comment-preview-${teachingId}`;
-    const target = document.getElementById(targetId); if (!target) return;
-    target.innerHTML = `<div class="relative inline-block"><img src="${reader.result}" class="rounded-2xl max-h-40"><button onclick="removeCommentImage('${targetId}')" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg">✕</button></div>`;
+    const target = document.getElementById(uid + '-preview');
+    if (!target) return;
+    target.innerHTML = `<div class="relative inline-block"><img src="${reader.result}" class="rounded-2xl max-h-40"><button onclick="removeCommentImage('${uid}')" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg">✕</button></div>`;
     target.classList.remove('hidden');
-    const btnId = parentId ? `reply-btn-${parentId}` : `comment-btn-${teachingId}`;
-    const btn = document.getElementById(btnId); if (btn) btn.disabled = false;
+    const btn = document.getElementById(uid + '-submit');
+    if (btn) btn.disabled = false;
   };
   reader.readAsDataURL(file);
 }
 
-function removeCommentImage(targetId) {
-  const target = document.getElementById(targetId); if (target) { target.innerHTML = ''; target.classList.add('hidden'); }
-  if (targetId.startsWith('comment-preview-')) { const tid = targetId.replace('comment-preview-', ''); document.getElementById('comment-file-' + tid).value = ''; const btn = document.getElementById('comment-btn-' + tid); const txt = document.getElementById('comment-text-' + tid); if (btn) btn.disabled = !txt.value.trim(); }
-  else { const pid = targetId.replace('reply-preview-', ''); document.getElementById('reply-file-' + pid).value = ''; const btn = document.getElementById('reply-btn-' + pid); const txt = document.getElementById('reply-text-' + pid); if (btn) btn.disabled = !txt.value.trim(); }
+function removeCommentImage(uid) {
+  const target = document.getElementById(uid + '-preview'); if (target) { target.innerHTML = ''; target.classList.add('hidden'); }
+  const f1 = document.getElementById(uid + '-file'); const f2 = document.getElementById(uid + '-camera');
+  if (f1) f1.value = ''; if (f2) f2.value = '';
+  const btn = document.getElementById(uid + '-submit'); const txt = document.getElementById(uid + '-text');
+  if (btn) btn.disabled = !txt.value.trim();
 }
 
 function renderCommentTree(comments, parentId, teachingId, depth = 0) {
@@ -1022,15 +1254,13 @@ function renderCommentTree(comments, parentId, teachingId, depth = 0) {
 }
 
 function renderComment(c, teachingId, depth, repliesHtml) {
-  const reactionBar = EMOJIS.map(e => { const count = countEmoji(c.reactions || [], e); const active = userReacted(c.reactions || [], e) ? 'active' : ''; return `<button class="reaction-pill ${active}" onclick="toggleCommentReaction(${c.id}, '${e}')" style="font-size:11px;padding:3px 9px;">${e}${count > 0 ? ' ' + count : ''}</button>`; }).join('');
   const info = state.profileCache[c.user_id] || { username: 'architect', avatar_url: null };
   const isOwner = c.user_id === state.user.id;
-  const maxVisualDepth = Math.min(depth, 6);
-  const indentStyle = maxVisualDepth > 0 ? `margin-left:${maxVisualDepth * 12}px;padding-left:11px;border-left:1px solid rgba(var(--accent-rgb),0.22);` : '';
+  const maxDepth = Math.min(depth, 6);
+  const indentStyle = maxDepth > 0 ? `margin-left:${maxDepth * 12}px;padding-left:11px;border-left:1px solid rgba(var(--accent-rgb),0.22);` : '';
   const edited = c.updated_at && c.updated_at !== c.created_at;
   const pendingClass = c._pending ? 'pending-opacity' : '';
   const contentWithMentions = (c.content || '').replace(/@([a-z0-9_]+)/gi, '<button onclick="openPublicProfileByUsername(\'$1\')" class="text-amethyst-300 font-medium hover:underline">@$1</button>');
-
   return `<div style="${indentStyle}" class="mb-2.5 ${pendingClass}" id="comment-${c.id}">
     <div class="flex gap-2.5">
       <button onclick="openPublicProfile('${c.user_id}')">${avatarHtml(c.user_id, 'sm')}</button>
@@ -1039,35 +1269,16 @@ function renderComment(c, teachingId, depth, repliesHtml) {
           <button onclick="openPublicProfile('${c.user_id}')" class="text-xs font-medium text-amethyst-300 hover:underline">@${escapeHtml(info.username)}</button>
           <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
           ${edited ? `<span class="text-[10px] text-gray-700">· edited</span>` : ''}
-          ${!isOwner ? `<button onclick="sendPoke('${c.user_id}', this)" class="poke-btn" title="Wave hello">👋</button>` : ''}
+          ${!isOwner ? `<button onclick="sendPoke('${c.user_id}', this)" class="poke-btn" title="Wave">👋</button>` : ''}
           ${isOwner ? `<button onclick="openCommentMenu(${c.id}, ${teachingId})" class="ml-auto p-1 text-gray-600 hover:text-gray-300 transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg></button>` : ''}
         </div>
         ${contentWithMentions ? `<p class="text-sm text-gray-300 prose-content mt-1.5">${contentWithMentions}</p>` : ''}
         ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-2.5 max-h-64 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
-        <div class="flex items-center gap-1.5 mt-2.5 flex-wrap">${reactionBar}</div>
-        <div class="flex items-center gap-4 mt-1.5">
+        <div class="mt-2.5 flex items-center gap-4">
+          ${reactionTriggerHtml(c)}
           <button onclick="showReplyBox(${c.id}, ${teachingId})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Reply</button>
         </div>
-        <div id="reply-box-${c.id}" class="hidden mt-2.5 space-y-2.5">
-          <div class="flex gap-2.5">
-            ${avatarHtml(state.user.id, 'xs')}
-            <div class="flex-1">
-              <div class="relative">
-                <textarea id="reply-text-${c.id}" rows="1" placeholder="Post your reply" class="w-full bg-transparent border-b border-void-600 pb-1.5 text-sm focus:border-amethyst-500 focus:outline-none resize-none transition" oninput="autoGrow(this); handleMention(this, ${teachingId}, ${c.id})"></textarea>
-                <div class="mention-dropdown hidden" id="mention-dropdown-${teachingId}-${c.id}"></div>
-              </div>
-              <div id="reply-preview-${c.id}" class="hidden mt-2"></div>
-              <div class="flex items-center justify-end gap-2 mt-1.5">
-                <label class="p-1.5 text-gray-500 hover:text-amethyst-400 cursor-pointer transition rounded-xl hover:bg-void-800">
-                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                  <input type="file" id="reply-file-${c.id}" accept="image/*" class="hidden" onchange="previewCommentImage(${teachingId}, ${c.id}, this)">
-                </label>
-                <button onclick="cancelReply(${c.id})" class="text-[10px] text-gray-500 hover:text-gray-300 px-2.5 py-1.5 transition">Cancel</button>
-                <button id="reply-btn-${c.id}" onclick="submitComment(${teachingId}, ${c.id})" class="btn px-4 py-1.5 rounded-full bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-[10px] font-semibold disabled:opacity-40 disabled:cursor-not-allowed" disabled>Reply</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div id="reply-box-${c.id}" class="hidden mt-2.5"></div>
         ${repliesHtml ? `<div class="mt-1.5">${repliesHtml}</div>` : ''}
       </div>
     </div>
@@ -1076,7 +1287,13 @@ function renderComment(c, teachingId, depth, repliesHtml) {
 
 function avatarHtml(userId, size) { const info = state.profileCache[userId] || {}; const cls = size === 'xs' ? 'avatar-xs' : size === 'lg' ? 'avatar-lg' : 'avatar-sm'; if (info.avatar_url) return `<img src="${info.avatar_url}" class="${cls}" alt="">`; const initial = (info.username || '?')[0].toUpperCase(); return `<div class="${cls}">${initial}</div>`; }
 
-function showReplyBox(commentId, teachingId) { const box = document.getElementById('reply-box-' + commentId); if (box) { box.classList.toggle('hidden'); if (!box.classList.contains('hidden')) document.getElementById('reply-text-' + commentId).focus(); } }
+function showReplyBox(commentId, teachingId) {
+  const box = document.getElementById('reply-box-' + commentId);
+  if (!box) return;
+  if (box.innerHTML.trim() === '') box.innerHTML = renderComposer(teachingId, commentId);
+  box.classList.toggle('hidden');
+  if (!box.classList.contains('hidden')) { const t = document.getElementById(`reply-${commentId}-text`); if (t) t.focus(); }
+}
 function cancelReply(commentId) { const box = document.getElementById('reply-box-' + commentId); if (box) box.classList.add('hidden'); }
 
 // ===== POKE =====
@@ -1085,28 +1302,26 @@ async function sendPoke(toUserId, btn) {
   if (btn.disabled) return;
   btn.disabled = true; btn.textContent = '⏳';
   try {
-    // rate limit: check if poked this user in last 24h
     const since = new Date(Date.now() - 86400000).toISOString();
-    const { data: existing } = await sb.from('pokes').select('id').eq('from_user', state.user.id).eq('to_user', toUserId).gte('created_at', since).limit(1);
-    if (existing && existing.length > 0) { btn.textContent = '✓'; setTimeout(() => { btn.disabled = false; btn.textContent = '👋'; }, 1500); return; }
+    const { data: ex } = await sb.from('pokes').select('id').eq('from_user', state.user.id).eq('to_user', toUserId).gte('created_at', since).limit(1);
+    if (ex && ex.length > 0) { btn.textContent = '✓'; setTimeout(() => { btn.disabled = false; btn.textContent = '👋'; }, 1500); return; }
     await sb.from('pokes').insert({ from_user: state.user.id, to_user: toUserId });
-    await sb.from('notifications').insert({
-      user_id: toUserId,
-      type: 'poke',
-      actor_id: state.user.id,
-      actor_username: state.profile.username,
-      message: '👋 @' + state.profile.username + ' waved at you'
-    });
+    await sb.from('notifications').insert({ user_id: toUserId, type: 'poke', actor_id: state.user.id, actor_username: state.profile.username, message: '👋 @' + state.profile.username + ' waved at you' });
     btn.textContent = '✓';
     setTimeout(() => { btn.disabled = false; btn.textContent = '👋'; }, 1500);
-  } catch (e) { console.error(e); btn.disabled = false; btn.textContent = '👋'; }
+  } catch (e) { btn.disabled = false; btn.textContent = '👋'; }
 }
 
 // ===== COMMENT MENU =====
 function openCommentMenu(commentId, teachingId) {
   const menu = document.createElement('div');
   menu.className = 'fixed inset-0 z-[78] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4';
-  menu.innerHTML = `<div class="glass card w-full max-w-sm border border-void-600 overflow-hidden"><button onclick="this.closest('.fixed').remove(); editComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Edit comment</button><button onclick="this.closest('.fixed').remove(); shareComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Share as post</button><button onclick="this.closest('.fixed').remove(); askDeleteComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-red-400 hover:bg-void-800 transition border-b border-void-600">Delete comment</button><button onclick="this.closest('.fixed').remove()" class="btn w-full py-4 text-center px-5 text-sm text-gray-400 hover:bg-void-800 transition">Cancel</button></div>`;
+  menu.innerHTML = `<div class="glass card w-full max-w-sm border border-void-600 overflow-hidden">
+    <button onclick="this.closest('.fixed').remove(); editComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Edit comment</button>
+    <button onclick="this.closest('.fixed').remove(); shareComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Share as post</button>
+    <button onclick="this.closest('.fixed').remove(); askDeleteComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-red-400 hover:bg-void-800 transition border-b border-void-600">Delete comment</button>
+    <button onclick="this.closest('.fixed').remove()" class="btn w-full py-4 text-center px-5 text-sm text-gray-400 hover:bg-void-800 transition">Cancel</button>
+  </div>`;
   menu.addEventListener('click', (e) => { if (e.target === menu) menu.remove(); });
   document.body.appendChild(menu);
 }
@@ -1128,7 +1343,7 @@ function shareComment(commentId, teachingId) {
   const info = state.profileCache[comment.user_id] || { username: 'someone' };
   const text = `"${comment.content || '[image]'}"\n\n— @${info.username} on Moph Echo\n\nhttps://mophecho-mirror.vercel.app`;
   if (navigator.share) navigator.share({ title: 'A reflection from Moph Echo', text }).catch(() => {});
-  else navigator.clipboard.writeText(text).then(() => alert('Copied. Paste anywhere to share.')).catch(() => {});
+  else navigator.clipboard.writeText(text).then(() => alert('Copied.')).catch(() => {});
 }
 
 let pendingDeletes = {};
@@ -1143,60 +1358,61 @@ function undoDelete(commentId) { if (pendingDeletes[commentId]) { clearTimeout(p
 
 let mentionTargets = {};
 function handleMention(textarea, teachingId, parentId) {
-  const val = textarea.value; const cursorPos = textarea.selectionStart; const beforeCursor = val.substring(0, cursorPos);
-  const atMatch = beforeCursor.match(/@([a-z0-9_]*)$/i);
+  const val = textarea.value; const pos = textarea.selectionStart; const before = val.substring(0, pos);
+  const atMatch = before.match(/@([a-z0-9_]*)$/i);
   const dropdownId = `mention-dropdown-${teachingId}-${parentId === null ? 'null' : parentId}`;
-  const dropdown = document.getElementById(dropdownId); if (!dropdown) return;
-  if (!atMatch) { dropdown.classList.add('hidden'); return; }
-  const query = atMatch[1].toLowerCase();
+  const dd = document.getElementById(dropdownId); if (!dd) return;
+  if (!atMatch) { dd.classList.add('hidden'); return; }
+  const q = atMatch[1].toLowerCase();
   const allUsers = Object.values(state.profileCache).filter(p => p.username);
-  const matches = allUsers.filter(u => u.username.toLowerCase().startsWith(query) && u.username.toLowerCase() !== (state.profile.username || '').toLowerCase()).slice(0, 6);
-  if (matches.length === 0) { dropdown.classList.add('hidden'); return; }
-  dropdown.innerHTML = matches.map((u, i) => `<div class="mention-item ${i === 0 ? 'active' : ''}" onclick="insertMention('${textarea.id}', '${u.username}', '${dropdownId}')">@${escapeHtml(u.username)}</div>`).join('');
-  dropdown.classList.remove('hidden');
+  const matches = allUsers.filter(u => u.username.toLowerCase().startsWith(q) && u.username.toLowerCase() !== (state.profile.username || '').toLowerCase()).slice(0, 6);
+  if (matches.length === 0) { dd.classList.add('hidden'); return; }
+  dd.innerHTML = matches.map((u, i) => `<div class="mention-item ${i === 0 ? 'active' : ''}" onclick="insertMention('${textarea.id}', '${u.username}', '${dropdownId}')">@${escapeHtml(u.username)}</div>`).join('');
+  dd.classList.remove('hidden');
   mentionTargets[dropdownId] = { textareaId: textarea.id, users: matches };
 }
 
 function insertMention(textareaId, username, dropdownId) {
-  const textarea = document.getElementById(textareaId); const val = textarea.value; const cursorPos = textarea.selectionStart;
-  const beforeCursor = val.substring(0, cursorPos); const afterCursor = val.substring(cursorPos);
-  const newBefore = beforeCursor.replace(/@([a-z0-9_]*)$/i, '@' + username + ' ');
-  textarea.value = newBefore + afterCursor; textarea.focus(); textarea.selectionStart = textarea.selectionEnd = newBefore.length;
+  const ta = document.getElementById(textareaId); const val = ta.value; const pos = ta.selectionStart;
+  const before = val.substring(0, pos); const after = val.substring(pos);
+  const newBefore = before.replace(/@([a-z0-9_]*)$/i, '@' + username + ' ');
+  ta.value = newBefore + after; ta.focus(); ta.selectionStart = ta.selectionEnd = newBefore.length;
   const dd = document.getElementById(dropdownId); if (dd) dd.classList.add('hidden');
 }
 
-function extractMentions(text) { const matches = text.match(/@([a-z0-9_]+)/gi) || []; return matches.map(m => m.substring(1).toLowerCase()); }
+function extractMentions(text) { const m = text.match(/@([a-z0-9_]+)/gi) || []; return m.map(x => x.substring(1).toLowerCase()); }
 
-async function submitComment(teachingId, parentId) {
-  const textId = parentId ? 'reply-text-' + parentId : 'comment-text-' + teachingId;
-  const fileId = parentId ? 'reply-file-' + parentId : 'comment-file-' + teachingId;
-  const previewId = parentId ? 'reply-preview-' + parentId : 'comment-preview-' + teachingId;
-  const btnId = parentId ? 'reply-btn-' + parentId : 'comment-btn-' + teachingId;
-  const textEl = document.getElementById(textId); const fileEl = document.getElementById(fileId);
-  const previewEl = document.getElementById(previewId); const btn = document.getElementById(btnId);
-  const text = textEl.value.trim(); const file = fileEl.files[0];
+async function submitComment(teachingId, parentId, uid) {
+  const textEl = document.getElementById(uid + '-text');
+  const previewEl = document.getElementById(uid + '-preview');
+  const btn = document.getElementById(uid + '-submit');
+  const text = textEl.value.trim();
+  const f1 = document.getElementById(uid + '-file'); const f2 = document.getElementById(uid + '-camera');
+  const file = (f1 && f1.files[0]) || (f2 && f2.files[0]);
   if (!text && !file) return;
   const tempId = 'temp-' + Date.now();
-  const hasPreviewImage = previewEl && !previewEl.classList.contains('hidden');
-  const previewImgSrc = hasPreviewImage ? previewEl.querySelector('img')?.src : null;
-  const optimisticComment = { id: tempId, teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url: previewImgSrc, parent_id: parentId || null, created_at: new Date().toISOString(), reactions: [], _pending: true };
+  const hasPreview = previewEl && !previewEl.classList.contains('hidden');
+  const previewImgSrc = hasPreview ? previewEl.querySelector('img')?.src : null;
+  const optimistic = { id: tempId, teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url: previewImgSrc, parent_id: parentId || null, created_at: new Date().toISOString(), reactions: [], _pending: true };
   const t = state.teachings.find(x => x.id === teachingId);
-  if (t) { t.comments.push(optimisticComment); renderTeachings(); if (parentId) { const rbox = document.getElementById('reply-box-' + parentId); if (rbox) rbox.classList.add('hidden'); } }
-  textEl.value = ''; if (fileEl) fileEl.value = ''; if (previewEl) { previewEl.innerHTML = ''; previewEl.classList.add('hidden'); } if (btn) btn.disabled = true;
+  if (t) { t.comments.push(optimistic); renderTeachings(); if (parentId) { const rb = document.getElementById('reply-box-' + parentId); if (rb) rb.classList.add('hidden'); } }
+  textEl.value = ''; if (f1) f1.value = ''; if (f2) f2.value = '';
+  if (previewEl) { previewEl.innerHTML = ''; previewEl.classList.add('hidden'); }
+  if (btn) btn.disabled = true;
   try {
     let image_url = null;
-    if (file) { const path = `${state.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`; const { error } = await sb.storage.from('comment-images').upload(path, file); if (!error) { const { data } = sb.storage.from('comment-images').getPublicUrl(path); image_url = data.publicUrl; } }
+    if (file) {
+      const path = `${state.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const { error } = await sb.storage.from('comment-images').upload(path, file);
+      if (!error) { const { data } = sb.storage.from('comment-images').getPublicUrl(path); image_url = data.publicUrl; }
+    }
     const { data: inserted, error } = await sb.from('teaching_comments').insert({ teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url, parent_id: parentId || null }).select().single();
     if (error) throw error;
     if (t) { const idx = t.comments.findIndex(c => c.id === tempId); if (idx >= 0) t.comments[idx] = { ...inserted, reactions: [] }; }
-    if (parentId) {
-      const parent = t.comments.find(c => c.id === parentId);
-      if (parent && parent.user_id !== state.user.id) await sb.from('notifications').insert({ user_id: parent.user_id, type: 'reply', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: parentId, message: '@' + state.profile.username + ' replied to your comment' });
-    }
-    const mentions = extractMentions(text);
-    for (const mentionUsername of mentions) {
-      const { data: mentionedUser } = await sb.from('profiles').select('id').ilike('username', mentionUsername).limit(1).maybeSingle();
-      if (mentionedUser && mentionedUser.id !== state.user.id) await sb.from('notifications').insert({ user_id: mentionedUser.id, type: 'mention', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: inserted.id, message: '@' + state.profile.username + ' mentioned you in a comment' });
+    if (parentId) { const p = t.comments.find(c => c.id === parentId); if (p && p.user_id !== state.user.id) await sb.from('notifications').insert({ user_id: p.user_id, type: 'reply', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: parentId, message: '@' + state.profile.username + ' replied to your comment' }); }
+    for (const mu of extractMentions(text)) {
+      const { data: u } = await sb.from('profiles').select('id').ilike('username', mu).limit(1).maybeSingle();
+      if (u && u.id !== state.user.id) await sb.from('notifications').insert({ user_id: u.id, type: 'mention', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: inserted.id, message: '@' + state.profile.username + ' mentioned you in a comment' });
     }
     renderTeachings();
   } catch (e) { console.error(e); if (t) { const idx = t.comments.findIndex(c => c.id === tempId); if (idx >= 0) t.comments[idx]._error = true; renderTeachings(); } }
@@ -1204,24 +1420,29 @@ async function submitComment(teachingId, parentId) {
 
 async function toggleTeachingReaction(teachingId, emoji) {
   const t = state.teachings.find(x => x.id === teachingId); if (!t) return;
-  const existing = t.reactions.find(r => r.user_id === state.user.id && r.emoji === emoji);
-  if (existing) t.reactions = t.reactions.filter(r => r.id !== existing.id);
-  else t.reactions.push({ id: 'temp-' + Date.now(), teaching_id: teachingId, user_id: state.user.id, emoji, _pending: true });
+  const ex = t.reactions.find(r => r.user_id === state.user.id && r.emoji === emoji);
+  if (ex) t.reactions = t.reactions.filter(r => r.id !== ex.id);
+  else t.reactions = t.reactions.filter(r => r.user_id !== state.user.id).concat([{ id: 'temp-' + Date.now(), teaching_id: teachingId, user_id: state.user.id, emoji, _pending: true }]);
   renderTeachings();
-  if (existing) await sb.from('teaching_reactions').delete().eq('id', existing.id);
-  else await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
+  if (ex) await sb.from('teaching_reactions').delete().eq('id', ex.id);
+  else {
+    // Remove any existing reaction from this user
+    await sb.from('teaching_reactions').delete().eq('teaching_id', teachingId).eq('user_id', state.user.id);
+    await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
+  }
 }
 
 async function toggleCommentReaction(commentId, emoji) {
   let comment = null, teachingId = null;
   for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; teachingId = t.id; break; } }
   if (!comment) return;
-  const existing = (comment.reactions || []).find(r => r.user_id === state.user.id && r.emoji === emoji);
-  if (existing) comment.reactions = comment.reactions.filter(r => r.id !== existing.id);
-  else comment.reactions.push({ id: 'temp-' + Date.now(), comment_id: commentId, user_id: state.user.id, emoji, _pending: true });
+  const ex = (comment.reactions || []).find(r => r.user_id === state.user.id && r.emoji === emoji);
+  if (ex) comment.reactions = comment.reactions.filter(r => r.id !== ex.id);
+  else comment.reactions = (comment.reactions || []).filter(r => r.user_id !== state.user.id).concat([{ id: 'temp-' + Date.now(), comment_id: commentId, user_id: state.user.id, emoji, _pending: true }]);
   renderTeachings();
-  if (existing) await sb.from('comment_reactions').delete().eq('id', existing.id);
+  if (ex) await sb.from('comment_reactions').delete().eq('id', ex.id);
   else {
+    await sb.from('comment_reactions').delete().eq('comment_id', commentId).eq('user_id', state.user.id);
     await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
     if (comment.user_id !== state.user.id) await sb.from('notifications').insert({ user_id: comment.user_id, type: 'reaction', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: commentId, message: '@' + state.profile.username + ' reacted ' + emoji + ' to your comment' });
   }
@@ -1230,8 +1451,8 @@ async function toggleCommentReaction(commentId, emoji) {
 function shareTeaching(teachingId) {
   const t = state.teachings.find(x => x.id === teachingId); if (!t) return;
   const text = (t.title ? t.title + '\n\n' : '') + (t.content || '').substring(0, 200) + '...\n\nRead on Moph Echo: https://mophecho-mirror.vercel.app';
-  if (navigator.share) navigator.share({ title: t.title || 'Moph Echo Teaching', text, url: 'https://mophecho-mirror.vercel.app' }).catch(() => {});
-  else navigator.clipboard.writeText(text).then(() => alert('Copied to clipboard')).catch(() => {});
+  if (navigator.share) navigator.share({ title: t.title || 'Moph Echo', text, url: 'https://mophecho-mirror.vercel.app' }).catch(() => {});
+  else navigator.clipboard.writeText(text).then(() => alert('Copied.')).catch(() => {});
 }
 
 function openImageViewer(src) { document.getElementById('imageViewerSrc').src = src; document.getElementById('imageViewer').classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
@@ -1246,6 +1467,7 @@ async function loadNotifications() {
   const badge = document.getElementById('notifBadge');
   if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.remove('hidden'); }
   else badge.classList.add('hidden');
+  if (!document.getElementById('notifPanel').classList.contains('hidden')) renderNotifications();
 }
 
 function renderNotifications() {
@@ -1261,7 +1483,7 @@ async function openNotification(notifId, teachingId) {
   await sb.from('notifications').update({ is_read: true }).eq('id', notifId);
   await loadNotifications();
   closeNotifications();
-  if (teachingId) { switchTab('teachings'); setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${teachingId}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 400); }
+  if (teachingId) { switchTab('teachings'); switchSubTab('all'); setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${teachingId}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 400); }
 }
 
 function openSettings() {
@@ -1279,6 +1501,8 @@ function openSettings() {
   document.getElementById('privStage').checked = state.profile.privacy_stage !== false;
   document.getElementById('privWound').checked = state.profile.privacy_wound !== false;
   document.getElementById('privGift').checked = state.profile.privacy_gift !== false;
+  document.getElementById('privFollowers').checked = state.profile.privacy_followers !== false;
+  document.getElementById('privFollowing').checked = state.profile.privacy_following !== false;
   document.getElementById('setUsernameErr').classList.add('hidden');
   selectTheme(state.profile.theme || 'amethyst');
   document.getElementById('settingsModal').classList.remove('hidden');
@@ -1293,8 +1517,8 @@ async function saveSettings() {
   const newUsername = document.getElementById('setUsername').value.trim().toLowerCase();
   if (!/^[a-z0-9_]{3,30}$/.test(newUsername)) { err.textContent = 'Username: lowercase letters, numbers, underscores. 3-30 chars.'; err.classList.remove('hidden'); btn.textContent = 'Save'; btn.disabled = false; return; }
   if (newUsername !== state.profile.username) {
-    const { data: existing } = await sb.from('profiles').select('id').ilike('username', newUsername).neq('id', state.user.id).limit(1);
-    if (existing && existing.length > 0) { err.textContent = 'That username is already taken.'; err.classList.remove('hidden'); btn.textContent = 'Save'; btn.disabled = false; return; }
+    const { data: ex } = await sb.from('profiles').select('id').ilike('username', newUsername).neq('id', state.user.id).limit(1);
+    if (ex && ex.length > 0) { err.textContent = 'That username is already taken.'; err.classList.remove('hidden'); btn.textContent = 'Save'; btn.disabled = false; return; }
   }
   const updates = {
     username: newUsername, bio: document.getElementById('setBio').value.trim() || null, website: document.getElementById('setWebsite').value.trim() || null,
@@ -1302,7 +1526,9 @@ async function saveSettings() {
     social_youtube: document.getElementById('setSocialYoutube').value.trim() || null, social_tiktok: document.getElementById('setSocialTiktok').value.trim() || null,
     social_whatsapp: document.getElementById('setSocialWhatsapp').value.trim() || null, social_linkedin: document.getElementById('setSocialLinkedin').value.trim() || null,
     privacy_element: document.getElementById('privElement').checked, privacy_stage: document.getElementById('privStage').checked,
-    privacy_wound: document.getElementById('privWound').checked, privacy_gift: document.getElementById('privGift').checked, theme: state.selectedTheme
+    privacy_wound: document.getElementById('privWound').checked, privacy_gift: document.getElementById('privGift').checked,
+    privacy_followers: document.getElementById('privFollowers').checked, privacy_following: document.getElementById('privFollowing').checked,
+    theme: state.selectedTheme
   };
   const { error } = await sb.from('profiles').update(updates).eq('id', state.user.id);
   btn.textContent = 'Save'; btn.disabled = false;
@@ -1315,10 +1541,12 @@ async function saveSettings() {
 }
 
 function switchProfileTab(tab) {
-  const postsTab = document.getElementById('pTabPosts'); const aboutTab = document.getElementById('pTabAbout');
-  const postsEl = document.getElementById('profilePosts'); const aboutEl = document.getElementById('profileAbout');
-  if (tab === 'posts') { postsTab.classList.add('active'); aboutTab.classList.remove('active'); postsEl.classList.remove('hidden'); aboutEl.classList.add('hidden'); }
-  else { aboutTab.classList.add('active'); postsTab.classList.remove('active'); aboutEl.classList.remove('hidden'); postsEl.classList.add('hidden'); }
+  ['posts','saved','about'].forEach(t => {
+    document.getElementById('pTab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
+    document.getElementById('profile' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('hidden', t !== tab);
+  });
+  if (tab === 'posts') loadMyPosts();
+  if (tab === 'saved') loadMySaved();
 }
 
 async function openPublicProfile(userId) {
@@ -1326,7 +1554,9 @@ async function openPublicProfile(userId) {
   const { data } = await sb.from('profiles').select('*').eq('id', userId).single();
   if (!data) { alert('Profile not found.'); return; }
   state.viewingUserId = userId;
-  renderPublicProfile(data);
+  const { data: followers } = await sb.from('follows').select('from_user').eq('to_user', userId);
+  const { data: following } = await sb.from('follows').select('to_user').eq('from_user', userId);
+  renderPublicProfile(data, followers?.length || 0, following?.length || 0);
   document.getElementById('publicProfileModal').classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 }
@@ -1338,33 +1568,41 @@ async function openPublicProfileByUsername(username) {
 
 function closePublicProfile() { document.getElementById('publicProfileModal').classList.add('hidden'); document.body.style.overflow = ''; state.viewingUserId = null; }
 
-function renderPublicProfile(p) {
+function renderPublicProfile(p, followersCount, followingCount) {
   const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin'].filter(k => p[k]).map(k => `<a href="${escapeHtml(p[k])}" target="_blank" rel="noopener" class="social-icon">${SOCIAL_ICONS[k].svg}</a>`).join('');
   const websiteHtml = p.website ? `<a href="${escapeHtml(p.website)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs text-amethyst-400 hover:underline mt-2"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>${escapeHtml(p.website)}</a>` : '';
-  const privateHtml = `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
-  const elementHtml = p.privacy_element !== false ? `<p class="text-sm font-medium ${p.element ? 'text-amethyst-400' : 'text-gray-400'}">${p.element || '—'}</p>` : privateHtml;
-  const stageHtml = p.privacy_stage !== false ? `<p class="text-sm font-medium ${p.stage ? 'text-amethyst-400' : 'text-gray-400'}">${p.stage || '—'}</p>` : privateHtml;
-  const woundHtml = p.privacy_wound !== false ? `<p class="text-sm font-medium ${p.wound ? 'text-amethyst-400' : 'text-gray-400'}">${p.wound || '—'}</p>` : privateHtml;
-  const giftHtml = p.privacy_gift !== false ? `<p class="text-sm font-medium ${p.gift ? 'text-amethyst-400' : 'text-gray-400'}">${p.gift || '—'}</p>` : privateHtml;
-  const avatarBig = p.avatar_url ? `<img src="${escapeHtml(p.avatar_url)}" class="avatar-lg mx-auto">` : `<div class="avatar-lg mx-auto">${(p.username || '?')[0].toUpperCase()}</div>`;
-  const streakHtml = (p.streak_count || 0) >= 2 ? `<div class="streak-badge mx-auto mt-3"><span>🔥</span><span>${p.streak_count}</span></div>` : '';
+  const priv = `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
+  const e = p.privacy_element !== false ? `<p class="text-sm font-medium ${p.element ? 'text-amethyst-400' : 'text-gray-400'}">${p.element || '—'}</p>` : priv;
+  const s = p.privacy_stage !== false ? `<p class="text-sm font-medium ${p.stage ? 'text-amethyst-400' : 'text-gray-400'}">${p.stage || '—'}</p>` : priv;
+  const w = p.privacy_wound !== false ? `<p class="text-sm font-medium ${p.wound ? 'text-amethyst-400' : 'text-gray-400'}">${p.wound || '—'}</p>` : priv;
+  const g = p.privacy_gift !== false ? `<p class="text-sm font-medium ${p.gift ? 'text-amethyst-400' : 'text-gray-400'}">${p.gift || '—'}</p>` : priv;
+  const avatar = p.avatar_url ? `<img src="${escapeHtml(p.avatar_url)}" class="avatar-lg mx-auto">` : `<div class="avatar-lg mx-auto">${(p.username || '?')[0].toUpperCase()}</div>`;
+  const isFollowing = state.myFollowing.has(p.id);
+  const streakHtml = (p.streak_count || 0) >= 2 ? `<div class="streak-badge mx-auto mt-3" style="display:inline-flex;"><span>🔥</span><span>${p.streak_count}</span></div>` : '';
+  const followersPublic = p.privacy_followers !== false;
+  const followingPublic = p.privacy_following !== false;
 
   document.getElementById('publicProfileContent').innerHTML = `
     <div class="glass card p-6 border border-void-600 mb-3 text-center">
-      ${avatarBig}
+      ${avatar}
       <h2 class="text-lg font-semibold mt-4">@${escapeHtml(p.username || 'architect')}</h2>
-      ${streakHtml}
-      ${p.bio ? `<p class="text-sm text-gray-400 mt-2">${escapeHtml(p.bio)}</p>` : ''}
+      ${streakHtml ? `<div class="mt-3">${streakHtml}</div>` : ''}
+      ${p.bio ? `<p class="text-sm text-gray-400 mt-3">${escapeHtml(p.bio)}</p>` : ''}
       ${websiteHtml}
       ${socials ? `<div class="flex flex-wrap justify-center gap-2 mt-4">${socials}</div>` : ''}
+      <button onclick="toggleFollow('${p.id}', this)" class="follow-btn ${isFollowing ? 'following' : 'not-following'} mt-5">${isFollowing ? 'Following' : 'Follow'}</button>
+      <div class="flex justify-center gap-6 mt-4">
+        ${followersPublic ? `<div class="text-xs"><span class="font-semibold text-gray-200">${followersCount}</span> <span class="text-gray-500">Followers</span></div>` : `<div class="text-xs text-gray-600 italic">Followers hidden</div>`}
+        ${followingPublic ? `<div class="text-xs"><span class="font-semibold text-gray-200">${followingCount}</span> <span class="text-gray-500">Following</span></div>` : `<div class="text-xs text-gray-600 italic">Following hidden</div>`}
+      </div>
     </div>
     <div class="glass card p-5 border border-void-600">
       <h3 class="text-sm font-semibold mb-3">Spiritual Stats</h3>
       <div class="grid grid-cols-2 gap-3">
-        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Element</p>${elementHtml}</div>
-        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stage</p>${stageHtml}</div>
-        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Wound</p>${woundHtml}</div>
-        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p>${giftHtml}</div>
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Element</p>${e}</div>
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stage</p>${s}</div>
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Wound</p>${w}</div>
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p>${g}</div>
       </div>
     </div>
   `;
@@ -1376,9 +1614,11 @@ function renderProfile() {
   document.getElementById('profileBio').className = state.profile.bio ? 'text-sm text-gray-400 mt-2 line-clamp-3' : 'text-sm text-gray-600 mt-2 italic';
   if (state.profile.joined_at) document.getElementById('profileJoined').textContent = 'Joined ' + new Date(state.profile.joined_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
   else document.getElementById('profileJoined').textContent = '';
+  document.getElementById('followersCount').textContent = state.myFollowers.size;
+  document.getElementById('followingCount').textContent = state.myFollowing.size;
   const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin'].filter(k => state.profile[k]).map(k => `<a href="${escapeHtml(state.profile[k])}" target="_blank" rel="noopener" class="social-icon" title="${SOCIAL_ICONS[k].name}">${SOCIAL_ICONS[k].svg}</a>`).join('');
-  const websiteBtn = state.profile.website ? `<a href="${escapeHtml(state.profile.website)}" target="_blank" rel="noopener" class="social-icon" title="Website"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></a>` : '';
-  document.getElementById('profileSocials').innerHTML = websiteBtn + socials;
+  const webBtn = state.profile.website ? `<a href="${escapeHtml(state.profile.website)}" target="_blank" rel="noopener" class="social-icon" title="Website"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></a>` : '';
+  document.getElementById('profileSocials').innerHTML = webBtn + socials;
   document.getElementById('pElement').textContent = state.profile.element || '—';
   document.getElementById('pElement').className = state.profile.element ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
   document.getElementById('pStage').textContent = state.profile.stage || '—';
@@ -1395,11 +1635,19 @@ function renderProfile() {
 }
 
 async function loadMyPosts() {
-  const el = document.getElementById('profilePosts');
+  const el = document.getElementById('myPostsList');
   el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading your posts...</p>';
   const { data } = await sb.from('teaching_comments').select('id, content, image_url, teaching_id, created_at').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(50);
-  if (!data || data.length === 0) { el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">You have not posted yet. Join a teaching and reply to start your journey.</p></div>'; return; }
-  el.innerHTML = data.map(c => {
+  state.myPosts = data || [];
+  renderMyPosts();
+}
+
+function renderMyPosts() {
+  const el = document.getElementById('myPostsList');
+  const q = (state.myPostsSearch || '').toLowerCase();
+  const filtered = q ? state.myPosts.filter(c => (c.content || '').toLowerCase().includes(q)) : state.myPosts;
+  if (!filtered || filtered.length === 0) { el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">' + (q ? 'No posts match.' : 'You have not posted yet.') + '</p></div>'; return; }
+  el.innerHTML = filtered.map(c => {
     const t = state.teachings.find(x => x.id === c.teaching_id);
     const title = t ? (t.title || 'Untitled teaching') : 'Teaching';
     return `<div class="post-card">
@@ -1410,14 +1658,31 @@ async function loadMyPosts() {
         <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
         <div class="flex items-center gap-3">
           <button onclick="jumpToComment(${c.teaching_id}, ${c.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">View thread</button>
-          <button onclick="shareComment(${c.id}, ${c.teaching_id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition flex items-center gap-1"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>Share</button>
+          <button onclick="shareComment(${c.id}, ${c.teaching_id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Share</button>
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-function jumpToComment(teachingId, commentId) { switchTab('teachings'); setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${teachingId}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300); }
+function filterMyPosts() { state.myPostsSearch = document.getElementById('searchMyPosts').value.trim(); renderMyPosts(); }
+
+async function loadMySaved() {
+  const el = document.getElementById('mySavedList');
+  el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading...</p>';
+  const ids = [...state.myBookmarkedIds];
+  if (ids.length === 0) { el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No saved teachings yet. Tap the bookmark icon on any teaching to save it.</p></div>'; return; }
+  const saved = state.teachings.filter(t => ids.includes(t.id));
+  if (saved.length === 0) { el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No saved teachings found.</p></div>'; return; }
+  el.innerHTML = saved.map(t => `<div class="post-card cursor-pointer" onclick="scrollToTeaching(${t.id})">
+    <h4 class="text-sm font-semibold text-gray-200 mb-1.5">${escapeHtml(t.title || 'Untitled')}</h4>
+    <p class="text-xs text-gray-500 line-clamp-2">${escapeHtml((t.content || '').substring(0, 120))}...</p>
+    <p class="text-[10px] text-gray-600 mt-2">${readingTime(t.content)} · Saved</p>
+  </div>`).join('');
+}
+
+function jumpToComment(teachingId, commentId) { switchTab('teachings'); switchSubTab('all'); setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${teachingId}"]`); if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); const c = document.getElementById('comments-' + teachingId); if (c) c.classList.remove('hidden'); } }, 300); }
+
 function openUsernameEditor() { openSettings(); }
 function closeUsernameEditor() { document.getElementById('usernameModal').classList.add('hidden'); }
 
@@ -1426,14 +1691,14 @@ async function handleAvatarUpload(e) {
   document.getElementById('avatarLoading').classList.remove('hidden');
   const ext = file.name.split('.').pop() || 'jpg';
   const path = `${state.user.id}/avatar-${Date.now()}.${ext}`;
-  const { error: upErr } = await sb.storage.from('avatars').upload(path, file, { upsert: true });
-  if (upErr) { document.getElementById('avatarLoading').classList.add('hidden'); alert('Upload failed: ' + upErr.message); return; }
-  const { data: urlData } = sb.storage.from('avatars').getPublicUrl(path);
-  const avatar_url = urlData.publicUrl + '?t=' + Date.now();
-  await sb.from('profiles').update({ avatar_url }).eq('id', state.user.id);
-  state.profile.avatar_url = avatar_url;
-  state.profileCache[state.user.id] = { username: state.profile.username, avatar_url };
-  document.getElementById('avatarUpload').innerHTML = `<img src="${avatar_url}" class="w-full h-full object-cover"><input type="file" id="avatarInput" accept="image/*" class="hidden">`;
+  const { error } = await sb.storage.from('avatars').upload(path, file, { upsert: true });
+  if (error) { document.getElementById('avatarLoading').classList.add('hidden'); alert('Upload failed'); return; }
+  const { data } = sb.storage.from('avatars').getPublicUrl(path);
+  const url = data.publicUrl + '?t=' + Date.now();
+  await sb.from('profiles').update({ avatar_url: url }).eq('id', state.user.id);
+  state.profile.avatar_url = url;
+  state.profileCache[state.user.id] = { username: state.profile.username, avatar_url: url };
+  document.getElementById('avatarUpload').innerHTML = `<img src="${url}" class="w-full h-full object-cover"><input type="file" id="avatarInput" accept="image/*" class="hidden">`;
   document.getElementById('avatarLoading').classList.add('hidden');
   document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
 }
@@ -1441,17 +1706,26 @@ document.getElementById('avatarUpload').addEventListener('click', () => document
 document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
 
 function switchTab(tab) {
-  ['chat','teachings','profile'].forEach(t => { const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1)); if (panel) panel.classList.add('hidden'); const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1)); if (btn) btn.className = 'flex-1 py-2 text-[11px] font-medium rounded-xl text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5 transition'; });
-  const activePanel = document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)); if (activePanel) activePanel.classList.remove('hidden');
-  const activeBtn = document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)); if (activeBtn) activeBtn.className = 'flex-1 py-2 text-[11px] font-medium rounded-xl bg-amethyst-600/25 text-amethyst-300 border border-amethyst-500/25 flex items-center justify-center gap-1.5 transition';
+  ['chat','teachings','profile'].forEach(t => {
+    const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (panel) panel.classList.add('hidden');
+    const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.className = 'flex-1 py-2 text-[11px] font-medium rounded-xl text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5 transition';
+  });
+  document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).className = 'flex-1 py-2 text-[11px] font-medium rounded-xl bg-amethyst-600/25 text-amethyst-300 border border-amethyst-500/25 flex items-center justify-center gap-1.5 transition';
   if (tab === 'profile') renderProfile();
-  if (tab === 'teachings') { renderTeachings(); }
+  if (tab === 'teachings') renderTeachings();
 }
 
 function renderChat() {
   const c = document.getElementById('chatContainer');
-  if (state.messages.length === 0) { c.innerHTML = `<div class="glass card p-5 border border-void-600 fade-in"><div class="flex items-start gap-3"><div class="w-8 h-8 rounded-xl bg-amethyst-600/20 flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-amethyst-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707m12.728 0l-.707-.707M6.343 6.343l-.707-.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/></svg></div><div><p class="text-sm text-gray-300">Welcome. I am the mirror.</p><p class="text-xs text-gray-500 mt-1">Speak your truth.</p></div></div></div>`; return; }
-  c.innerHTML = state.messages.map(m => { if (m.role === 'user') return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-3xl rounded-br-lg px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`; if (m.role === 'surprise') return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-3xl rounded-bl-lg px-4 py-3 max-w-[90%]"><div class="flex items-start gap-2.5"><svg class="w-4 h-4 text-gold-400 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><p class="text-sm text-gold-200">${formatResponse(m.text)}</p></div></div></div>`; return `<div class="flex justify-start fade-in"><div class="glass rounded-3xl rounded-bl-lg px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`; }).join('');
+  if (state.messages.length === 0) { c.innerHTML = `<div class="glass card p-5 border border-void-600 fade-in"><p class="text-sm text-gray-300">Welcome. I am the mirror.</p><p class="text-xs text-gray-500 mt-1">Speak your truth.</p></div>`; return; }
+  c.innerHTML = state.messages.map(m => {
+    if (m.role === 'user') return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-3xl rounded-br-lg px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`;
+    if (m.role === 'surprise') return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-3xl rounded-bl-lg px-4 py-3 max-w-[90%]"><p class="text-sm text-gold-200">${formatResponse(m.text)}</p></div></div>`;
+    return `<div class="flex justify-start fade-in"><div class="glass rounded-3xl rounded-bl-lg px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`;
+  }).join('');
   c.scrollTop = c.scrollHeight;
 }
 
@@ -1459,13 +1733,13 @@ async function processEntry() {
   const input = document.getElementById('userInput'); const text = input.value.trim();
   if (!text || !state.user) return;
   state.messages.push({ role: 'user', text }); await saveMessage('user', text);
-  input.value = ''; renderChat();
+  input.value = ''; input.style.height = 'auto'; renderChat();
   await new Promise(r => setTimeout(r, 400));
   const reflection = generateReflection(text);
   state.messages.push({ role: 'mirror', text: reflection }); await saveMessage('mirror', reflection);
   identifyProfile(text);
-  const newStar = generateGoldenStar(text);
-  if (newStar) { setTimeout(async () => { state.messages.push({ role: 'surprise', text: newStar.text }); await saveMessage('surprise', newStar.text); await saveGoldenStar(newStar.text, newStar.trait_type, newStar.trait_value); renderChat(); renderProfile(); }, 1500); }
+  const ns = generateGoldenStar(text);
+  if (ns) setTimeout(async () => { state.messages.push({ role: 'surprise', text: ns.text }); await saveMessage('surprise', ns.text); await saveGoldenStar(ns.text, ns.trait_type, ns.trait_value); renderChat(); renderProfile(); }, 1500);
   renderChat(); renderProfile(); checkGrounding(text); input.focus();
 }
 
@@ -1491,40 +1765,34 @@ function identifyProfile(text) {
     else if (l.includes('create')||l.includes('build')||l.includes('design')) { state.profile.gift='Creation'; changed=true; }
     else if (l.includes('protect')||l.includes('shield')||l.includes('guard')) { state.profile.gift='Protection'; changed=true; }
   }
-  if (!state.profile.stage) {
-    if (l.includes('confused')||l.includes('what is happening')||l.includes('help')) { state.profile.stage='Seeking'; changed=true; }
-    else if (l.includes('sync')||l.includes('coincidence')||l.includes('pattern')) { state.profile.stage='Alignment'; changed=true; }
-    else if (l.includes('void')||l.includes('empty')||l.includes('flat')) { state.profile.stage='Flatness'; changed=true; }
-    else if (l.includes('build')||l.includes('create')||l.includes('work')) { state.profile.stage='Forging'; changed=true; }
-  }
   if (changed) saveProfile();
 }
 
-function generateGoldenStar(text) {
-  if (state.profile.element && !state.goldenStars.some(s => s.trait_type === 'element')) { const reward = TRAIT_REWARDS.element[state.profile.element]; if (reward) return { text: reward, trait_type: 'element', trait_value: state.profile.element }; }
-  if (state.profile.wound && !state.goldenStars.some(s => s.trait_type === 'wound')) { const reward = TRAIT_REWARDS.wound[state.profile.wound]; if (reward) return { text: reward, trait_type: 'wound', trait_value: state.profile.wound }; }
-  if (state.profile.gift && !state.goldenStars.some(s => s.trait_type === 'gift')) { const reward = TRAIT_REWARDS.gift[state.profile.gift]; if (reward) return { text: reward, trait_type: 'gift', trait_value: state.profile.gift }; }
+function generateGoldenStar() {
+  if (state.profile.element && !state.goldenStars.some(s => s.trait_type === 'element')) { const r = TRAIT_REWARDS.element[state.profile.element]; if (r) return { text: r, trait_type: 'element', trait_value: state.profile.element }; }
+  if (state.profile.wound && !state.goldenStars.some(s => s.trait_type === 'wound')) { const r = TRAIT_REWARDS.wound[state.profile.wound]; if (r) return { text: r, trait_type: 'wound', trait_value: state.profile.wound }; }
+  if (state.profile.gift && !state.goldenStars.some(s => s.trait_type === 'gift')) { const r = TRAIT_REWARDS.gift[state.profile.gift]; if (r) return { text: r, trait_type: 'gift', trait_value: state.profile.gift }; }
   return null;
 }
 
-function openDownloadModal() { if (state.messages.length === 0) { alert('No reflections to download yet.'); return; } document.getElementById('downloadFilename').value = 'moph-echo-journey'; document.getElementById('downloadModal').classList.remove('hidden'); }
+function openDownloadModal() { if (state.messages.length === 0) { alert('No reflections yet.'); return; } document.getElementById('downloadModal').classList.remove('hidden'); }
 function closeDownloadModal() { document.getElementById('downloadModal').classList.add('hidden'); }
 
 function downloadAs(format) {
   const filename = (document.getElementById('downloadFilename').value.trim() || 'moph-echo-journey').replace(/[^a-z0-9-_]/gi, '_');
-  let log = 'MOPH ECHO MIRROR — REFLECTION LOG\n' + `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
+  let log = 'MOPH ECHO — REFLECTION LOG\n' + `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
   state.messages.forEach(m => { const r = m.role === 'user' ? 'YOU' : m.role === 'surprise' ? 'GOLDEN' : 'MIRROR'; log += `[${r}] ${String(m.text).replace(/<[^>]*>/g, '')}\n${'-'.repeat(30)}\n`; });
   if (format === 'txt') { const blob = new Blob([log], { type: 'text/plain' }); const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename + '.txt'; a.click(); URL.revokeObjectURL(a.href); closeDownloadModal(); return; }
-  const htmlMessages = state.messages.map(m => { if (m.role === 'user') return `<div class="msg user"><div class="bubble user">${escapeHtml(m.text)}</div></div>`; if (m.role === 'surprise') return `<div class="msg mirror"><div class="bubble gold">${escapeHtml(String(m.text).replace(/<[^>]*>/g, ''))}</div></div>`; return `<div class="msg mirror"><div class="bubble mirror">${String(m.text).replace(/<[^>]*>/g, '')}</div></div>`; }).join('');
-  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(filename)}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Inter',Arial,sans-serif;background:#fff;color:#111;padding:40px;max-width:700px;margin:0 auto;}h1{font-size:22px;color:#7c3aed;margin-bottom:4px;}.meta{font-size:12px;color:#666;margin-bottom:32px;border-bottom:1px solid #eee;padding-bottom:16px;}.msg{margin-bottom:16px;display:flex;}.msg.user{justify-content:flex-end;}.bubble{padding:10px 14px;border-radius:14px;max-width:80%;font-size:13px;line-height:1.6;white-space:pre-wrap;}.bubble.user{background:#f3e8ff;border:1px solid #e9d5ff;}.bubble.mirror{background:#f9fafb;border:1px solid #e5e7eb;}.bubble.gold{background:#fefce8;border:1px solid #fde68a;color:#854d0e;}@media print{body{padding:0;}.msg{page-break-inside:avoid;}}</style></head><body><h1>⚡ Moph Echo Mirror</h1><div class="meta">Reflection log · Exported ${new Date().toLocaleString()}</div>${htmlMessages}<script>window.onload = () => { setTimeout(() => window.print(), 300); }<\/script></body></html>`;
-  const win = window.open('', '_blank'); if (!win) { alert('Please allow popups to save as PDF.'); return; } win.document.write(html); win.document.close(); closeDownloadModal();
+  const hms = state.messages.map(m => { if (m.role === 'user') return `<div class="msg user"><div class="bubble user">${escapeHtml(m.text)}</div></div>`; if (m.role === 'surprise') return `<div class="msg mirror"><div class="bubble gold">${escapeHtml(String(m.text).replace(/<[^>]*>/g, ''))}</div></div>`; return `<div class="msg mirror"><div class="bubble mirror">${String(m.text).replace(/<[^>]*>/g, '')}</div></div>`; }).join('');
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(filename)}</title><style>body{font-family:-apple-system,BlinkMacSystemFont,'Inter',Arial,sans-serif;background:#fff;color:#111;padding:40px;max-width:700px;margin:0 auto;}h1{font-size:22px;color:#7c3aed;margin-bottom:4px;}.meta{font-size:12px;color:#666;margin-bottom:32px;border-bottom:1px solid #eee;padding-bottom:16px;}.msg{margin-bottom:16px;display:flex;}.msg.user{justify-content:flex-end;}.bubble{padding:10px 14px;border-radius:14px;max-width:80%;font-size:13px;line-height:1.6;white-space:pre-wrap;}.bubble.user{background:#f3e8ff;border:1px solid #e9d5ff;}.bubble.mirror{background:#f9fafb;border:1px solid #e5e7eb;}.bubble.gold{background:#fefce8;border:1px solid #fde68a;color:#854d0e;}@media print{body{padding:0;}.msg{page-break-inside:avoid;}}</style></head><body><h1>⚡ Moph Echo</h1><div class="meta">Reflection log · ${new Date().toLocaleString()}</div>${hms}<script>window.onload = () => { setTimeout(() => window.print(), 300); }<\/script></body></html>`;
+  const win = window.open('', '_blank'); if (!win) { alert('Allow popups.'); return; } win.document.write(html); win.document.close(); closeDownloadModal();
 }
 
-function checkGrounding(text) { const l = text.toLowerCase(); const alert = document.getElementById('groundingAlert'); if (l.includes('hungry')||l.includes('floating')||l.includes('eat')) alert.classList.remove('hidden'); else alert.classList.add('hidden'); }
+function checkGrounding(text) { const l = text.toLowerCase(); const a = document.getElementById('groundingAlert'); if (l.includes('hungry')||l.includes('floating')||l.includes('eat')) a.classList.remove('hidden'); else a.classList.add('hidden'); }
 
-document.getElementById('panelTeachings')?.addEventListener('scroll', () => { const panel = document.getElementById('panelTeachings'); const bar = document.getElementById('readingBar'); const scrollTop = panel.scrollTop; const scrollHeight = panel.scrollHeight - panel.clientHeight; bar.style.width = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 + '%' : '0%'; });
+document.getElementById('panelTeachings')?.addEventListener('scroll', () => { const p = document.getElementById('panelTeachings'); const b = document.getElementById('readingBar'); const st = p.scrollTop; const sh = p.scrollHeight - p.clientHeight; b.style.width = sh > 0 ? (st / sh) * 100 + '%' : '0%'; });
 document.addEventListener('click', (e) => { if (!e.target.closest('textarea')) document.querySelectorAll('.mention-dropdown').forEach(d => d.classList.add('hidden')); });
-document.getElementById('userInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); processEntry(); } });
+document.getElementById('userInput').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); processEntry(); } });
 
 initConfig();
 </script>
