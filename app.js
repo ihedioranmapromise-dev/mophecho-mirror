@@ -1,0 +1,2048 @@
+/* ============================================================
+   app.js — Moph Echo Mirror application.
+   DOM, state, auth, Supabase, teachings, everything except
+   the reasoning engine (which lives in engine.js).
+
+   Loaded from index.html as:
+     <script type="module" src="/app.js"></script>
+   ============================================================ */
+
+import {
+  generateReflection,
+  formatResponse,
+  escapeHtml,
+  TRAIT_REWARDS
+} from './engine.js';
+
+/* ============================================================
+   NETWORK
+   ============================================================ */
+
+function showNetworkBanner(msg) {
+  document.getElementById('networkBannerText').textContent = msg || 'The signal is lost. Restore your connection.';
+  document.getElementById('networkBanner').classList.add('show');
+}
+function hideNetworkBanner() { document.getElementById('networkBanner').classList.remove('show'); }
+function isOnline() { return navigator.onLine !== false; }
+
+window.addEventListener('online', () => { hideNetworkBanner(); });
+window.addEventListener('offline', () => { showNetworkBanner('The signal is lost. Restore your connection.'); });
+
+async function safeFetch(url, options) {
+  if (!isOnline()) { showNetworkBanner('The signal is lost. Restore your connection.'); throw new Error('offline'); }
+  try { return await fetch(url, options); }
+  catch (e) { showNetworkBanner('The mirror is out of reach. Trying again...'); throw e; }
+}
+
+function retryConnection() {
+  if (!isOnline()) { showNetworkBanner('Still offline. Check your network.'); return; }
+  hideNetworkBanner();
+  location.reload();
+}
+
+/* ============================================================
+   PWA
+   ============================================================ */
+
+let deferredPrompt = null;
+const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  if (!isStandalone && !localStorage.getItem('moph_install_dismissed')) {
+    setTimeout(() => document.getElementById('installBanner').classList.remove('hidden'), 4000);
+  }
+});
+
+window.addEventListener('load', () => {
+  if (isStandalone || localStorage.getItem('moph_install_dismissed')) return;
+  if (isIOS) {
+    setTimeout(() => {
+      document.getElementById('installText').textContent = 'Install Moph Echo Mirror';
+      document.getElementById('installSub').textContent = 'Tap Share then "Add to Home Screen"';
+      document.getElementById('installBtn').textContent = 'Got it';
+      document.getElementById('installBtn').onclick = dismissInstall;
+      document.getElementById('installBanner').classList.remove('hidden');
+    }, 4000);
+  }
+});
+
+function handleInstall() {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(c => {
+      if (c.outcome === 'accepted') dismissInstall();
+      deferredPrompt = null;
+    });
+  } else dismissInstall();
+}
+function dismissInstall() {
+  document.getElementById('installBanner').classList.add('hidden');
+  localStorage.setItem('moph_install_dismissed', 'true');
+}
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('/sw.js').catch(() => {}));
+}
+
+/* ============================================================
+   STATE
+   ============================================================ */
+
+let sb = null;
+let signupMode = false;
+let pendingEmail = '';
+let notifPoll = null;
+
+const state = {
+  user: null,
+  messages: [],
+  profile: {
+    element: null, stage: null, wound: null, gift: null,
+    avatar_url: null, username: null, bio: null, website: null,
+    social_x: null, social_instagram: null, social_youtube: null,
+    social_tiktok: null, social_whatsapp: null, social_linkedin: null,
+    privacy_element: true, privacy_stage: true, privacy_wound: true,
+    privacy_gift: true, privacy_followers: true, privacy_following: true,
+    theme: 'amethyst', joined_at: null, streak_count: 0,
+    longest_streak: 0, last_active_date: null
+  },
+  goldenStars: [],
+  teachings: [],
+  profileCache: {},
+  notifications: [],
+  usedResponses: [],
+  activeTag: null,
+  myPosts: [],
+  myBookmarks: [],
+  myBookmarkedIds: new Set(),
+  myFollowing: new Set(),
+  myFollowers: new Set(),
+  selectedTheme: 'amethyst',
+  viewingUserId: null,
+  featuredTeaching: null,
+  activeSubTab: 'all',
+  myPostsSearch: '',
+  expandedCommentTeachingIds: new Set(),
+  openReplyCommentId: null,
+  quoteTarget: null
+};
+
+const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
+
+const SOCIAL_ICONS = {
+  social_x: { name: 'X', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>' },
+  social_instagram: { name: 'Instagram', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>' },
+  social_youtube: { name: 'YouTube', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>' },
+  social_tiktok: { name: 'TikTok', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>' },
+  social_whatsapp: { name: 'WhatsApp', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>' },
+  social_linkedin: { name: 'LinkedIn', svg: '<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.063 2.063 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>' }
+};
+
+/* ============================================================
+   ONBOARDING
+   ============================================================ */
+
+let obStep = 0;
+const obSlides = [
+  { title: 'Welcome to the Mirror', body: 'It reflects what you already know but have not yet seen.' },
+  { title: 'Speak. Observe. Become.', body: 'Type what you are feeling. Golden moments mark your deepest realizations.' },
+  { title: 'Teachings', body: 'Reflections from the Architect. React, comment, reply, mention, ask.' }
+];
+
+function nextOnboarding() {
+  obStep++;
+  if (obStep >= obSlides.length) { finishOnboarding(); return; }
+  document.getElementById('obTitle').textContent = obSlides[obStep].title;
+  document.getElementById('obBody').textContent = obSlides[obStep].body;
+  const dots = document.getElementById('obDots').children;
+  for (let i = 0; i < dots.length; i++) {
+    dots[i].className = 'w-2 h-2 rounded-full ' + (i <= obStep ? 'bg-amethyst-500' : 'bg-void-600');
+  }
+  if (obStep === obSlides.length - 1) document.getElementById('obBtn').textContent = 'Enter the Mirror';
+}
+function skipOnboarding() { finishOnboarding(); }
+function finishOnboarding() { localStorage.setItem('moph_onboarded', 'true'); document.getElementById('onboarding').classList.add('hidden'); }
+function maybeShowOnboarding() { if (localStorage.getItem('moph_onboarded') !== 'true') document.getElementById('onboarding').classList.remove('hidden'); }
+
+/* ============================================================
+   THEME
+   ============================================================ */
+
+function applyTheme(theme) {
+  document.body.setAttribute('data-theme', theme || 'amethyst');
+  state.selectedTheme = theme || 'amethyst';
+}
+function selectTheme(theme) {
+  applyTheme(theme);
+  document.querySelectorAll('.theme-swatch').forEach(s => s.classList.toggle('active', s.dataset.theme === theme));
+}
+
+function readingTime(content) {
+  const words = (content || '').trim().split(/\s+/).length;
+  return Math.max(1, Math.round(words / 200)) + ' min read';
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+
+const customStorage = {
+  getItem: (key) => localStorage.getItem(key) || sessionStorage.getItem(key),
+  setItem: (key, value) => {
+    const r = localStorage.getItem('moph_remember') === 'true';
+    if (r) { localStorage.setItem(key, value); sessionStorage.removeItem(key); }
+    else { sessionStorage.setItem(key, value); localStorage.removeItem(key); }
+  },
+  removeItem: (key) => { localStorage.removeItem(key); sessionStorage.removeItem(key); }
+};
+
+function togglePass(id, btn) {
+  const input = document.getElementById(id);
+  const eo = btn.querySelector('.eye-open');
+  const ec = btn.querySelector('.eye-closed');
+  if (input.type === 'password') { input.type = 'text'; eo.classList.add('hidden'); ec.classList.remove('hidden'); }
+  else { input.type = 'password'; eo.classList.remove('hidden'); ec.classList.add('hidden'); }
+}
+
+function toggleSignupMode() {
+  signupMode = !signupMode;
+  const wrap = document.getElementById('confirmPassWrap');
+  const btn = document.getElementById('signInText');
+  const tgl = document.getElementById('toggleBtn');
+  if (signupMode) {
+    wrap.classList.remove('hidden');
+    btn.textContent = 'Create Account';
+    tgl.textContent = 'Already have an account? Sign in';
+  } else {
+    wrap.classList.add('hidden');
+    btn.textContent = 'Enter the Mirror';
+    tgl.textContent = 'New here? Create an account';
+  }
+  document.getElementById('authError').classList.add('hidden');
+  document.getElementById('authSuccess').classList.add('hidden');
+}
+
+function showError(m) {
+  const e = document.getElementById('authError');
+  const s = document.getElementById('authSuccess');
+  e.textContent = m;
+  e.classList.remove('hidden');
+  s.classList.add('hidden');
+}
+function showSuccess(m) {
+  const e = document.getElementById('authError');
+  const s = document.getElementById('authSuccess');
+  s.textContent = m;
+  s.classList.remove('hidden');
+  e.classList.add('hidden');
+}
+
+async function initConfig() {
+  if (localStorage.getItem('moph_remember') === null) localStorage.setItem('moph_remember', 'true');
+  if (!isOnline()) {
+    document.getElementById('loadingMsg').textContent = 'Waiting for network...';
+    document.getElementById('fatalError').classList.remove('hidden');
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('fatalErrorMsg').textContent = 'No internet connection. Turn on mobile data or Wi-Fi and tap Retry.';
+    return;
+  }
+  try {
+    const res = await safeFetch('/api/config');
+    const cfg = await res.json();
+    if (!cfg.supabaseUrl) throw new Error('Config missing');
+    sb = supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
+      auth: { storage: customStorage, persistSession: true, autoRefreshToken: true }
+    });
+    await checkSession();
+  } catch (e) {
+    document.getElementById('loadingScreen').classList.add('hidden');
+    document.getElementById('fatalError').classList.remove('hidden');
+    if (!isOnline()) document.getElementById('fatalErrorMsg').textContent = 'No internet connection. Turn on mobile data or Wi-Fi and tap Retry.';
+    else document.getElementById('fatalErrorMsg').textContent = 'The mirror is out of reach. Try again.';
+  }
+}
+
+async function checkSession() {
+  const { data: { session } } = await sb.auth.getSession();
+  document.getElementById('loadingScreen').classList.add('hidden');
+  if (session?.user) {
+    if (!session.user.email_confirmed_at) {
+      pendingEmail = session.user.email;
+      document.getElementById('otpEmail').textContent = pendingEmail;
+      document.getElementById('otpScreen').classList.remove('hidden');
+      return;
+    }
+    await enterApp(session.user);
+  } else {
+    document.getElementById('authScreen').classList.remove('hidden');
+    maybeShowOnboarding();
+  }
+}
+
+async function signIn() {
+  const email = document.getElementById('authEmail').value.trim();
+  const pass = document.getElementById('authPassword').value.trim();
+  if (!isOnline()) { showError('The signal is lost. Restore your connection.'); return; }
+  if (!email || !pass) { showError('Enter email and password.'); return; }
+
+  if (signupMode) {
+    const confirm = document.getElementById('authConfirmPassword').value.trim();
+    if (pass !== confirm) { showError('Passwords do not match.'); return; }
+    if (pass.length < 6) { showError('Password must be at least 6 characters.'); return; }
+    const { data, error } = await sb.auth.signUp({ email, password: pass });
+    if (error) { showError(error.message); return; }
+    if (data.user) {
+      pendingEmail = email;
+      document.getElementById('otpEmail').textContent = email;
+      document.getElementById('authScreen').classList.add('hidden');
+      document.getElementById('otpScreen').classList.remove('hidden');
+      document.getElementById('otpInput').focus();
+    }
+  } else {
+    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) {
+      if (error.message.toLowerCase().includes('email not confirmed')) {
+        pendingEmail = email;
+        document.getElementById('otpEmail').textContent = email;
+        document.getElementById('authScreen').classList.add('hidden');
+        document.getElementById('otpScreen').classList.remove('hidden');
+        return;
+      }
+      showError(error.message);
+      return;
+    }
+    if (data.user) await enterApp(data.user);
+  }
+}
+
+async function verifyOtp() {
+  const token = document.getElementById('otpInput').value.trim();
+  const err = document.getElementById('otpError');
+  err.classList.add('hidden');
+  if (!token || token.length !== 6) { err.textContent = 'Enter the 6-digit code.'; err.classList.remove('hidden'); return; }
+  const btn = document.getElementById('otpBtnText');
+  btn.textContent = 'Verifying...';
+
+  const { data, error } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: 'signup' });
+  if (error) {
+    const { data: d2, error: e2 } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: 'email' });
+    if (e2) { err.textContent = error.message || 'Invalid code.'; err.classList.remove('hidden'); btn.textContent = 'Verify & Enter'; return; }
+    if (d2.user) { document.getElementById('otpScreen').classList.add('hidden'); await enterApp(d2.user); return; }
+  }
+  if (data?.user) { document.getElementById('otpScreen').classList.add('hidden'); await enterApp(data.user); }
+  else { err.textContent = 'Verification failed.'; err.classList.remove('hidden'); btn.textContent = 'Verify & Enter'; }
+}
+
+async function resendOtp() {
+  const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail });
+  const err = document.getElementById('otpError');
+  if (error) { err.textContent = error.message; err.classList.remove('hidden'); }
+  else { err.textContent = 'Code resent.'; err.classList.remove('hidden', 'text-red-400'); err.classList.add('text-green-400'); }
+}
+function backToAuth() {
+  document.getElementById('otpScreen').classList.add('hidden');
+  document.getElementById('authScreen').classList.remove('hidden');
+  document.getElementById('otpInput').value = '';
+}
+
+async function signOut() {
+  if (notifPoll) { clearInterval(notifPoll); notifPoll = null; }
+  await sb.auth.signOut();
+  location.reload();
+}
+
+/* ============================================================
+   ENTER APP
+   ============================================================ */
+
+async function enterApp(user) {
+  state.user = user;
+  document.getElementById('authScreen').classList.add('hidden');
+  document.getElementById('otpScreen').classList.add('hidden');
+  document.getElementById('mainApp').classList.remove('hidden');
+  document.getElementById('userEmail').textContent = user.email;
+  showTeachingsSkeleton();
+  await loadProfile();
+  applyTheme(state.profile.theme || 'amethyst');
+  updateStreakUI();
+  renderProfile();
+  await loadMessages();
+  renderChat();
+  document.getElementById('userInput').focus();
+  maybeShowOnboarding();
+  logActivity('app_open');
+
+  Promise.all([
+    loadGoldenStars(),
+    loadTeachings(),
+    loadNotifications(),
+    loadFollowing(),
+    loadBookmarks(),
+    loadFollowers()
+  ]).then(() => {
+    renderProfile(); renderTeachings(); renderNotifications();
+    const savedTab = localStorage.getItem('moph_active_tab');
+    if (savedTab && ['chat','teachings','profile'].includes(savedTab) && savedTab !== 'chat') switchTab(savedTab);
+    const savedSub = localStorage.getItem('moph_active_subtab');
+    if (savedSub && ['all','following','qa'].includes(savedSub)) switchSubTab(savedSub);
+  }).catch(err => console.error('Load error:', err));
+
+  updateStreak();
+  if (notifPoll) clearInterval(notifPoll);
+  notifPoll = setInterval(() => {
+    if (document.visibilityState === 'visible' && state.user) loadNotifications();
+  }, 30000);
+}
+
+/* ============================================================
+   ACTIVITY
+   ============================================================ */
+
+async function logActivity(kind) {
+  try {
+    if (!state.user) return;
+    await sb.from('activity_log').insert({
+      user_id: state.user.id,
+      kind,
+      day: new Date().toISOString().split('T')[0]
+    });
+  } catch (e) { /* silent */ }
+}
+
+async function loadActivityCalendar() {
+  try {
+    const since = new Date(Date.now() - 29 * 86400000).toISOString().split('T')[0];
+    const { data, error } = await sb.from('activity_log').select('kind, day').eq('user_id', state.user.id).gte('day', since);
+    if (error) return;
+    const rows = data || [];
+    const grid = document.getElementById('activityGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const today = new Date().toISOString().split('T')[0];
+    const counts = {};
+    rows.forEach(r => { counts[r.day] = (counts[r.day] || 0) + 1; });
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000).toISOString().split('T')[0];
+      const n = counts[d] || 0;
+      const cell = document.createElement('div');
+      cell.className = 'activity-cell';
+      if (n === 1) cell.classList.add('a1');
+      else if (n === 2) cell.classList.add('a2');
+      else if (n >= 3) cell.classList.add('a3');
+      if (d === today) cell.classList.add('today');
+      cell.title = `${d}: ${n} action${n === 1 ? '' : 's'}`;
+      grid.appendChild(cell);
+    }
+    const by = k => rows.filter(r => r.kind === k).length;
+    const so = document.getElementById('statOpens'); if (so) so.textContent = by('app_open');
+    const sc = document.getElementById('statComments'); if (sc) sc.textContent = by('comment');
+    const sbk = document.getElementById('statBookmarks'); if (sbk) sbk.textContent = by('bookmark');
+    const sqa = document.getElementById('statQA'); if (sqa) sqa.textContent = by('qa_answer');
+    const sv = document.getElementById('statVotes'); if (sv) sv.textContent = by('poll_vote');
+  } catch (e) { /* silent */ }
+}
+
+/* ============================================================
+   PUSH
+   ============================================================ */
+
+function enablePush() {
+  const btn = document.getElementById('pushEnableBtn');
+  if (!('Notification' in window)) { alert('Notifications are not supported on this device.'); return; }
+  if (Notification.permission === 'granted') { btn.classList.add('enabled'); btn.textContent = 'Notifications enabled'; btn.disabled = true; return; }
+  Notification.requestPermission().then(perm => {
+    if (perm === 'granted') {
+      btn.classList.add('enabled');
+      btn.textContent = 'Notifications enabled';
+      btn.disabled = true;
+      try { new Notification('Moph Echo Mirror', { body: 'The mirror will signal you when someone speaks.' }); } catch (e) {}
+    } else {
+      btn.textContent = 'Permission denied — try again';
+    }
+  });
+}
+function refreshPushButton() {
+  const btn = document.getElementById('pushEnableBtn');
+  if (!btn) return;
+  if ('Notification' in window && Notification.permission === 'granted') {
+    btn.classList.add('enabled');
+    btn.textContent = 'Notifications enabled';
+    btn.disabled = true;
+  }
+}
+
+/* ============================================================
+   STREAK
+   ============================================================ */
+
+async function updateStreak() {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const last = state.profile.last_active_date;
+    if (last === today) return;
+    let newStreak = 1;
+    if (last) {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      if (last === yesterday) newStreak = (state.profile.streak_count || 0) + 1;
+      else newStreak = 1;
+    }
+    const longest = Math.max(state.profile.longest_streak || 0, newStreak);
+    await sb.from('profiles').update({ streak_count: newStreak, longest_streak: longest, last_active_date: today }).eq('id', state.user.id);
+    state.profile.streak_count = newStreak;
+    state.profile.longest_streak = longest;
+    state.profile.last_active_date = today;
+    updateStreakUI();
+  } catch (e) { console.error(e); }
+}
+
+function updateStreakUI() {
+  const c = state.profile.streak_count || 0;
+  const hb = document.getElementById('streakBadge'), hc = document.getElementById('streakCount');
+  const pb = document.getElementById('streakBadgeProfile'), pc = document.getElementById('streakCountProfile');
+  if (c >= 2) { hb.classList.remove('hidden'); hc.textContent = c; pb.classList.remove('hidden'); pc.textContent = c; }
+  else { hb.classList.add('hidden'); pb.classList.add('hidden'); }
+  const ps = document.getElementById('pStreak'), pl = document.getElementById('pLongestStreak');
+  if (ps) ps.textContent = c + (c === 1 ? ' day' : ' days');
+  if (pl) pl.textContent = (state.profile.longest_streak || 0) + ' days';
+}
+
+function showTeachingsSkeleton() {
+  const el = document.getElementById('teachingsFeed');
+  el.innerHTML = Array(3).fill(0).map(() => `<div class="glass card border border-void-600 p-5 space-y-3.5"><div class="skeleton h-4 w-3/4"></div><div class="skeleton h-3 w-full"></div><div class="skeleton h-3 w-5/6"></div></div>`).join('');
+}
+
+/* ============================================================
+   PROFILE DATA
+   ============================================================ */
+
+async function loadProfile() {
+  const { data, error } = await sb.from('profiles').select('*').eq('id', state.user.id).single();
+  if (error || !data) {
+    const emailPrefix = (state.user.email || 'architect').split('@')[0].toLowerCase().replace(/[^a-z0-9_]/g, '_');
+    let base = emailPrefix.length >= 3 ? emailPrefix : 'architect';
+    let username = base, counter = 0;
+    while (true) {
+      const { data: ex } = await sb.from('profiles').select('id').ilike('username', username).limit(1);
+      if (!ex || ex.length === 0) break;
+      counter++;
+      username = base + '_' + counter;
+    }
+    await sb.from('profiles').insert({ id: state.user.id, username });
+    return loadProfile();
+  }
+  state.profile = { ...state.profile, ...data };
+  state.profileCache[state.user.id] = { username: state.profile.username, avatar_url: state.profile.avatar_url };
+  if (state.profile.avatar_url) {
+    document.getElementById('avatarUpload').innerHTML = `<img src="${state.profile.avatar_url}" class="w-full h-full object-cover"><input type="file" id="avatarInput" accept="image/*" class="hidden">`;
+    document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
+  }
+  document.getElementById('displayUsername').textContent = '@' + (state.profile.username || 'architect');
+}
+
+async function saveProfile() {
+  await sb.from('profiles').update({
+    element: state.profile.element,
+    stage: state.profile.stage,
+    wound: state.profile.wound,
+    gift: state.profile.gift,
+    updated_at: new Date().toISOString()
+  }).eq('id', state.user.id);
+}
+
+async function loadMessages() {
+  const { data } = await sb.from('journal_entries').select('role, content, created_at').eq('user_id', state.user.id).order('created_at', { ascending: true }).limit(200);
+  if (data) state.messages = data.map(m => ({ role: m.role, text: m.content }));
+}
+async function saveMessage(role, text) {
+  await sb.from('journal_entries').insert({ user_id: state.user.id, role, content: text });
+}
+
+async function loadGoldenStars() {
+  const { data } = await sb.from('golden_moments').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false });
+  if (data) state.goldenStars = data.map(g => ({
+    text: g.content,
+    trait_type: g.trait_type || null,
+    trait_value: g.trait_value || null,
+    date: new Date(g.created_at).toLocaleString()
+  }));
+}
+async function saveGoldenStar(text, trait_type, trait_value) {
+  await sb.from('golden_moments').insert({ user_id: state.user.id, content: text, trait_type, trait_value });
+  state.goldenStars.unshift({ text, trait_type, trait_value, date: new Date().toLocaleString() });
+}
+
+/* ============================================================
+   FOLLOWS / BOOKMARKS
+   ============================================================ */
+
+async function loadFollowing() {
+  const { data } = await sb.from('follows').select('to_user').eq('from_user', state.user.id);
+  state.myFollowing = new Set((data || []).map(f => f.to_user));
+}
+async function loadFollowers() {
+  const { data } = await sb.from('follows').select('from_user').eq('to_user', state.user.id);
+  state.myFollowers = new Set((data || []).map(f => f.from_user));
+  document.getElementById('followersCount').textContent = state.myFollowers.size;
+  document.getElementById('followingCount').textContent = state.myFollowing.size;
+}
+async function followUser(toUserId, btn) {
+  if (toUserId === state.user.id) return;
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    await sb.from('follows').insert({ from_user: state.user.id, to_user: toUserId });
+    state.myFollowing.add(toUserId);
+    if (btn) { btn.className = 'follow-btn following'; btn.textContent = 'Following'; btn.disabled = false; }
+    await sb.from('notifications').insert({
+      user_id: toUserId, type: 'follow',
+      actor_id: state.user.id, actor_username: state.profile.username,
+      message: '@' + state.profile.username + ' started following you'
+    });
+  } catch (e) { if (btn) { btn.disabled = false; btn.textContent = 'Follow'; } }
+}
+async function unfollowUser(toUserId, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '...'; }
+  try {
+    await sb.from('follows').delete().eq('from_user', state.user.id).eq('to_user', toUserId);
+    state.myFollowing.delete(toUserId);
+    if (btn) { btn.className = 'follow-btn not-following'; btn.textContent = 'Follow'; btn.disabled = false; }
+  } catch (e) { if (btn) { btn.disabled = false; btn.textContent = 'Following'; } }
+}
+function toggleFollow(toUserId, btn) {
+  if (state.myFollowing.has(toUserId)) unfollowUser(toUserId, btn);
+  else followUser(toUserId, btn);
+}
+
+async function loadBookmarks() {
+  const { data } = await sb.from('bookmarks').select('teaching_id').eq('user_id', state.user.id);
+  state.myBookmarkedIds = new Set((data || []).map(b => b.teaching_id));
+}
+async function toggleBookmark(teachingId, btn) {
+  const isBookmarked = state.myBookmarkedIds.has(teachingId);
+  if (isBookmarked) {
+    await sb.from('bookmarks').delete().eq('user_id', state.user.id).eq('teaching_id', teachingId);
+    state.myBookmarkedIds.delete(teachingId);
+    if (btn) btn.classList.remove('active');
+  } else {
+    await sb.from('bookmarks').insert({ user_id: state.user.id, teaching_id: teachingId });
+    state.myBookmarkedIds.add(teachingId);
+    if (btn) btn.classList.add('active');
+    logActivity('bookmark');
+  }
+  renderTeachings();
+  if (!document.getElementById('profileSaved').classList.contains('hidden')) loadMySaved();
+}
+
+/* ============================================================
+   TEACHINGS
+   ============================================================ */
+
+async function loadTeachings() {
+  try {
+    const { data: teachings, error } = await sb.from('teachings').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(50);
+    if (error || !teachings) { state.teachings = []; return; }
+    const ids = teachings.map(t => t.id);
+    if (ids.length === 0) { state.teachings = []; return; }
+
+    const { data: allComments } = await sb.from('teaching_comments').select('*').in('teaching_id', ids);
+    const cids = (allComments || []).map(c => c.id);
+    const { data: tReactions } = await sb.from('teaching_reactions').select('*').in('teaching_id', ids);
+    const { data: cReactions } = cids.length > 0 ? await sb.from('comment_reactions').select('*').in('comment_id', cids) : { data: [] };
+
+    let polls = [], votes = [];
+    try {
+      const { data: p } = await sb.from('teaching_polls').select('*').in('teaching_id', ids);
+      polls = p || [];
+      const pollIds = polls.map(x => x.id);
+      if (pollIds.length) {
+        const { data: v } = await sb.from('poll_votes').select('*').in('poll_id', pollIds);
+        votes = v || [];
+      }
+    } catch (e) { /* polls missing */ }
+
+    const userIds = new Set();
+    (allComments || []).forEach(c => userIds.add(c.user_id));
+    if (userIds.size > 0) {
+      const { data: profiles } = await sb.from('profiles').select('id, username, avatar_url').in('id', [...userIds]);
+      (profiles || []).forEach(p => { state.profileCache[p.id] = { username: p.username || 'architect', avatar_url: p.avatar_url }; });
+      [...userIds].forEach(id => { if (!state.profileCache[id]) state.profileCache[id] = { username: 'architect', avatar_url: null }; });
+    }
+
+    const trByT = {};
+    (tReactions || []).forEach(r => { if (!trByT[r.teaching_id]) trByT[r.teaching_id] = []; trByT[r.teaching_id].push(r); });
+    const crByC = {};
+    (cReactions || []).forEach(r => { if (!crByC[r.comment_id]) crByC[r.comment_id] = []; crByC[r.comment_id].push(r); });
+    const cByT = {};
+    (allComments || []).forEach(c => {
+      if (!cByT[c.teaching_id]) cByT[c.teaching_id] = [];
+      cByT[c.teaching_id].push({ ...c, reactions: crByC[c.id] || [] });
+    });
+
+    const pollByT = {};
+    polls.forEach(p => { pollByT[p.teaching_id] = p; });
+    const votesByPoll = {};
+    votes.forEach(v => { if (!votesByPoll[v.poll_id]) votesByPoll[v.poll_id] = []; votesByPoll[v.poll_id].push(v); });
+
+    state.teachings = teachings.map(t => {
+      const poll = pollByT[t.id] || null;
+      const pollVotes = poll ? (votesByPoll[poll.id] || []) : [];
+      return { ...t, reactions: trByT[t.id] || [], comments: cByT[t.id] || [], poll, pollVotes };
+    });
+
+    const today = new Date().toISOString().split('T')[0];
+    state.featuredTeaching = state.teachings.find(t => t.featured_date === today) || null;
+    renderTagFilters();
+    renderFeaturedBanner();
+  } catch (e) { state.teachings = []; }
+}
+
+function renderFeaturedBanner() {
+  const el = document.getElementById('featuredBanner');
+  if (!state.featuredTeaching) { el.classList.add('hidden'); return; }
+  el.classList.remove('hidden');
+  el.innerHTML = `<div style="background:linear-gradient(135deg, rgba(var(--accent-rgb),0.2), rgba(var(--accent-rgb),0.08)); border:1px solid rgba(var(--accent-rgb),0.4); border-radius:1.25rem; padding:14px 18px;">
+    <span class="text-[10px] px-2 py-0.5 rounded-full bg-gold-400/20 text-gold-300 border border-gold-400/40 font-semibold tracking-wider">TODAY'S TEACHING</span>
+    <h3 class="text-base font-semibold text-gray-100 mt-2 mb-1">${escapeHtml(state.featuredTeaching.title || 'Untitled')}</h3>
+    <p class="text-xs text-gray-400 line-clamp-2">${escapeHtml((state.featuredTeaching.content || '').replace(/<[^>]*>/g,'').substring(0, 140))}...</p>
+    <button onclick="scrollToFeatured()" class="mt-2 text-[10px] text-amethyst-400 hover:text-amethyst-300 font-semibold">Read in full →</button>
+  </div>`;
+}
+function scrollToFeatured() {
+  if (!state.featuredTeaching) return;
+  const el = document.querySelector(`[data-teaching-id="${state.featuredTeaching.id}"]`);
+  if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderTagFilters() {
+  const allTags = new Set();
+  state.teachings.forEach(t => (t.tags || []).forEach(tag => allTags.add(tag)));
+  const el = document.getElementById('tagFilters');
+  if (allTags.size === 0) { el.innerHTML = ''; return; }
+  el.innerHTML = `<button onclick="setTag(null)" class="text-[10px] px-3 py-1.5 rounded-full transition ${!state.activeTag ? 'bg-amethyst-600/40 text-amethyst-200 border border-amethyst-500/40' : 'bg-void-800 text-gray-400 border border-void-600'}">All</button>` +
+    [...allTags].map(tag => `<button onclick="setTag('${escapeHtml(tag)}')" class="text-[10px] px-3 py-1.5 rounded-full transition ${state.activeTag === tag ? 'bg-amethyst-600/40 text-amethyst-200 border border-amethyst-500/40' : 'bg-void-800 text-gray-400 border border-void-600'}">#${escapeHtml(tag)}</button>`).join('');
+}
+function setTag(tag) { state.activeTag = tag; renderTagFilters(); filterTeachings(); }
+
+function switchSubTab(tab) {
+  state.activeSubTab = tab;
+  localStorage.setItem('moph_active_subtab', tab);
+  document.getElementById('subTabAll').classList.toggle('active', tab === 'all');
+  document.getElementById('subTabFollowing').classList.toggle('active', tab === 'following');
+  document.getElementById('subTabQA').classList.toggle('active', tab === 'qa');
+  renderTeachings();
+}
+
+function filterTeachings() {
+  if (state.activeSubTab === 'following') { renderFollowingFeed(); return; }
+  const q = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  let filtered = state.teachings;
+  if (state.activeSubTab === 'qa') filtered = filtered.filter(t => t.is_question === true);
+  if (state.activeTag) filtered = filtered.filter(t => (t.tags || []).includes(state.activeTag));
+  if (q) filtered = filtered.filter(t => ((t.title || '') + ' ' + (t.content || '')).toLowerCase().includes(q));
+  const el = document.getElementById('teachingsFeed');
+  if (filtered.length === 0) {
+    const msg = state.activeSubTab === 'qa' ? 'No questions have been asked yet.' : 'Nothing matches.';
+    el.innerHTML = `<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">${msg}</p></div>`;
+    return;
+  }
+  el.innerHTML = filtered.map(t => renderTeachingPost(t)).join('');
+}
+
+function renderFollowingFeed() {
+  const el = document.getElementById('teachingsFeed');
+  const followedIds = [...state.myFollowing];
+  if (followedIds.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">You are not following anyone yet. Tap a @username in any comment to view their profile and follow.</p></div>';
+    return;
+  }
+  const posts = [];
+  state.teachings.forEach(t => {
+    t.comments.forEach(c => { if (followedIds.includes(c.user_id)) posts.push({ comment: c, teaching: t }); });
+  });
+  posts.sort((a, b) => new Date(b.comment.created_at) - new Date(a.comment.created_at));
+  if (posts.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No recent activity from the people you follow.</p></div>';
+    return;
+  }
+  el.innerHTML = posts.slice(0, 40).map(p => renderFollowPost(p.comment, p.teaching)).join('');
+}
+
+function renderFollowPost(c, t) {
+  const info = state.profileCache[c.user_id] || { username: 'architect', avatar_url: null };
+  return `<article class="post-card fade-in">
+    <div class="flex items-center gap-2 mb-3 text-xs text-gray-500">
+      <button onclick="openPublicProfile('${c.user_id}')">${avatarHtml(c.user_id, 'xs')}</button>
+      <button onclick="openPublicProfile('${c.user_id}')" class="text-amethyst-300 font-medium hover:underline">@${escapeHtml(info.username)}</button>
+      <span>·</span><span>${relativeTime(c.created_at)}</span>
+    </div>
+    <button onclick="scrollToTeaching(${t.id})" class="text-[10px] px-3 py-1.5 rounded-full bg-void-800 border border-void-600 text-gray-400 hover:border-amethyst-500/40 hover:text-amethyst-400 transition mb-2 inline-flex items-center gap-1.5">
+      Replying on: ${escapeHtml(t.title || 'Untitled')}
+    </button>
+    ${c.content ? `<p class="text-sm text-gray-200 prose-content">${escapeHtml(c.content)}</p>` : ''}
+    ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
+    <div class="mt-3" onclick="event.stopPropagation()">${reactionTriggerHtml(c, 'comment')}</div>
+    <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
+      <button onclick="scrollToTeaching(${t.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Read full teaching</button>
+      <button onclick="jumpToTeachingComments(${t.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Show comments (${t.comments.length})</button>
+    </div>
+  </article>`;
+}
+
+function scrollToTeaching(tid) {
+  switchSubTab('all');
+  setTimeout(() => {
+    const el = document.querySelector(`[data-teaching-id="${tid}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+function jumpToTeachingComments(tid) {
+  state.expandedCommentTeachingIds.add(tid);
+  switchSubTab('all');
+  setTimeout(() => {
+    const el = document.querySelector(`[data-teaching-id="${tid}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+function renderTeachings() { filterTeachings(); renderFeaturedBanner(); }
+
+function reactionTriggerHtml(c, type) {
+  const myReaction = (c.reactions || []).find(r => r.user_id === state.user.id);
+  const totalCount = (c.reactions || []).length;
+  const display = myReaction ? myReaction.emoji : '🙂';
+  const hasReaction = !!myReaction;
+  return `<div class="relative inline-block">
+    <button class="reaction-trigger ${hasReaction ? 'has-reaction' : ''}" onclick="toggleReactionPicker(event, '${type}', ${c.id})">
+      <span>${display}</span>
+      ${totalCount > 0 ? `<span>${totalCount}</span>` : ''}
+    </button>
+  </div>`;
+}
+
+function toggleReactionPicker(event, type, id) {
+  event.stopPropagation();
+  document.querySelectorAll('.reaction-picker').forEach(p => p.remove());
+  const btn = event.currentTarget;
+  const wrap = btn.parentElement;
+  const picker = document.createElement('div');
+  picker.className = 'reaction-picker';
+  const reactions = type === 'teaching'
+    ? (state.teachings.find(t => t.id === id)?.reactions || [])
+    : (() => { for (const t of state.teachings) { const c = t.comments.find(x => x.id === id); if (c) return c.reactions || []; } return []; })();
+  const myReaction = reactions.find(r => r.user_id === state.user.id);
+  picker.innerHTML = EMOJIS.map(e => `<button class="${myReaction && myReaction.emoji === e ? 'is-selected' : ''}" onclick="selectReaction(event, '${type}', ${id}, '${e}')">${e}</button>`).join('');
+  wrap.appendChild(picker);
+  const rect = picker.getBoundingClientRect();
+  if (rect.right > window.innerWidth - 8) picker.classList.add('right-anchor');
+  setTimeout(() => {
+    const closer = (ev) => { if (!picker.contains(ev.target) && ev.target !== btn) { picker.remove(); document.removeEventListener('click', closer); } };
+    document.addEventListener('click', closer);
+  }, 0);
+}
+
+async function selectReaction(event, type, id, emoji) {
+  event.stopPropagation();
+  document.querySelectorAll('.reaction-picker').forEach(p => p.remove());
+  if (type === 'teaching') await toggleTeachingReaction(id, emoji);
+  else await toggleCommentReaction(id, emoji);
+}
+
+function renderPollHtml(t) {
+  if (!t.poll) return '';
+  const poll = t.poll;
+  let opts = poll.options;
+  if (typeof opts === 'string') { try { opts = JSON.parse(opts); } catch (e) { opts = []; } }
+  if (!Array.isArray(opts)) opts = [];
+  const votes = t.pollVotes || [];
+  const myVote = votes.find(v => v.user_id === state.user.id);
+  const total = votes.length || 1;
+  const showResults = !!myVote;
+  return `<div class="poll-wrap" data-poll-id="${poll.id}">
+    ${poll.question ? `<p class="poll-question">${escapeHtml(poll.question)}</p>` : ''}
+    ${opts.map((opt, i) => {
+      const count = votes.filter(v => v.option_index === i).length;
+      const pct = Math.round((count / total) * 100);
+      const mine = myVote && myVote.option_index === i;
+      return `<button class="poll-option ${mine ? 'mine' : ''} ${showResults ? 'voted' : ''}" onclick="votePoll(${poll.id}, ${i}, ${t.id})" ${myVote ? 'disabled' : ''}>
+        ${showResults ? `<div class="poll-fill" style="width:${pct}%"></div>` : ''}
+        <div class="poll-content"><span>${mine ? '◉' : '○'} ${escapeHtml(opt)}</span>${showResults ? `<span class="poll-pct">${pct}%</span>` : ''}</div>
+      </button>`;
+    }).join('')}
+    <p class="poll-meta">${showResults ? `${votes.length} vote${votes.length === 1 ? '' : 's'}` : 'Vote to see results'}</p>
+  </div>`;
+}
+
+async function votePoll(pollId, optionIndex, teachingId) {
+  try {
+    const { error } = await sb.from('poll_votes').insert({ poll_id: pollId, user_id: state.user.id, option_index: optionIndex });
+    if (error) { alert(error.message); return; }
+    logActivity('poll_vote');
+    await loadTeachings();
+    renderTeachings();
+  } catch (e) { alert('Could not record vote.'); }
+}
+
+function looksLikeQuestion(text) {
+  const t = (text || '').trim();
+  if (!t) return false;
+  if (t.endsWith('?')) return true;
+  if (/^(what|why|how|when|where|who|which|whose|whom)\b/i.test(t)) return true;
+  if (/^(is|are|was|were|do|does|did|can|could|will|would|should|may|might|shall|have|has|had)\b/i.test(t)) return true;
+  if (/^(help me|tell me|explain|teach me|show me|guide me|i need to know|i want to know)\b/i.test(t)) return true;
+  return false;
+}
+
+function updateSmartToggles(uid) {
+  const ta = document.getElementById(uid + '-text');
+  if (!ta) return;
+  const isTopLevel = !uid.startsWith('reply-');
+  const show = isTopLevel || looksLikeQuestion(ta.value);
+  const qa = document.getElementById(uid + '-qa');
+  if (qa) qa.style.display = show ? 'inline-flex' : 'none';
+  if (!show && qa) { const i = qa.querySelector('input'); if (i) i.checked = false; qa.classList.remove('active'); }
+}
+
+function toggleSmartFlag(el) {
+  const cb = el.querySelector('input');
+  if (!cb) return;
+  cb.checked = !cb.checked;
+  el.classList.toggle('active', cb.checked);
+}
+
+function setQuote(teachingId, comment) {
+  state.quoteTarget = {
+    teachingId,
+    commentId: comment.id,
+    username: comment.user_id === state.user.id ? (state.profile.username || 'you') : (state.profileCache[comment.user_id]?.username || 'seeker'),
+    excerpt: (comment.content || '[image]').slice(0, 120)
+  };
+  state.expandedCommentTeachingIds.add(teachingId);
+  state.openReplyCommentId = null;
+  renderTeachings();
+  setTimeout(() => {
+    const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+function clearQuote() { state.quoteTarget = null; renderTeachings(); }
+
+function renderTeachingPost(t) {
+  const tagHtml = (t.tags || []).map(tag => `<span class="text-[10px] px-2.5 py-1 rounded-full bg-void-800 border border-void-600 text-gray-400">#${escapeHtml(tag)}</span>`).join('');
+  const pinnedHtml = t.pinned ? `<span class="text-[10px] px-2.5 py-1 rounded-full bg-gold-400/20 border border-gold-400/40 text-gold-300">📌 Pinned</span>` : '';
+  const featuredHtml = (state.featuredTeaching && state.featuredTeaching.id === t.id) ? `<span class="text-[10px] px-2.5 py-1 rounded-full bg-amethyst-600/30 border border-amethyst-500/40 text-amethyst-300">⭐ Today's Teaching</span>` : '';
+  const qBadge = t.is_question ? `<span class="q-badge">Q&amp;A</span>` : '';
+  const isBookmarked = state.myBookmarkedIds.has(t.id);
+  const expanded = state.expandedCommentTeachingIds.has(t.id);
+
+  let mediaHtml = '';
+  if (t.video_url) {
+    const isExternal = !t.video_url.includes('teaching-media') && !t.video_url.match(/\.(mp4|webm|mov)$/i);
+    if (isExternal) mediaHtml = `<div class="rounded-2xl overflow-hidden mb-3.5 bg-void-800 p-4 text-center cursor-pointer" onclick="window.open('${escapeHtml(t.video_url)}', '_blank')"><p class="text-xs text-amethyst-400">🎬 Watch video on external site</p></div>`;
+    else mediaHtml = `<div class="video-wrapper mb-3.5 cursor-pointer" onclick="openVideoViewer('${escapeHtml(t.video_url)}')"><video src="${escapeHtml(t.video_url)}" autoplay muted loop playsinline preload="metadata"></video><div class="absolute inset-0 flex items-center justify-center pointer-events-none" style="background:rgba(0,0,0,0.1);"><div class="bg-black/50 rounded-full p-3.5" style="backdrop-filter:blur(6px);"><svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div></div>`;
+  }
+  if (t.cover_image) mediaHtml += `<img src="${escapeHtml(t.cover_image)}" class="w-full rounded-2xl mb-3.5 cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(t.cover_image)}')">`;
+
+  const commentsBlock = expanded
+    ? `<div class="pt-4">${renderComposer(t.id, null)}</div>
+       <div id="comments-${t.id}" class="space-y-3 mt-1">${renderCommentsFor(t) || '<p class="text-xs text-gray-600 text-center py-4">No one has spoken yet. Open the thread.</p>'}</div>`
+    : '';
+  const toggleLabel = expanded ? 'Hide comments' : `${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}`;
+
+  return `<article class="glass card-lg border border-void-600 overflow-hidden fade-in" data-teaching-id="${t.id}">
+    <div class="p-5">
+      <div class="flex items-start justify-between gap-2 mb-2.5">
+        <div class="flex flex-wrap gap-1.5 flex-1 items-center">${featuredHtml}${pinnedHtml}${qBadge}${tagHtml}</div>
+        <button onclick="toggleBookmark(${t.id}, this)" class="bookmark-btn ${isBookmarked ? 'active' : ''}">
+          <svg class="w-4 h-4" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
+        </button>
+      </div>
+      ${t.title ? `<h3 class="text-base font-semibold mb-2.5">${escapeHtml(t.title)}</h3>` : ''}
+      ${mediaHtml}
+      <div class="text-sm text-gray-300 prose-content">${formatResponse(t.content)}</div>
+      ${renderPollHtml(t)}
+      <div class="flex items-center gap-3 mt-3.5 text-[10px] text-gray-600">
+        <span>${relativeTime(t.created_at)}</span><span>·</span><span class="read-time">${readingTime(t.content)}</span>
+      </div>
+      <div class="mt-3.5">${reactionTriggerHtml(t, 'teaching')}</div>
+      <div class="flex items-center justify-between mt-3.5 ${expanded ? 'pb-3.5' : ''} border-b border-void-600">
+        <button onclick="toggleTeachingComments(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
+          ${toggleLabel}
+        </button>
+        <button onclick="shareTeaching(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
+          Share
+        </button>
+      </div>
+      ${commentsBlock}
+    </div>
+  </article>`;
+}
+
+function toggleTeachingComments(tid) {
+  if (state.expandedCommentTeachingIds.has(tid)) {
+    state.expandedCommentTeachingIds.delete(tid);
+    state.openReplyCommentId = null;
+  } else {
+    state.expandedCommentTeachingIds.add(tid);
+  }
+  renderTeachings();
+}
+
+function renderCommentsFor(t) {
+  const acceptedId = t.accepted_answer_id;
+  const sorted = [...t.comments].sort((a, b) => {
+    if (a.id === acceptedId) return -1;
+    if (b.id === acceptedId) return 1;
+    return new Date(a.created_at) - new Date(b.created_at);
+  });
+  return renderCommentTree(sorted, null, t.id, 0, t);
+}
+
+function renderComposer(teachingId, parentId) {
+  const uid = parentId ? `reply-${parentId}` : `comment-${teachingId}`;
+  const isTopLevel = !parentId;
+  const placeholder = 'Post your reply';
+  const quoteBlock = (state.quoteTarget && !parentId) ? `
+    <div class="quote-preview">
+      <div class="qp-body">
+        <div class="qp-user">@${escapeHtml(state.quoteTarget.username)}</div>
+        <div>${escapeHtml(state.quoteTarget.excerpt)}</div>
+      </div>
+      <button class="qp-x" onclick="clearQuote()" title="Remove quote">×</button>
+    </div>` : '';
+  const qaDisplay = isTopLevel ? 'inline-flex' : 'none';
+  const compact = !isTopLevel ? ' compact' : '';
+
+  return `<div class="composer${compact}">
+    <div class="flex gap-2.5">
+      ${avatarHtml(state.user.id, 'sm')}
+      <div class="flex-1 min-w-0">
+        ${quoteBlock}
+        <textarea id="${uid}-text" rows="1" placeholder="${placeholder}" class="composer-textarea" oninput="autoGrow(this); handleMention(this, ${teachingId}, ${parentId || 'null'}); updateSmartToggles('${uid}')"></textarea>
+        <div id="${uid}-preview" class="hidden mt-2"></div>
+        <div class="composer-actions">
+          <div class="composer-tools">
+            <label class="composer-tool" title="Image">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+              <input type="file" id="${uid}-file" accept="image/*" class="hidden" onchange="previewCommentImage(${teachingId}, ${parentId || 'null'}, '${uid}')">
+            </label>
+            <label class="composer-tool" title="Camera">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+              <input type="file" id="${uid}-camera" accept="image/*" capture="environment" class="hidden" onchange="previewCommentImage(${teachingId}, ${parentId || 'null'}, '${uid}')">
+            </label>
+            <label class="smart-toggle qa" id="${uid}-qa" style="display:${qaDisplay};" onclick="event.preventDefault(); toggleSmartFlag(this);">
+              <input type="checkbox"><span>Q&amp;A</span>
+            </label>
+            ${parentId ? `<button onclick="cancelReply(${parentId})" class="text-[11px] text-gray-500 hover:text-gray-300 px-2 py-1 transition flex-shrink-0">Cancel</button>` : ''}
+          </div>
+          <button id="${uid}-submit" onclick="submitComment(${teachingId}, ${parentId || 'null'}, '${uid}')" class="composer-submit" disabled>Reply</button>
+        </div>
+      </div>
+    </div>
+    <div class="mention-dropdown hidden" id="mention-dropdown-${teachingId}-${parentId || 'null'}"></div>
+  </div>`;
+}
+
+function autoGrowChat(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+}
+
+function autoGrow(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 200) + 'px';
+  let uid;
+  if (el.id.startsWith('comment-')) uid = 'comment-' + el.id.split('-')[1];
+  else if (el.id.startsWith('reply-')) uid = 'reply-' + el.id.split('-')[1];
+  if (uid) {
+    const btn = document.getElementById(uid + '-submit');
+    const preview = document.getElementById(uid + '-preview');
+    if (btn) {
+      const hasImg = preview && !preview.classList.contains('hidden') && preview.querySelector('img');
+      btn.disabled = !el.value.trim() && !hasImg;
+    }
+    updateSmartToggles(uid);
+  }
+}
+
+function focusCommentBox(tid) {
+  state.expandedCommentTeachingIds.add(tid);
+  switchSubTab('all');
+  setTimeout(() => {
+    const el = document.getElementById(`comment-${tid}-text`);
+    if (el) { el.focus(); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  }, 120);
+}
+
+function previewCommentImage(teachingId, parentId, uid) {
+  let file = null;
+  const f1 = document.getElementById(uid + '-file');
+  const f2 = document.getElementById(uid + '-camera');
+  if (f1 && f1.files[0]) file = f1.files[0];
+  else if (f2 && f2.files[0]) file = f2.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const target = document.getElementById(uid + '-preview');
+    if (!target) return;
+    target.innerHTML = `<div class="relative inline-block"><img src="${reader.result}" class="rounded-2xl max-h-40"><button onclick="removeCommentImage('${uid}')" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow-lg">✕</button></div>`;
+    target.classList.remove('hidden');
+    const btn = document.getElementById(uid + '-submit');
+    if (btn) btn.disabled = false;
+  };
+  reader.readAsDataURL(file);
+}
+
+function removeCommentImage(uid) {
+  const target = document.getElementById(uid + '-preview');
+  if (target) { target.innerHTML = ''; target.classList.add('hidden'); }
+  const f1 = document.getElementById(uid + '-file');
+  const f2 = document.getElementById(uid + '-camera');
+  if (f1) f1.value = '';
+  if (f2) f2.value = '';
+  const btn = document.getElementById(uid + '-submit');
+  const txt = document.getElementById(uid + '-text');
+  if (btn) btn.disabled = !txt.value.trim();
+}
+
+function renderCommentTree(comments, parentId, teachingId, depth = 0, teaching = null) {
+  const children = comments.filter(c => (c.parent_id || null) === parentId);
+  if (children.length === 0) return '';
+  return children.map(c => {
+    const replies = renderCommentTree(comments, c.id, teachingId, depth + 1, teaching);
+    return renderComment(c, teachingId, depth, replies, teaching);
+  }).join('');
+}
+
+function renderComment(c, teachingId, depth, repliesHtml, teaching) {
+  const info = state.profileCache[c.user_id] || { username: 'architect', avatar_url: null };
+  const isOwner = c.user_id === state.user.id;
+  const isAnon = c.is_anonymous === true;
+  const isQuestion = c.is_question === true;
+  const isAccepted = teaching && teaching.accepted_answer_id === c.id;
+  const isTeachingAuthor = teaching && teaching.user_id === state.user.id;
+  const canAccept = teaching && teaching.is_question && isTeachingAuthor && !isAccepted && c.user_id !== state.user.id;
+  const depthClass = depth > 0 ? 'comment-thread' : '';
+  const edited = c.updated_at && c.updated_at !== c.created_at;
+  const pendingClass = c._pending ? 'pending-opacity' : '';
+  const displayName = isAnon ? 'anonymous' : info.username;
+  const contentWithMentions = (c.content || '').replace(/@([a-z0-9_]+)/gi, '<button onclick="openPublicProfileByUsername(\'$1\')" class="text-amethyst-300 font-medium hover:underline">@$1</button>');
+
+  let quotedHtml = '';
+  if (c.quoted_comment_id) {
+    const allComments = teaching ? teaching.comments : [];
+    const q = allComments.find(x => x.id === c.quoted_comment_id);
+    if (q) {
+      const qUser = q.is_anonymous ? 'anonymous' : (state.profileCache[q.user_id]?.username || 'seeker');
+      const qExcerpt = (q.content || '[image]').slice(0, 120);
+      quotedHtml = `<div class="quoted-inline"><span class="qi-user">@${escapeHtml(qUser)}</span> · ${escapeHtml(qExcerpt)}</div>`;
+    }
+  }
+
+  const acceptedBadge = isAccepted ? `<span class="accepted-badge">✓ Accepted</span>` : '';
+  const qBadge = isQuestion ? `<span class="q-badge">Q&amp;A</span>` : '';
+  const anonBadge = isAnon ? `<span class="anon-badge">anon</span>` : '';
+  const bodyClass = isAccepted ? 'accepted-comment-body' : '';
+
+  return `<div class="mb-3 ${pendingClass} ${depthClass}" id="comment-${c.id}">
+    <div class="flex gap-2.5">
+      ${isAnon ? `<div>${avatarHtml('__anon__', 'sm')}</div>` : `<button onclick="openPublicProfile('${c.user_id}')">${avatarHtml(c.user_id, 'sm')}</button>`}
+      <div class="flex-1 min-w-0">
+        <div class="${bodyClass}" style="${bodyClass ? 'padding:10px 12px; border-radius:12px;' : ''}">
+          <div class="flex items-center gap-2 flex-wrap">
+            ${isAnon ? `<span class="text-xs font-medium text-gray-500">@anonymous</span>` : `<button onclick="openPublicProfile('${c.user_id}')" class="text-xs font-medium text-amethyst-300 hover:underline">@${escapeHtml(displayName)}</button>`}
+            ${qBadge}${acceptedBadge}${anonBadge}
+            <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
+            ${edited ? `<span class="text-[10px] text-gray-700">· edited</span>` : ''}
+            ${!isOwner && !isAnon ? `<button onclick="sendPoke('${c.user_id}', this)" class="poke-btn" title="Wave">👋</button>` : ''}
+            <button onclick="openCommentMenu(${c.id}, ${teachingId})" class="ml-auto p-1 text-gray-600 hover:text-gray-300 transition"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg></button>
+          </div>
+          ${quotedHtml}
+          ${contentWithMentions ? `<p class="text-sm text-gray-300 prose-content mt-1.5">${contentWithMentions}</p>` : ''}
+          ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-2.5 max-h-64 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
+        </div>
+        <div class="mt-2.5 flex items-center gap-4 flex-wrap">
+          ${reactionTriggerHtml(c, 'comment')}
+          <button onclick="showReplyBox(${c.id}, ${teachingId})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Reply</button>
+          ${canAccept ? `<button onclick="acceptAnswer(${c.id}, ${teachingId})" class="text-[10px] text-green-400 hover:text-green-300 transition">Accept as answer</button>` : ''}
+        </div>
+        <div id="reply-box-${c.id}" class="hidden mt-2.5"></div>
+        ${repliesHtml ? `<div class="mt-1.5">${repliesHtml}</div>` : ''}
+      </div>
+    </div>
+  </div>`;
+}
+
+async function acceptAnswer(commentId, teachingId) {
+  try {
+    await sb.from('teachings').update({ accepted_answer_id: commentId }).eq('id', teachingId);
+    const t = state.teachings.find(x => x.id === teachingId);
+    if (t) t.accepted_answer_id = commentId;
+    const comment = t ? t.comments.find(c => c.id === commentId) : null;
+    if (comment && comment.user_id !== state.user.id) {
+      await sb.from('notifications').insert({
+        user_id: comment.user_id, type: 'accepted',
+        actor_id: state.user.id, actor_username: state.profile.username,
+        teaching_id: teachingId, message: 'Your answer was accepted.'
+      });
+    }
+    renderTeachings();
+  } catch (e) { alert('Could not mark as accepted.'); }
+}
+
+function avatarHtml(userId, size) {
+  const cls = size === 'xs' ? 'avatar-xs' : size === 'lg' ? 'avatar-lg' : 'avatar-sm';
+  if (userId === '__anon__') return `<div class="${cls}">?</div>`;
+  const info = state.profileCache[userId] || {};
+  if (info.avatar_url) return `<img src="${info.avatar_url}" class="${cls}" alt="">`;
+  const initial = (info.username || '?')[0].toUpperCase();
+  return `<div class="${cls}">${initial}</div>`;
+}
+
+function showReplyBox(commentId, teachingId) {
+  const box = document.getElementById('reply-box-' + commentId);
+  if (!box) return;
+  if (state.openReplyCommentId && state.openReplyCommentId !== commentId) {
+    const prev = document.getElementById('reply-box-' + state.openReplyCommentId);
+    if (prev) { prev.classList.add('hidden'); prev.innerHTML = ''; }
+  }
+  if (box.innerHTML.trim() === '') box.innerHTML = renderComposer(teachingId, commentId);
+  const willOpen = box.classList.contains('hidden');
+  if (willOpen) {
+    box.classList.remove('hidden');
+    state.openReplyCommentId = commentId;
+    const t = document.getElementById(`reply-${commentId}-text`);
+    if (t) t.focus();
+  } else {
+    box.classList.add('hidden');
+    state.openReplyCommentId = null;
+  }
+}
+function cancelReply(commentId) {
+  const box = document.getElementById('reply-box-' + commentId);
+  if (box) { box.classList.add('hidden'); box.innerHTML = ''; }
+  if (state.openReplyCommentId === commentId) state.openReplyCommentId = null;
+}
+
+async function sendPoke(toUserId, btn) {
+  if (toUserId === state.user.id) return;
+  if (btn.disabled) return;
+  btn.disabled = true; btn.textContent = '⏳';
+  try {
+    const since = new Date(Date.now() - 86400000).toISOString();
+    const { data: ex } = await sb.from('pokes').select('id').eq('from_user', state.user.id).eq('to_user', toUserId).gte('created_at', since).limit(1);
+    if (ex && ex.length > 0) { btn.textContent = '✓'; setTimeout(() => { btn.disabled = false; btn.textContent = '👋'; }, 1500); return; }
+    await sb.from('pokes').insert({ from_user: state.user.id, to_user: toUserId });
+    await sb.from('notifications').insert({
+      user_id: toUserId, type: 'poke',
+      actor_id: state.user.id, actor_username: state.profile.username,
+      message: '👋 @' + state.profile.username + ' waved at you'
+    });
+    btn.textContent = '✓';
+    setTimeout(() => { btn.disabled = false; btn.textContent = '👋'; }, 1500);
+  } catch (e) { btn.disabled = false; btn.textContent = '👋'; }
+}
+
+function openCommentMenu(commentId, teachingId) {
+  let comment = null;
+  for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; break; } }
+  if (!comment) return;
+  const isOwner = comment.user_id === state.user.id;
+  const menu = document.createElement('div');
+  menu.className = 'fixed inset-0 z-[78] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4';
+  menu.innerHTML = `<div class="glass card w-full max-w-sm border border-void-600 overflow-hidden">
+    ${isOwner ? `<button onclick="this.closest('.fixed').remove(); editComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Edit comment</button>` : ''}
+    <button onclick="this.closest('.fixed').remove(); quoteComment(${teachingId}, ${commentId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Quote this comment</button>
+    <button onclick="this.closest('.fixed').remove(); shareComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Share as post</button>
+    ${isOwner ? `<button onclick="this.closest('.fixed').remove(); askDeleteComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-red-400 hover:bg-void-800 transition border-b border-void-600">Delete comment</button>` : ''}
+    <button onclick="this.closest('.fixed').remove()" class="btn w-full py-4 text-center px-5 text-sm text-gray-400 hover:bg-void-800 transition">Cancel</button>
+  </div>`;
+  menu.addEventListener('click', (e) => { if (e.target === menu) menu.remove(); });
+  document.body.appendChild(menu);
+}
+
+function quoteComment(teachingId, commentId) {
+  const t = state.teachings.find(x => x.id === teachingId);
+  if (!t) return;
+  const c = t.comments.find(x => x.id === commentId);
+  if (!c) return;
+  setQuote(teachingId, c);
+}
+
+async function editComment(commentId, teachingId) {
+  let comment = null;
+  for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; break; } }
+  if (!comment) return;
+  const newText = prompt('Edit your comment:', comment.content || '');
+  if (newText === null || newText === comment.content) return;
+  await sb.from('teaching_comments').update({ content: newText, updated_at: new Date().toISOString() }).eq('id', commentId);
+  await loadTeachings();
+  renderTeachings();
+}
+
+function shareComment(commentId, teachingId) {
+  let comment = null;
+  for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; break; } }
+  if (!comment) return;
+  const info = state.profileCache[comment.user_id] || { username: 'someone' };
+  const text = `"${comment.content || '[image]'}"\n\n— @${info.username} on Moph Echo\n\nhttps://mophecho-mirror.vercel.app`;
+  if (navigator.share) navigator.share({ title: 'A reflection from Moph Echo', text }).catch(() => {});
+  else navigator.clipboard.writeText(text).then(() => alert('Copied.')).catch(() => {});
+}
+
+let pendingDeletes = {};
+function askDeleteComment(commentId, teachingId) {
+  const el = document.getElementById('comment-' + commentId);
+  if (el) el.style.display = 'none';
+  const toast = document.createElement('div');
+  toast.className = 'undo-toast';
+  toast.id = 'undo-' + commentId;
+  toast.innerHTML = `<span class="text-xs text-gray-300">Comment deleted</span><button onclick="undoDelete(${commentId})" class="text-xs text-amethyst-400 hover:text-amethyst-300 font-semibold transition">Undo</button>`;
+  document.body.appendChild(toast);
+  pendingDeletes[commentId] = setTimeout(async () => {
+    await sb.from('teaching_comments').delete().eq('id', commentId);
+    const t = document.getElementById('undo-' + commentId);
+    if (t) t.remove();
+    delete pendingDeletes[commentId];
+  }, 5000);
+}
+function undoDelete(commentId) {
+  if (pendingDeletes[commentId]) { clearTimeout(pendingDeletes[commentId]); delete pendingDeletes[commentId]; }
+  const el = document.getElementById('comment-' + commentId);
+  if (el) el.style.display = '';
+  const t = document.getElementById('undo-' + commentId);
+  if (t) t.remove();
+}
+
+let mentionTargets = {};
+function handleMention(textarea, teachingId, parentId) {
+  const val = textarea.value;
+  const pos = textarea.selectionStart;
+  const before = val.substring(0, pos);
+  const atMatch = before.match(/@([a-z0-9_]*)$/i);
+  const dropdownId = `mention-dropdown-${teachingId}-${parentId === null ? 'null' : parentId}`;
+  const dd = document.getElementById(dropdownId);
+  if (!dd) return;
+  if (!atMatch) { dd.classList.add('hidden'); return; }
+  const q = atMatch[1].toLowerCase();
+  const allUsers = Object.values(state.profileCache).filter(p => p.username);
+  const matches = allUsers.filter(u => u.username.toLowerCase().startsWith(q) && u.username.toLowerCase() !== (state.profile.username || '').toLowerCase()).slice(0, 6);
+  if (matches.length === 0) { dd.classList.add('hidden'); return; }
+  dd.innerHTML = matches.map((u, i) => `<div class="mention-item ${i === 0 ? 'active' : ''}" onclick="insertMention('${textarea.id}', '${u.username}', '${dropdownId}')">@${escapeHtml(u.username)}</div>`).join('');
+  dd.classList.remove('hidden');
+  mentionTargets[dropdownId] = { textareaId: textarea.id, users: matches };
+}
+
+function insertMention(textareaId, username, dropdownId) {
+  const ta = document.getElementById(textareaId);
+  const val = ta.value;
+  const pos = ta.selectionStart;
+  const before = val.substring(0, pos);
+  const after = val.substring(pos);
+  const newBefore = before.replace(/@([a-z0-9_]*)$/i, '@' + username + ' ');
+  ta.value = newBefore + after;
+  ta.focus();
+  ta.selectionStart = ta.selectionEnd = newBefore.length;
+  const dd = document.getElementById(dropdownId);
+  if (dd) dd.classList.add('hidden');
+}
+
+function extractMentions(text) {
+  const m = (text || '').match(/@([a-z0-9_]+)/gi) || [];
+  return m.map(x => x.substring(1).toLowerCase());
+}
+
+async function submitComment(teachingId, parentId, uid) {
+  const textEl = document.getElementById(uid + '-text');
+  const previewEl = document.getElementById(uid + '-preview');
+  const btn = document.getElementById(uid + '-submit');
+  const text = textEl.value.trim();
+  const f1 = document.getElementById(uid + '-file');
+  const f2 = document.getElementById(uid + '-camera');
+  const file = (f1 && f1.files[0]) || (f2 && f2.files[0]);
+  if (!text && !file) return;
+
+  const qaEl = document.getElementById(uid + '-qa');
+  const isQuestion = qaEl && qaEl.querySelector('input') && qaEl.querySelector('input').checked;
+  const quotedId = (!parentId && state.quoteTarget) ? state.quoteTarget.commentId : null;
+
+  const tempId = 'temp-' + Date.now();
+  const hasPreview = previewEl && !previewEl.classList.contains('hidden');
+  const previewImgSrc = hasPreview ? previewEl.querySelector('img')?.src : null;
+  const optimistic = {
+    id: tempId, teaching_id: teachingId, user_id: state.user.id,
+    content: text || null, image_url: previewImgSrc,
+    parent_id: parentId || null, created_at: new Date().toISOString(),
+    reactions: [], is_question: isQuestion, is_anonymous: false,
+    quoted_comment_id: quotedId, _pending: true
+  };
+  const t = state.teachings.find(x => x.id === teachingId);
+  if (t) {
+    t.comments.push(optimistic);
+    renderTeachings();
+    if (parentId) { const rb = document.getElementById('reply-box-' + parentId); if (rb) rb.classList.add('hidden'); }
+  }
+  textEl.value = '';
+  if (f1) f1.value = '';
+  if (f2) f2.value = '';
+  if (previewEl) { previewEl.innerHTML = ''; previewEl.classList.add('hidden'); }
+  if (btn) btn.disabled = true;
+
+  try {
+    let image_url = null;
+    if (file) {
+      const path = `${state.user.id}/${Date.now()}-${file.name.replace(/[^a-zA-Z0-9.-]/g, '_')}`;
+      const { error } = await sb.storage.from('comment-images').upload(path, file);
+      if (!error) {
+        const { data } = sb.storage.from('comment-images').getPublicUrl(path);
+        image_url = data.publicUrl;
+      }
+    }
+    const payload = {
+      teaching_id: teachingId,
+      user_id: state.user.id,
+      content: text || null,
+      image_url,
+      parent_id: parentId || null
+    };
+    if (isQuestion) payload.is_question = true;
+    if (quotedId) payload.quoted_comment_id = quotedId;
+
+    const { data: inserted, error } = await sb.from('teaching_comments').insert(payload).select().single();
+    if (error) throw error;
+    if (t) {
+      const idx = t.comments.findIndex(c => c.id === tempId);
+      if (idx >= 0) t.comments[idx] = { ...inserted, reactions: [] };
+    }
+
+    if (parentId) {
+      const p = t.comments.find(c => c.id === parentId);
+      if (p && p.user_id !== state.user.id) {
+        await sb.from('notifications').insert({
+          user_id: p.user_id, type: 'reply',
+          actor_id: state.user.id, actor_username: state.profile.username,
+          teaching_id: teachingId, comment_id: parentId,
+          message: '@' + state.profile.username + ' replied to your comment'
+        });
+      }
+    }
+    if (t && t.user_id && t.user_id !== state.user.id) {
+      await sb.from('notifications').insert({
+        user_id: t.user_id, type: 'comment',
+        actor_id: state.user.id, actor_username: state.profile.username,
+        teaching_id: teachingId, comment_id: inserted.id,
+        message: '@' + state.profile.username + ' commented on your teaching'
+      });
+    }
+    for (const mu of extractMentions(text)) {
+      const { data: u } = await sb.from('profiles').select('id').ilike('username', mu).limit(1).maybeSingle();
+      if (u && u.id !== state.user.id) {
+        await sb.from('notifications').insert({
+          user_id: u.id, type: 'mention',
+          actor_id: state.user.id, actor_username: state.profile.username,
+          teaching_id: teachingId, comment_id: inserted.id,
+          message: '@' + state.profile.username + ' mentioned you'
+        });
+      }
+    }
+
+    logActivity(isQuestion && parentId ? 'qa_answer' : 'comment');
+    if (quotedId) state.quoteTarget = null;
+    state.openReplyCommentId = null;
+
+    renderTeachings();
+  } catch (e) {
+    console.error(e);
+    if (t) {
+      const idx = t.comments.findIndex(c => c.id === tempId);
+      if (idx >= 0) t.comments[idx]._error = true;
+      renderTeachings();
+    }
+  }
+}
+
+async function toggleTeachingReaction(teachingId, emoji) {
+  const t = state.teachings.find(x => x.id === teachingId);
+  if (!t) return;
+  const ex = t.reactions.find(r => r.user_id === state.user.id && r.emoji === emoji);
+  if (ex) t.reactions = t.reactions.filter(r => r.id !== ex.id);
+  else t.reactions = t.reactions.filter(r => r.user_id !== state.user.id).concat([{ id: 'temp-' + Date.now(), teaching_id: teachingId, user_id: state.user.id, emoji, _pending: true }]);
+  renderTeachings();
+  if (ex) {
+    await sb.from('teaching_reactions').delete().eq('id', ex.id);
+  } else {
+    await sb.from('teaching_reactions').delete().eq('teaching_id', teachingId).eq('user_id', state.user.id);
+    const { error } = await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
+    if (error) { console.error(error); await loadTeachings(); renderTeachings(); }
+  }
+}
+
+async function toggleCommentReaction(commentId, emoji) {
+  let comment = null, teachingId = null;
+  for (const t of state.teachings) {
+    const c = t.comments.find(x => x.id === commentId);
+    if (c) { comment = c; teachingId = t.id; break; }
+  }
+  if (!comment) return;
+  const ex = (comment.reactions || []).find(r => r.user_id === state.user.id && r.emoji === emoji);
+  if (ex) comment.reactions = comment.reactions.filter(r => r.id !== ex.id);
+  else comment.reactions = (comment.reactions || []).filter(r => r.user_id !== state.user.id).concat([{ id: 'temp-' + Date.now(), comment_id: commentId, user_id: state.user.id, emoji, _pending: true }]);
+  renderTeachings();
+  if (ex) {
+    await sb.from('comment_reactions').delete().eq('id', ex.id);
+  } else {
+    await sb.from('comment_reactions').delete().eq('comment_id', commentId).eq('user_id', state.user.id);
+    const { error } = await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
+    if (error) { console.error(error); await loadTeachings(); renderTeachings(); return; }
+    if (comment.user_id !== state.user.id) {
+      await sb.from('notifications').insert({
+        user_id: comment.user_id, type: 'reaction',
+        actor_id: state.user.id, actor_username: state.profile.username,
+        teaching_id: teachingId, comment_id: commentId,
+        message: '@' + state.profile.username + ' reacted ' + emoji + ' to your comment'
+      });
+    }
+  }
+}
+
+function shareTeaching(teachingId) {
+  const t = state.teachings.find(x => x.id === teachingId);
+  if (!t) return;
+  const text = (t.title ? t.title + '\n\n' : '') + (t.content || '').replace(/<[^>]*>/g,'').substring(0, 200) + '...\n\nRead on Moph Echo: https://mophecho-mirror.vercel.app';
+  if (navigator.share) navigator.share({ title: t.title || 'Moph Echo', text, url: 'https://mophecho-mirror.vercel.app' }).catch(() => {});
+  else navigator.clipboard.writeText(text).then(() => alert('Copied.')).catch(() => {});
+}
+
+function openImageViewer(src) {
+  document.getElementById('imageViewerSrc').src = src;
+  document.getElementById('imageViewer').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeImageViewer() {
+  document.getElementById('imageViewer').classList.add('hidden');
+  document.getElementById('imageViewerSrc').src = '';
+  document.body.style.overflow = '';
+}
+function openVideoViewer(src) {
+  const v = document.getElementById('videoViewerSrc');
+  v.src = src;
+  document.getElementById('videoViewer').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  v.play().catch(() => {});
+}
+function closeVideoViewer() {
+  const v = document.getElementById('videoViewerSrc');
+  v.pause();
+  v.src = '';
+  document.getElementById('videoViewer').classList.add('hidden');
+  document.body.style.overflow = '';
+}
+
+/* ============================================================
+   NOTIFICATIONS
+   ============================================================ */
+
+async function loadNotifications() {
+  const { data } = await sb.from('notifications').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(50);
+  state.notifications = data || [];
+  const unread = state.notifications.filter(n => !n.is_read).length;
+  const badge = document.getElementById('notifBadge');
+  if (unread > 0) { badge.textContent = unread > 9 ? '9+' : unread; badge.classList.remove('hidden'); }
+  else badge.classList.add('hidden');
+  if (!document.getElementById('notifPanel').classList.contains('hidden')) renderNotifications();
+}
+
+function renderNotifications() {
+  const el = document.getElementById('notifList');
+  if (state.notifications.length === 0) {
+    el.innerHTML = '<p class="text-xs text-gray-600 text-center py-8">The mirror is quiet. Nothing has arrived yet.</p>';
+    return;
+  }
+  el.innerHTML = state.notifications.map(n => `<div class="bg-void-800/50 card p-3.5 border ${n.is_read ? 'border-void-600' : 'border-amethyst-500/30'} cursor-pointer transition hover:border-amethyst-500/40" onclick="openNotification(${n.id}, ${n.teaching_id || 'null'})"><p class="text-xs text-gray-300">${escapeHtml(n.message || 'New notification')}</p><p class="text-[10px] text-gray-600 mt-1.5">${relativeTime(n.created_at)}</p></div>`).join('');
+}
+
+function showNotifications() { document.getElementById('notifPanel').classList.remove('hidden'); renderNotifications(); }
+function closeNotifications() { document.getElementById('notifPanel').classList.add('hidden'); }
+async function markAllRead() {
+  await sb.from('notifications').update({ is_read: true }).eq('user_id', state.user.id).eq('is_read', false);
+  await loadNotifications();
+  renderNotifications();
+}
+async function openNotification(notifId, teachingId) {
+  await sb.from('notifications').update({ is_read: true }).eq('id', notifId);
+  await loadNotifications();
+  closeNotifications();
+  if (teachingId) {
+    switchTab('teachings');
+    state.expandedCommentTeachingIds.add(teachingId);
+    switchSubTab('all');
+    setTimeout(() => {
+      const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 400);
+  }
+}
+
+/* ============================================================
+   SETTINGS
+   ============================================================ */
+
+function openSettings() {
+  document.getElementById('setUsername').value = state.profile.username || '';
+  document.getElementById('setBio').value = state.profile.bio || '';
+  document.getElementById('bioCount').textContent = (state.profile.bio || '').length;
+  document.getElementById('setWebsite').value = state.profile.website || '';
+  document.getElementById('setSocialX').value = state.profile.social_x || '';
+  document.getElementById('setSocialInstagram').value = state.profile.social_instagram || '';
+  document.getElementById('setSocialYoutube').value = state.profile.social_youtube || '';
+  document.getElementById('setSocialTiktok').value = state.profile.social_tiktok || '';
+  document.getElementById('setSocialWhatsapp').value = state.profile.social_whatsapp || '';
+  document.getElementById('setSocialLinkedin').value = state.profile.social_linkedin || '';
+  document.getElementById('privElement').checked = state.profile.privacy_element !== false;
+  document.getElementById('privStage').checked = state.profile.privacy_stage !== false;
+  document.getElementById('privWound').checked = state.profile.privacy_wound !== false;
+  document.getElementById('privGift').checked = state.profile.privacy_gift !== false;
+  document.getElementById('privFollowers').checked = state.profile.privacy_followers !== false;
+  document.getElementById('privFollowing').checked = state.profile.privacy_following !== false;
+  document.getElementById('setUsernameErr').classList.add('hidden');
+  selectTheme(state.profile.theme || 'amethyst');
+  document.getElementById('settingsModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeSettings() {
+  document.getElementById('settingsModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  applyTheme(state.profile.theme || 'amethyst');
+}
+
+async function saveSettings() {
+  const btn = document.getElementById('saveSettingsBtn');
+  const err = document.getElementById('setUsernameErr');
+  err.classList.add('hidden');
+  btn.textContent = 'Saving...';
+  btn.disabled = true;
+  const newUsername = document.getElementById('setUsername').value.trim().toLowerCase();
+  if (!/^[a-z0-9_]{3,30}$/.test(newUsername)) {
+    err.textContent = 'Lowercase letters, numbers, underscores. 3–30 characters.';
+    err.classList.remove('hidden');
+    btn.textContent = 'Save';
+    btn.disabled = false;
+    return;
+  }
+  if (newUsername !== state.profile.username) {
+    const { data: ex } = await sb.from('profiles').select('id').ilike('username', newUsername).neq('id', state.user.id).limit(1);
+    if (ex && ex.length > 0) {
+      err.textContent = 'That username is already taken.';
+      err.classList.remove('hidden');
+      btn.textContent = 'Save';
+      btn.disabled = false;
+      return;
+    }
+  }
+  const updates = {
+    username: newUsername,
+    bio: document.getElementById('setBio').value.trim() || null,
+    website: document.getElementById('setWebsite').value.trim() || null,
+    social_x: document.getElementById('setSocialX').value.trim() || null,
+    social_instagram: document.getElementById('setSocialInstagram').value.trim() || null,
+    social_youtube: document.getElementById('setSocialYoutube').value.trim() || null,
+    social_tiktok: document.getElementById('setSocialTiktok').value.trim() || null,
+    social_whatsapp: document.getElementById('setSocialWhatsapp').value.trim() || null,
+    social_linkedin: document.getElementById('setSocialLinkedin').value.trim() || null,
+    privacy_element: document.getElementById('privElement').checked,
+    privacy_stage: document.getElementById('privStage').checked,
+    privacy_wound: document.getElementById('privWound').checked,
+    privacy_gift: document.getElementById('privGift').checked,
+    privacy_followers: document.getElementById('privFollowers').checked,
+    privacy_following: document.getElementById('privFollowing').checked,
+    theme: state.selectedTheme
+  };
+  const { error } = await sb.from('profiles').update(updates).eq('id', state.user.id);
+  btn.textContent = 'Save';
+  btn.disabled = false;
+  if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
+  Object.assign(state.profile, updates);
+  state.profileCache[state.user.id] = { username: newUsername, avatar_url: state.profile.avatar_url };
+  applyTheme(state.selectedTheme);
+  renderProfile();
+  closeSettings();
+}
+
+function switchProfileTab(tab) {
+  ['posts','saved','about'].forEach(t => {
+    document.getElementById('pTab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
+    document.getElementById('profile' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('hidden', t !== tab);
+  });
+  if (tab === 'posts') loadMyPosts();
+  if (tab === 'saved') loadMySaved();
+  if (tab === 'about') { loadActivityCalendar(); refreshPushButton(); }
+}
+
+/* ============================================================
+   PUBLIC PROFILE
+   ============================================================ */
+
+async function openPublicProfile(userId) {
+  if (userId === state.user.id) { switchTab('profile'); return; }
+  const { data } = await sb.from('profiles').select('*').eq('id', userId).single();
+  if (!data) { alert('Profile not found.'); return; }
+  state.viewingUserId = userId;
+  const { data: followers } = await sb.from('follows').select('from_user').eq('to_user', userId);
+  const { data: following } = await sb.from('follows').select('to_user').eq('from_user', userId);
+  renderPublicProfile(data, followers?.length || 0, following?.length || 0);
+  document.getElementById('publicProfileModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+
+async function openPublicProfileByUsername(username) {
+  const { data } = await sb.from('profiles').select('id').ilike('username', username).limit(1).maybeSingle();
+  if (data) openPublicProfile(data.id);
+}
+
+function closePublicProfile() {
+  document.getElementById('publicProfileModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  state.viewingUserId = null;
+}
+
+function renderPublicProfile(p, followersCount, followingCount) {
+  const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin']
+    .filter(k => p[k])
+    .map(k => `<a href="${escapeHtml(p[k])}" target="_blank" rel="noopener" class="social-icon">${SOCIAL_ICONS[k].svg}</a>`)
+    .join('');
+  const websiteHtml = p.website ? `<a href="${escapeHtml(p.website)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs text-amethyst-400 hover:underline mt-2">${escapeHtml(p.website)}</a>` : '';
+  const priv = `<p class="private-badge">Private</p>`;
+  const e = p.privacy_element !== false ? `<p class="text-sm font-medium ${p.element ? 'text-amethyst-400' : 'text-gray-400'}">${p.element || '—'}</p>` : priv;
+  const s = p.privacy_stage !== false ? `<p class="text-sm font-medium ${p.stage ? 'text-amethyst-400' : 'text-gray-400'}">${p.stage || '—'}</p>` : priv;
+  const w = p.privacy_wound !== false ? `<p class="text-sm font-medium ${p.wound ? 'text-amethyst-400' : 'text-gray-400'}">${p.wound || '—'}</p>` : priv;
+  const g = p.privacy_gift !== false ? `<p class="text-sm font-medium ${p.gift ? 'text-amethyst-400' : 'text-gray-400'}">${p.gift || '—'}</p>` : priv;
+  const avatar = p.avatar_url ? `<img src="${escapeHtml(p.avatar_url)}" class="avatar-lg mx-auto">` : `<div class="avatar-lg mx-auto">${(p.username || '?')[0].toUpperCase()}</div>`;
+  const isFollowing = state.myFollowing.has(p.id);
+  const streakHtml = (p.streak_count || 0) >= 2 ? `<div class="streak-badge mx-auto mt-3" style="display:inline-flex;"><span>🔥</span><span>${p.streak_count}</span></div>` : '';
+  const followersPublic = p.privacy_followers !== false;
+  const followingPublic = p.privacy_following !== false;
+
+  document.getElementById('publicProfileContent').innerHTML = `
+    <div class="glass card p-6 border border-void-600 mb-3 text-center">
+      ${avatar}
+      <h2 class="text-lg font-semibold mt-4">@${escapeHtml(p.username || 'architect')}</h2>
+      ${streakHtml ? `<div class="mt-3">${streakHtml}</div>` : ''}
+      ${p.bio ? `<p class="text-sm text-gray-400 mt-3">${escapeHtml(p.bio)}</p>` : ''}
+      ${websiteHtml}
+      ${socials ? `<div class="flex flex-wrap justify-center gap-2 mt-4">${socials}</div>` : ''}
+      <button onclick="toggleFollow('${p.id}', this)" class="follow-btn ${isFollowing ? 'following' : 'not-following'} mt-5">${isFollowing ? 'Following' : 'Follow'}</button>
+      <div class="flex justify-center gap-6 mt-4">
+        ${followersPublic ? `<div class="text-xs"><span class="font-semibold text-gray-200">${followersCount}</span> <span class="text-gray-500">Followers</span></div>` : `<div class="text-xs text-gray-600 italic">Followers hidden</div>`}
+        ${followingPublic ? `<div class="text-xs"><span class="font-semibold text-gray-200">${followingCount}</span> <span class="text-gray-500">Following</span></div>` : `<div class="text-xs text-gray-600 italic">Following hidden</div>`}
+      </div>
+    </div>
+    <div class="glass card p-5 border border-void-600">
+      <h3 class="text-sm font-semibold mb-3">Spiritual Stats</h3>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Element</p>${e}</div>
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Stage</p>${s}</div>
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Wound</p>${w}</div>
+        <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p>${g}</div>
+      </div>
+    </div>
+  `;
+}
+
+/* ============================================================
+   OWN PROFILE
+   ============================================================ */
+
+function renderProfile() {
+  document.getElementById('displayUsername').textContent = '@' + (state.profile.username || 'architect');
+  document.getElementById('profileBio').textContent = state.profile.bio || 'Tap the settings icon to add a bio...';
+  document.getElementById('profileBio').className = state.profile.bio ? 'text-sm text-gray-400 mt-2 line-clamp-3' : 'text-sm text-gray-600 mt-2 italic';
+  if (state.profile.joined_at) {
+    document.getElementById('profileJoined').textContent = 'Joined ' + new Date(state.profile.joined_at).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+  } else {
+    document.getElementById('profileJoined').textContent = '';
+  }
+  document.getElementById('followersCount').textContent = state.myFollowers.size;
+  document.getElementById('followingCount').textContent = state.myFollowing.size;
+  const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin']
+    .filter(k => state.profile[k])
+    .map(k => `<a href="${escapeHtml(state.profile[k])}" target="_blank" rel="noopener" class="social-icon" title="${SOCIAL_ICONS[k].name}">${SOCIAL_ICONS[k].svg}</a>`)
+    .join('');
+  const webBtn = state.profile.website ? `<a href="${escapeHtml(state.profile.website)}" target="_blank" rel="noopener" class="social-icon" title="Website"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg></a>` : '';
+  document.getElementById('profileSocials').innerHTML = webBtn + socials;
+
+  document.getElementById('pElement').textContent = state.profile.element || '—';
+  document.getElementById('pElement').className = state.profile.element ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+  document.getElementById('pStage').textContent = state.profile.stage || '—';
+  document.getElementById('pStage').className = state.profile.stage ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+  document.getElementById('pWound').textContent = state.profile.wound || '—';
+  document.getElementById('pWound').className = state.profile.wound ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+  document.getElementById('pGift').textContent = state.profile.gift || '—';
+  document.getElementById('pGift').className = state.profile.gift ? 'text-sm font-medium text-amethyst-400' : 'text-sm font-medium text-gray-400';
+
+  const gl = document.getElementById('goldenList');
+  if (state.goldenStars.length === 0) gl.innerHTML = '<p class="text-xs text-gray-600">Your first golden moment is still unwritten.</p>';
+  else gl.innerHTML = state.goldenStars.map(s => `<div class="bg-gold-400/5 border border-gold-400/20 card p-3.5"><p class="text-xs text-gold-200 prose-content">${formatResponse(s.text)}</p><p class="text-[10px] text-gray-600 mt-2">${s.date}</p></div>`).join('');
+
+  updateStreakUI();
+  loadMyPosts();
+}
+
+async function loadMyPosts() {
+  const el = document.getElementById('myPostsList');
+  el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading your posts...</p>';
+  const { data, error } = await sb.from('teaching_comments')
+    .select('id, content, image_url, teaching_id, created_at, is_question, is_anonymous')
+    .eq('user_id', state.user.id)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) {
+    console.error('loadMyPosts error:', error);
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Could not load your posts. Pull down to refresh.</p></div>';
+    return;
+  }
+  state.myPosts = data || [];
+  renderMyPosts();
+}
+
+function renderMyPosts() {
+  const el = document.getElementById('myPostsList');
+  const q = (state.myPostsSearch || '').toLowerCase();
+  const filtered = q ? state.myPosts.filter(c => (c.content || '').toLowerCase().includes(q)) : state.myPosts;
+  if (!filtered || filtered.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">' + (q ? 'Nothing matches.' : 'Nothing posted yet.') + '</p></div>';
+    return;
+  }
+  el.innerHTML = filtered.map(c => {
+    const t = state.teachings.find(x => x.id === c.teaching_id);
+    const title = t ? (t.title || 'Untitled teaching') : 'Teaching';
+    const qBadge = c.is_question ? '<span class="q-badge">Q&amp;A</span>' : '';
+    const anonBadge = c.is_anonymous ? '<span class="anon-badge">anon</span>' : '';
+    return `<div class="post-card">
+      <div class="flex items-center gap-2 mb-3 text-xs text-gray-500"><span class="text-amethyst-400">Replying to</span><span class="text-gray-400 truncate">${escapeHtml(title)}</span>${qBadge}${anonBadge}</div>
+      ${c.content ? `<p class="text-sm text-gray-200 prose-content">${escapeHtml(c.content)}</p>` : ''}
+      ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
+      <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
+        <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
+        <div class="flex items-center gap-3">
+          <button onclick="jumpToComment(${c.teaching_id}, ${c.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">View thread</button>
+          <button onclick="shareComment(${c.id}, ${c.teaching_id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Share</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterMyPosts() {
+  state.myPostsSearch = document.getElementById('searchMyPosts').value.trim();
+  renderMyPosts();
+}
+
+async function loadMySaved() {
+  const el = document.getElementById('mySavedList');
+  el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading...</p>';
+  const ids = [...state.myBookmarkedIds];
+  if (ids.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Nothing saved. Tap the bookmark on any teaching.</p></div>';
+    return;
+  }
+  const saved = state.teachings.filter(t => ids.includes(t.id));
+  if (saved.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Nothing saved yet.</p></div>';
+    return;
+  }
+  el.innerHTML = saved.map(t => `<div class="post-card cursor-pointer" onclick="scrollToTeaching(${t.id})">
+    <h4 class="text-sm font-semibold text-gray-200 mb-1.5">${escapeHtml(t.title || 'Untitled')}</h4>
+    <p class="text-xs text-gray-500 line-clamp-2">${escapeHtml((t.content || '').replace(/<[^>]*>/g,'').substring(0, 120))}...</p>
+    <p class="text-[10px] text-gray-600 mt-2">${readingTime(t.content)} · Saved</p>
+  </div>`).join('');
+}
+
+function jumpToComment(teachingId, commentId) {
+  state.expandedCommentTeachingIds.add(teachingId);
+  switchTab('teachings');
+  switchSubTab('all');
+  setTimeout(() => {
+    const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 300);
+}
+
+async function handleAvatarUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  document.getElementById('avatarLoading').classList.remove('hidden');
+  const ext = file.name.split('.').pop() || 'jpg';
+  const path = `${state.user.id}/avatar-${Date.now()}.${ext}`;
+  const { error } = await sb.storage.from('avatars').upload(path, file, { upsert: true });
+  if (error) {
+    document.getElementById('avatarLoading').classList.add('hidden');
+    alert('Upload failed');
+    return;
+  }
+  const { data } = sb.storage.from('avatars').getPublicUrl(path);
+  const url = data.publicUrl + '?t=' + Date.now();
+  await sb.from('profiles').update({ avatar_url: url }).eq('id', state.user.id);
+  state.profile.avatar_url = url;
+  state.profileCache[state.user.id] = { username: state.profile.username, avatar_url: url };
+  document.getElementById('avatarUpload').innerHTML = `<img src="${url}" class="w-full h-full object-cover"><input type="file" id="avatarInput" accept="image/*" class="hidden">`;
+  document.getElementById('avatarLoading').classList.add('hidden');
+  document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
+}
+
+/* ============================================================
+   TAB SWITCHING
+   ============================================================ */
+
+function switchTab(tab) {
+  ['chat','teachings','profile'].forEach(t => {
+    const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (panel) panel.classList.add('hidden');
+    const btn = document.getElementById('tab' + t.charAt(0).toUpperCase() + t.slice(1));
+    if (btn) btn.className = 'flex-1 py-2 text-[11px] font-medium rounded-xl text-gray-500 hover:text-gray-300 flex items-center justify-center gap-1.5 transition';
+  });
+  document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
+  document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).className = 'flex-1 py-2 text-[11px] font-medium rounded-xl bg-amethyst-600/25 text-amethyst-300 border border-amethyst-500/25 flex items-center justify-center gap-1.5 transition';
+  localStorage.setItem('moph_active_tab', tab);
+  if (tab === 'profile') renderProfile();
+  if (tab === 'teachings') renderTeachings();
+}
+
+/* ============================================================
+   CHAT
+   ============================================================ */
+
+function renderChat() {
+  const c = document.getElementById('chatContainer');
+  if (state.messages.length === 0) {
+    c.innerHTML = `<div class="glass card p-5 border border-void-600 fade-in"><p class="text-sm text-gray-300">Welcome. I am the mirror.</p><p class="text-xs text-gray-500 mt-1">Speak your truth.</p></div>`;
+    return;
+  }
+  c.innerHTML = state.messages.map(m => {
+    if (m.role === 'user') return `<div class="flex justify-end fade-in"><div class="bg-amethyst-600/20 border border-amethyst-500/20 rounded-3xl rounded-br-lg px-4 py-3 max-w-[85%]"><p class="text-sm text-gray-200">${escapeHtml(m.text)}</p></div></div>`;
+    if (m.role === 'surprise') return `<div class="flex justify-start fade-in"><div class="bg-gold-400/10 border border-gold-400/30 rounded-3xl rounded-bl-lg px-4 py-3 max-w-[90%]"><p class="text-sm text-gold-200">${formatResponse(m.text)}</p></div></div>`;
+    return `<div class="flex justify-start fade-in"><div class="glass rounded-3xl rounded-bl-lg px-4 py-3 max-w-[90%] border border-void-600"><p class="text-sm text-gray-300">${m.text}</p></div></div>`;
+  }).join('');
+  c.scrollTop = c.scrollHeight;
+}
+
+async function processEntry() {
+  const input = document.getElementById('userInput');
+  const text = input.value.trim();
+  if (!text || !state.user) return;
+
+  state.messages.push({ role: 'user', text });
+  await saveMessage('user', text);
+  input.value = '';
+  input.style.height = 'auto';
+  renderChat();
+
+  await new Promise(r => setTimeout(r, 400));
+
+  const lastMsg = state.messages.length > 1 ? state.messages[state.messages.length - 2]?.text : '';
+  const { response } = generateReflection(text, state.usedResponses, lastMsg);
+  state.usedResponses.push(response);
+  if (state.usedResponses.length > 100) state.usedResponses = state.usedResponses.slice(-100);
+
+  state.messages.push({ role: 'mirror', text: response });
+  await saveMessage('mirror', response);
+
+  identifyProfile(text);
+  const ns = generateGoldenStar(text);
+  if (ns) {
+    setTimeout(async () => {
+      state.messages.push({ role: 'surprise', text: ns.text });
+      await saveMessage('surprise', ns.text);
+      await saveGoldenStar(ns.text, ns.trait_type, ns.trait_value);
+      renderChat();
+      renderProfile();
+    }, 1500);
+  }
+  renderChat();
+  renderProfile();
+  checkGrounding(text);
+  input.focus();
+}
+
+function identifyProfile(text) {
+  const l = text.toLowerCase();
+  let changed = false;
+  if (!state.profile.element) {
+    if (l.includes('anger')||l.includes('passion')||l.includes('burn')||l.includes('fire')) { state.profile.element='Fire'; changed=true; }
+    else if (l.includes('sad')||l.includes('cry')||l.includes('deep')||l.includes('void')||l.includes('empty')) { state.profile.element='Water'; changed=true; }
+    else if (l.includes('heavy')||l.includes('grounded')||l.includes('money')||l.includes('debt')) { state.profile.element='Earth'; changed=true; }
+    else if (l.includes('think')||l.includes('curious')||l.includes('mind')||l.includes('question')) { state.profile.element='Air'; changed=true; }
+  }
+  if (!state.profile.wound) {
+    if (l.includes('alone')||l.includes('lonely')||l.includes('abandoned')) { state.profile.wound='Abandonment'; changed=true; }
+    else if (l.includes('betray')||l.includes('trust')||l.includes('liar')) { state.profile.wound='Betrayal'; changed=true; }
+    else if (l.includes('worthless')||l.includes('not enough')||l.includes('failure')) { state.profile.wound='Worthlessness'; changed=true; }
+    else if (l.includes('powerless')||l.includes('control')||l.includes('weak')) { state.profile.wound='Powerlessness'; changed=true; }
+    else if (l.includes('invisible')||l.includes('ignore')) { state.profile.wound='Invisibility'; changed=true; }
+  }
+  if (!state.profile.gift) {
+    if (l.includes('intuitive')||l.includes('know without knowing')) { state.profile.gift='Intuition'; changed=true; }
+    else if (l.includes('heal')||l.includes('comfort')||l.includes('nurture')) { state.profile.gift='Healing'; changed=true; }
+    else if (l.includes('teach')||l.includes('explain')||l.includes('guide')) { state.profile.gift='Teaching'; changed=true; }
+    else if (l.includes('create')||l.includes('build')||l.includes('design')) { state.profile.gift='Creation'; changed=true; }
+    else if (l.includes('protect')||l.includes('shield')||l.includes('guard')) { state.profile.gift='Protection'; changed=true; }
+  }
+  if (changed) saveProfile();
+}
+
+function generateGoldenStar() {
+  if (state.profile.element && !state.goldenStars.some(s => s.trait_type === 'element')) {
+    const r = TRAIT_REWARDS.element[state.profile.element];
+    if (r) return { text: r, trait_type: 'element', trait_value: state.profile.element };
+  }
+  if (state.profile.wound && !state.goldenStars.some(s => s.trait_type === 'wound')) {
+    const r = TRAIT_REWARDS.wound[state.profile.wound];
+    if (r) return { text: r, trait_type: 'wound', trait_value: state.profile.wound };
+  }
+  if (state.profile.gift && !state.goldenStars.some(s => s.trait_type === 'gift')) {
+    const r = TRAIT_REWARDS.gift[state.profile.gift];
+    if (r) return { text: r, trait_type: 'gift', trait_value: state.profile.gift };
+  }
+  return null;
+}
+
+function checkGrounding(text) {
+  const l = text.toLowerCase();
+  const a = document.getElementById('groundingAlert');
+  if (l.includes('hungry')||l.includes('floating')||l.includes('eat')) a.classList.remove('hidden');
+  else a.classList.add('hidden');
+}
+
+/* ============================================================
+   DOWNLOAD
+   ============================================================ */
+
+function openDownloadModal() {
+  if (state.messages.length === 0) { alert('Nothing to download yet.'); return; }
+  document.getElementById('downloadModal').classList.remove('hidden');
+}
+function closeDownloadModal() { document.getElementById('downloadModal').classList.add('hidden'); }
+
+function downloadAs(format) {
+  const filename = (document.getElementById('downloadFilename').value.trim() || 'moph-echo-journey').replace(/[^a-z0-9-_]/gi, '_');
+  let log = 'MOPH ECHO MIRROR — REFLECTION LOG\n' + `Exported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n`;
+  state.messages.forEach(m => {
+    const r = m.role === 'user' ? 'YOU' : m.role === 'surprise' ? 'GOLDEN' : 'MIRROR';
+    log += `[${r}] ${String(m.text).replace(/<[^>]*>/g, '')}\n${'-'.repeat(30)}\n`;
+  });
+  if (format === 'txt') {
+    const blob = new Blob([log], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename + '.txt';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    closeDownloadModal();
+    return;
+  }
+  const hms = state.messages.map(m => {
+    if (m.role === 'user') return `<div class="msg user"><div class="bubble user">${escapeHtml(m.text)}</div></div>`;
+    if (m.role === 'surprise') return `<div class="msg mirror"><div class="bubble gold">${escapeHtml(String(m.text).replace(/<[^>]*>/g, ''))}</div></div>`;
+    return `<div class="msg mirror"><div class="bubble mirror">${String(m
