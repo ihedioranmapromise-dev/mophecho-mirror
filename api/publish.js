@@ -1,5 +1,5 @@
 // /api/publish.js
-// Admin: create / update / delete teachings + polls + email
+// Admin: create / update / delete teachings + polls + email + analytics
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -29,7 +29,11 @@ export default async function handler(req, res) {
 
 // ============ CREATE ============
 async function createTeaching(body, supabaseUrl, serviceKey, res) {
-  const { title, content, cover_image, video_file, video_url, sendEmail, tags, pinned, featured, poll } = body;
+  const {
+    title, content, cover_image, video_file, video_url, sendEmail,
+    tags, pinned, featured, poll,
+    is_question, is_anonymous, cross_question_id
+  } = body;
 
   if (!content || !content.trim()) return res.status(400).json({ error: 'Content is required' });
 
@@ -54,7 +58,10 @@ async function createTeaching(body, supabaseUrl, serviceKey, res) {
     video_url: finalVideoUrl,
     tags: tags || [],
     pinned: pinned || false,
-    featured_date: featured ? new Date().toISOString().split('T')[0] : null
+    featured_date: featured ? new Date().toISOString().split('T')[0] : null,
+    is_question: !!is_question,
+    is_anonymous: !!is_anonymous,
+    cross_question_id: cross_question_id || null
   };
 
   const insertRes = await fetch(`${supabaseUrl}/rest/v1/teachings`, {
@@ -75,7 +82,7 @@ async function createTeaching(body, supabaseUrl, serviceKey, res) {
   const inserted = await insertRes.json();
   const teaching = inserted[0];
 
-  // Create poll if provided
+  // Create poll if provided — single row, JSONB options
   if (poll && poll.question && poll.options && poll.options.filter(o => o.trim()).length >= 2) {
     await createPoll(teaching.id, poll, supabaseUrl, serviceKey);
   }
@@ -88,7 +95,10 @@ async function createTeaching(body, supabaseUrl, serviceKey, res) {
 
 // ============ UPDATE ============
 async function updateTeaching(body, supabaseUrl, serviceKey, res) {
-  const { id, title, content, cover_image, video_file, video_url, tags, pinned, featured, poll } = body;
+  const {
+    id, title, content, cover_image, video_file, video_url, tags, pinned, featured, poll,
+    is_question, is_anonymous, cross_question_id
+  } = body;
 
   if (!id) return res.status(400).json({ error: 'Missing id' });
   if (!content || !content.trim()) return res.status(400).json({ error: 'Content is required' });
@@ -97,7 +107,10 @@ async function updateTeaching(body, supabaseUrl, serviceKey, res) {
     title: title || null,
     content,
     tags: tags || [],
-    pinned: pinned || false
+    pinned: pinned || false,
+    is_question: !!is_question,
+    is_anonymous: !!is_anonymous,
+    cross_question_id: cross_question_id || null
   };
 
   if (featured) {
@@ -140,10 +153,9 @@ async function updateTeaching(body, supabaseUrl, serviceKey, res) {
   }
   const updated = await r.json();
 
-  // Handle poll: if polls were sent, delete old poll and re-create
+  // Handle poll: delete existing row from teaching_polls, then re-create if poll provided
   if (poll !== undefined) {
-    // Delete existing poll (cascade will handle options/votes)
-    await fetch(`${supabaseUrl}/rest/v1/polls?teaching_id=eq.${id}`, {
+    await fetch(`${supabaseUrl}/rest/v1/teaching_polls?teaching_id=eq.${id}`, {
       method: 'DELETE',
       headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
     });
@@ -160,6 +172,7 @@ async function deleteTeaching(body, supabaseUrl, serviceKey, res) {
   const { id } = body;
   if (!id) return res.status(400).json({ error: 'Missing id' });
 
+  // teaching_polls cascades from teachings via FK on delete cascade
   const r = await fetch(`${supabaseUrl}/rest/v1/teachings?id=eq.${id}`, {
     method: 'DELETE',
     headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` }
@@ -175,28 +188,45 @@ async function deleteTeaching(body, supabaseUrl, serviceKey, res) {
 // ============ ANALYTICS ============
 async function getAnalytics(body, supabaseUrl, serviceKey, res) {
   try {
-    const [tRes, vRes, cRes, rRes] = await Promise.all([
-      fetch(`${supabaseUrl}/rest/v1/teachings?select=id,title,created_at`, { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }),
-      fetch(`${supabaseUrl}/rest/v1/teaching_views?select=teaching_id`, { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }),
-      fetch(`${supabaseUrl}/rest/v1/teaching_comments?select=teaching_id`, { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }),
-      fetch(`${supabaseUrl}/rest/v1/teaching_reactions?select=teaching_id`, { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } })
+    const [tRes, readRes, cRes, rRes, pRes, vRes] = await Promise.all([
+      fetch(`${supabaseUrl}/rest/v1/teachings?select=id,title,created_at,is_question,pinned&order=created_at.desc&limit=200`,
+        { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }),
+      fetch(`${supabaseUrl}/rest/v1/teachings_read?select=teaching_id`,
+        { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }),
+      fetch(`${supabaseUrl}/rest/v1/teaching_comments?select=teaching_id`,
+        { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }),
+      fetch(`${supabaseUrl}/rest/v1/teaching_reactions?select=teaching_id`,
+        { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }),
+      fetch(`${supabaseUrl}/rest/v1/teaching_polls?select=id,teaching_id`,
+        { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }),
+      fetch(`${supabaseUrl}/rest/v1/poll_votes?select=poll_id`,
+        { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } })
     ]);
     const teachings = await tRes.json();
-    const views = await vRes.json();
+    const reads = await readRes.json();
     const comments = await cRes.json();
     const reactions = await rRes.json();
+    const polls = await pRes.json();
+    const votes = await vRes.json();
 
-    const viewsBy = {}; (views || []).forEach(v => { viewsBy[v.teaching_id] = (viewsBy[v.teaching_id] || 0) + 1; });
+    const readsBy = {}; (reads || []).forEach(r => { readsBy[r.teaching_id] = (readsBy[r.teaching_id] || 0) + 1; });
     const commentsBy = {}; (comments || []).forEach(c => { commentsBy[c.teaching_id] = (commentsBy[c.teaching_id] || 0) + 1; });
     const reactionsBy = {}; (reactions || []).forEach(r => { reactionsBy[r.teaching_id] = (reactionsBy[r.teaching_id] || 0) + 1; });
+
+    const pollByT = {}; (polls || []).forEach(p => { pollByT[p.teaching_id] = p.id; });
+    const votesByPoll = {}; (votes || []).forEach(v => { votesByPoll[v.poll_id] = (votesByPoll[v.poll_id] || 0) + 1; });
 
     const result = (teachings || []).map(t => ({
       id: t.id,
       title: t.title || 'Untitled',
       created_at: t.created_at,
-      views: viewsBy[t.id] || 0,
+      is_question: !!t.is_question,
+      pinned: !!t.pinned,
+      reads: readsBy[t.id] || 0,
       comments: commentsBy[t.id] || 0,
-      reactions: reactionsBy[t.id] || 0
+      reactions: reactionsBy[t.id] || 0,
+      votes: pollByT[t.id] ? (votesByPoll[pollByT[t.id]] || 0) : 0,
+      hasPoll: !!pollByT[t.id]
     }));
 
     return res.status(200).json({ success: true, analytics: result });
@@ -207,22 +237,24 @@ async function getAnalytics(body, supabaseUrl, serviceKey, res) {
 
 // ============ HELPERS ============
 async function createPoll(teachingId, poll, supabaseUrl, serviceKey) {
-  const pollRes = await fetch(`${supabaseUrl}/rest/v1/polls`, {
+  const opts = poll.options.map(o => o.trim()).filter(Boolean).slice(0, 4);
+  const r = await fetch(`${supabaseUrl}/rest/v1/teaching_polls`, {
     method: 'POST',
-    headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
-    body: JSON.stringify({ teaching_id: teachingId, question: poll.question })
+    headers: {
+      'apikey': serviceKey,
+      'Authorization': `Bearer ${serviceKey}`,
+      'Content-Type': 'application/json',
+      'Prefer': 'return=representation'
+    },
+    body: JSON.stringify({
+      teaching_id: teachingId,
+      question: poll.question,
+      options: opts
+    })
   });
-  if (!pollRes.ok) return;
-  const pollData = await pollRes.json();
-  const pollId = pollData[0].id;
-
-  const opts = poll.options.filter(o => o.trim()).slice(0, 4);
-  for (let i = 0; i < opts.length; i++) {
-    await fetch(`${supabaseUrl}/rest/v1/poll_options`, {
-      method: 'POST',
-      headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ poll_id: pollId, option_text: opts[i], position: i })
-    });
+  if (!r.ok) {
+    const err = await r.text();
+    console.error('createPoll failed', err);
   }
 }
 
