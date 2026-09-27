@@ -1,12 +1,3 @@
-/* ============================================================
-   app.js — Moph Echo Mirror application.
-   DOM, state, auth, Supabase, teachings, everything except
-   the reasoning engine (which lives in engine.js).
-
-   Loaded from index.html as:
-     <script type="module" src="/app.js"></script>
-   ============================================================ */
-
 import {
   generateReflection,
   formatResponse,
