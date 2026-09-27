@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Moph Echo">
+<meta name="app-version" content="v2">
 <title>Moph Echo Mirror</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icon.svg">
@@ -43,12 +44,12 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .skeleton { background: linear-gradient(90deg, rgba(40,40,60,0.4) 25%, rgba(60,60,80,0.4) 50%, rgba(40,40,60,0.4) 75%); background-size: 200% 100%; animation: shimmer 1.6s infinite; border-radius: 12px; }
 @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 .pending-opacity { opacity: 0.6; }
-.mention-dropdown { position: absolute; background: #161624; border: 1px solid #3a3a5a; border-radius: 14px; max-height: 180px; overflow-y: auto; z-index: 60; box-shadow: 0 12px 32px rgba(0,0,0,0.6); }
+.mention-dropdown { position: absolute; background: #161624; border: 1px solid #3a3a5a; border-radius: 14px; max-height: 180px; overflow-y: auto; z-index: 60; box-shadow: 0 12px 32px rgba(0,0,0,0.6); max-width: calc(100vw - 32px); }
 .mention-item { padding: 9px 13px; cursor: pointer; font-size: 13px; color: #d0d0e8; }
 .mention-item:hover, .mention-item.active { background: rgba(var(--accent-rgb),0.15); }
 .video-wrapper { position: relative; background: #000; border-radius: 16px; overflow: hidden; max-height: 70vh; display: flex; align-items: center; justify-content: center; }
 .video-wrapper video { max-width: 100%; max-height: 70vh; width: 100%; display: block; }
-.undo-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(26,26,46,0.95); backdrop-filter: blur(12px); border: 1px solid #3a3a5a; border-radius: 14px; padding: 12px 18px; z-index: 90; display: flex; align-items: center; gap: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); animation: fadeIn 0.25s ease; }
+.undo-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%); background: rgba(26,26,46,0.95); backdrop-filter: blur(12px); border: 1px solid #3a3a5a; border-radius: 14px; padding: 12px 18px; z-index: 90; display: flex; align-items: center; gap: 14px; box-shadow: 0 12px 32px rgba(0,0,0,0.5); animation: fadeIn 0.25s ease; max-width: calc(100vw - 32px); }
 .card { border-radius: 1.25rem; } .card-lg { border-radius: 1.5rem; }
 .btn { transition: all 0.18s cubic-bezier(0.2,0.8,0.3,1); }
 .btn:hover { transform: translateY(-1px); } .btn:active { transform: translateY(0) scale(0.98); }
@@ -83,7 +84,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .reaction-trigger:hover { background: rgba(var(--accent-rgb),0.15); border-color: rgba(var(--accent-rgb),0.35); }
 .reaction-trigger.has-reaction { background: rgba(var(--accent-rgb),0.35); border-color: rgba(var(--accent-rgb),0.55); }
 .reaction-picker { position: absolute; bottom: 100%; left: 0; margin-bottom: 8px; background: #161624; border: 1px solid #3a3a5a; border-radius: 24px; padding: 6px; display: flex; gap: 2px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); z-index: 50; animation: fadeIn 0.15s ease; max-width: calc(100vw - 24px); }
-.reaction-picker.right-anchor { left: auto; right: 0; }
 .reaction-picker button { width: 36px; height: 36px; border-radius: 50%; font-size: 19px; cursor: pointer; transition: all 0.15s; background: transparent; border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .reaction-picker button:hover { background: rgba(var(--accent-rgb),0.2); transform: scale(1.15); }
 .reaction-picker button.is-selected { background: rgba(var(--accent-rgb),0.4); }
@@ -320,7 +320,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
     <div class="px-3 sm:px-4 py-4 space-y-4">
       <div id="featuredBanner" class="hidden"></div>
       <div class="glass card p-5 border border-void-600 space-y-3.5">
-        <div class="relative">
+        <div class="relative" id="searchWrap">
           <svg class="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           <input type="text" id="searchInput" placeholder="Search the teachings..." oninput="filterTeachings()" class="w-full bg-void-900 border border-void-600 rounded-2xl pl-10 pr-3.5 py-2.5 text-sm focus:border-amethyst-500 focus:outline-none transition">
         </div>
