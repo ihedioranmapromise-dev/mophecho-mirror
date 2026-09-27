@@ -14,11 +14,15 @@ body { background:#06060a; }
 .glass { background:rgba(16,16,28,0.75); backdrop-filter:blur(24px); }
 .spinner { border:2px solid rgba(139,92,246,.2); border-top-color:#a78bfa; border-radius:50%; width:16px; height:16px; animation:spin .8s linear infinite; display:inline-block; }
 @keyframes spin { to{transform:rotate(360deg);} }
-.rich-toolbar button { padding: 6px 10px; border-radius: 8px; color: #b0b0c8; background: transparent; border: 1px solid transparent; transition: all 0.15s; font-size: 13px; cursor: pointer; }
+
+.rich-toolbar button { padding: 6px 10px; border-radius: 8px; color: #b0b0c8; background: transparent; border: 1px solid transparent; transition: all 0.15s; font-size: 13px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; min-height: 32px; }
 .rich-toolbar button:hover { background: rgba(124,58,237,0.2); color: #fff; border-color: rgba(124,58,237,0.3); }
 .rich-toolbar button.active { background: rgba(124,58,237,0.3); color: #fff; border-color: rgba(124,58,237,0.5); }
-#richEditor { min-height: 300px; padding: 16px; background: #0a0a12; border: 1px solid #161624; border-radius: 12px; color: #d0d0e8; font-size: 15px; line-height: 1.7; outline: none; overflow-y: auto; }
-#richEditor:focus { border-color: #7c3aed; }
+.rich-toolbar .divider { width: 1px; background: #2a2a3a; margin: 4px 2px; align-self: stretch; }
+
+#richEditor { min-height: 340px; padding: 18px; background: #0a0a12; border: 1px solid #161624; border-radius: 12px; color: #d0d0e8; font-size: 15px; line-height: 1.75; outline: none; overflow-y: auto; }
+#richEditor:focus { border-color: #7c3aed; box-shadow: 0 0 0 3px rgba(124,58,237,0.1); }
+#richEditor:empty::before { content: attr(data-placeholder); color: #4a4a5a; white-space: pre-wrap; pointer-events: none; }
 #richEditor h1 { font-size: 1.6em; font-weight: 700; margin: 0.6em 0 0.4em; color: #e0e0f0; }
 #richEditor h2 { font-size: 1.3em; font-weight: 600; margin: 0.6em 0 0.4em; color: #e0e0f0; }
 #richEditor h3 { font-size: 1.1em; font-weight: 600; margin: 0.6em 0 0.4em; color: #d0d0e8; }
@@ -27,6 +31,22 @@ body { background:#06060a; }
 #richEditor blockquote { border-left: 3px solid #7c3aed; padding-left: 12px; margin: 0.5em 0; color: #b0b0c8; font-style: italic; }
 #richEditor a { color: #a78bfa; text-decoration: underline; }
 #richEditor b, #richEditor strong { color: #e0e0f0; }
+
+.ql-tip { position: absolute; background: #161624; border: 1px solid #3a3a5a; border-radius: 10px; padding: 6px 10px; font-size: 11px; color: #b0b0c8; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 80; pointer-events: none; white-space: nowrap; }
+
+.marker-btn { background: rgba(124,58,237,0.10); border: 1px solid rgba(124,58,237,0.30); color: #a78bfa; font-weight: 700; }
+.marker-btn:hover { background: rgba(124,58,237,0.25); }
+
+.toggle-pill { display:inline-flex; align-items:center; gap:8px; padding: 10px 14px; border-radius: 12px; background: rgba(16,16,28,0.6); border: 1px solid #2a2a3a; cursor: pointer; transition: all 0.15s; user-select: none; }
+.toggle-pill:hover { border-color: rgba(124,58,237,0.35); }
+.toggle-pill.on { background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.55); }
+.toggle-pill input { display: none; }
+.toggle-pill .dot { width: 8px; height: 8px; border-radius: 50%; background: #3a3a5a; transition: all 0.15s; }
+.toggle-pill.on .dot { background: #a78bfa; box-shadow: 0 0 8px rgba(167,139,250,0.6); }
+
+.autosave-dot { width: 7px; height: 7px; border-radius: 50%; background: #3a3a5a; transition: all 0.3s; }
+.autosave-dot.saving { background: #eab308; box-shadow: 0 0 6px rgba(234,179,8,0.6); }
+.autosave-dot.saved { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,0.6); }
 </style>
 </head>
 <body class="font-sans text-gray-200 min-h-screen">
@@ -99,32 +119,83 @@ body { background:#06060a; }
       <input type="text" id="tTags" placeholder="e.g., Gnosis, Discipline" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
     </div>
 
+    <!-- ============ TEACHING TYPE ============ -->
     <div>
-      <label class="text-xs text-gray-500 uppercase tracking-wider">Content</label>
-      <div class="rich-toolbar mt-1 mb-2 flex flex-wrap gap-1 p-1.5 bg-void-800/50 rounded-xl border border-void-600">
-        <button type="button" onclick="formatDoc('bold')" title="Bold"><b>B</b></button>
-        <button type="button" onclick="formatDoc('italic')" title="Italic"><i>I</i></button>
-        <button type="button" onclick="formatDoc('underline')" title="Underline"><u>U</u></button>
-        <span class="text-gray-700 mx-1">|</span>
+      <label class="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Teaching type</label>
+      <div class="flex flex-wrap gap-2">
+        <label class="toggle-pill" id="qaPill" onclick="togglePill('qaPill', 'qaChk')">
+          <input type="checkbox" id="qaChk">
+          <span class="dot"></span>
+          <span class="text-xs text-gray-300">Mark as Q&amp;A question</span>
+        </label>
+        <label class="toggle-pill" id="anonPill" onclick="togglePill('anonPill', 'anonChk')">
+          <input type="checkbox" id="anonChk">
+          <span class="dot"></span>
+          <span class="text-xs text-gray-300">Post anonymously</span>
+        </label>
+      </div>
+      <p class="text-[10px] text-gray-600 mt-2">Q&amp;A teachings appear in the Q&amp;A tab. Anonymous hides the author and posts as @anonymous.</p>
+    </div>
+
+    <!-- ============ CROSS-QUESTION LINK ============ -->
+    <div>
+      <label class="text-xs text-gray-500 uppercase tracking-wider">Link to a Q&amp;A question (optional)</label>
+      <select id="crossQuestionSelect" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <option value="">— None —</option>
+      </select>
+      <p class="text-[10px] text-gray-600 mt-1">The selected question will show as a linked card inside this teaching.</p>
+    </div>
+
+    <!-- ============ RICH EDITOR ============ -->
+    <div>
+      <div class="flex items-center justify-between mb-2">
+        <label class="text-xs text-gray-500 uppercase tracking-wider">Content</label>
+        <div class="flex items-center gap-2">
+          <span id="autosaveLabel" class="text-[10px] text-gray-500">Ready</span>
+          <span id="autosaveDot" class="autosave-dot"></span>
+        </div>
+      </div>
+
+      <div class="rich-toolbar mb-2 flex flex-wrap gap-1 p-1.5 bg-void-800/50 rounded-xl border border-void-600 items-center">
+        <button type="button" onclick="formatDoc('bold')" title="Bold (Ctrl+B)"><b>B</b></button>
+        <button type="button" onclick="formatDoc('italic')" title="Italic (Ctrl+I)"><i>I</i></button>
+        <button type="button" onclick="formatDoc('underline')" title="Underline (Ctrl+U)"><u>U</u></button>
+        <button type="button" onclick="formatDoc('strikeThrough')" title="Strikethrough"><s>S</s></button>
+        <span class="divider"></span>
         <button type="button" onclick="formatDoc('formatBlock', 'h1')" title="Heading 1">H1</button>
         <button type="button" onclick="formatDoc('formatBlock', 'h2')" title="Heading 2">H2</button>
         <button type="button" onclick="formatDoc('formatBlock', 'h3')" title="Heading 3">H3</button>
         <button type="button" onclick="formatDoc('formatBlock', 'p')" title="Paragraph">¶</button>
-        <span class="text-gray-700 mx-1">|</span>
+        <span class="divider"></span>
         <button type="button" onclick="formatDoc('insertUnorderedList')" title="Bullet list">• List</button>
         <button type="button" onclick="formatDoc('insertOrderedList')" title="Numbered list">1. List</button>
         <button type="button" onclick="formatDoc('formatBlock', 'blockquote')" title="Quote">❝</button>
-        <span class="text-gray-700 mx-1">|</span>
-        <button type="button" onclick="insertLink()" title="Insert link">🔗</button>
-        <button type="button" onclick="formatDoc('removeFormat')" title="Clear format">✕ Format</button>
+        <button type="button" onclick="insertDivider()" title="Divider">—</button>
+        <span class="divider"></span>
+        <button type="button" onclick="insertLink()" title="Link (Ctrl+K)">🔗</button>
+        <button type="button" onclick="formatDoc('removeFormat')" title="Clear format">✕</button>
+        <span class="divider"></span>
+        <button type="button" class="marker-btn" onclick="insertMarker('✦')" title="Insert insight marker">✦</button>
+        <button type="button" class="marker-btn" onclick="insertMarker('❓')" title="Insert question marker">❓</button>
+        <button type="button" class="marker-btn" onclick="insertMarker('✨')" title="Insert golden moment marker">✨</button>
+        <span class="divider"></span>
+        <button type="button" onclick="togglePreview()" id="previewBtn" title="Preview">👁 Preview</button>
       </div>
-      <div id="richEditor" contenteditable="true" data-placeholder="Write your teaching here...&#10;&#10;Use ✦ for insight markers and ❓ for the closing question."></div>
+
+      <div id="richEditor" contenteditable="true" data-placeholder="Write your teaching here...&#10;&#10;Type # for a heading, - for a list, > for a quote.&#10;&#10;Use ✦ for insights and ❓ for the closing question."></div>
+
+      <div class="flex items-center justify-between mt-2 text-[10px] text-gray-600">
+        <span id="editorMeta">0 words · 0 min read</span>
+        <span id="editorCharCount">0 / 8000</span>
+      </div>
     </div>
 
+    <!-- ============ POLL ============ -->
     <div class="border-t border-void-600 pt-4">
-      <label class="flex items-center gap-2 cursor-pointer select-none">
-        <input type="checkbox" id="pollChk" class="w-4 h-4 rounded border-void-600 bg-void-900 accent-amethyst-600" onchange="togglePoll()">
-        <span class="text-xs text-gray-400">📊 Attach a poll to this teaching</span>
+      <label class="toggle-pill" id="pollPill" onclick="togglePill('pollPill', 'pollChk'); togglePoll();">
+        <input type="checkbox" id="pollChk">
+        <span class="dot"></span>
+        <span class="text-xs text-gray-300">📊 Attach a poll to this teaching</span>
       </label>
       <div id="pollFields" class="hidden mt-3 space-y-2 pl-6 border-l-2 border-amethyst-500/30">
         <input type="text" id="pollQuestion" placeholder="Poll question..." class="w-full bg-void-900 border border-void-600 rounded-xl px-4 py-2.5 text-sm focus:border-amethyst-500 focus:outline-none transition">
@@ -136,6 +207,7 @@ body { background:#06060a; }
       </div>
     </div>
 
+    <!-- ============ FLAGS ============ -->
     <label class="flex items-center gap-2 cursor-pointer select-none">
       <input type="checkbox" id="pinChk" class="w-4 h-4 rounded border-void-600 bg-void-900 accent-amethyst-600">
       <span class="text-xs text-gray-400">📌 Pin to top of feed</span>
@@ -183,7 +255,7 @@ body { background:#06060a; }
 <div id="deleteModal" class="hidden fixed inset-0 z-[80] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
   <div class="glass rounded-2xl p-6 max-w-sm w-full border border-red-500/30 shadow-2xl">
     <h3 class="text-base font-semibold mb-2">Delete this teaching?</h3>
-    <p class="text-xs text-gray-400 mb-5">This cannot be undone.</p>
+    <p class="text-xs text-gray-400 mb-5">This cannot be undone. Comments, reactions, polls, and read history will also be removed.</p>
     <div class="flex gap-2">
       <button onclick="closeDeleteModal()" class="flex-1 py-2.5 rounded-xl bg-void-800 text-gray-300 text-sm font-medium">Cancel</button>
       <button onclick="confirmDelete()" id="confirmDelBtn" class="flex-1 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-sm font-medium">Delete</button>
@@ -196,41 +268,153 @@ let adminKey = sessionStorage.getItem('moph_admin_key') || '';
 let coverImageUrl = null, videoFileBase64 = null, videoUrlExternal = null;
 let existingCoverUrl = null, existingVideoUrl = null, pendingDeleteId = null;
 let richContentEdited = false;
+let editorPreviewing = false;
+let cachedQaTeachings = [];
+let currentCrossId = null;
+let allTeachingsCache = [];
 
 // ===== RICH TEXT EDITOR =====
 const editor = document.getElementById('richEditor');
+
 editor.addEventListener('input', () => {
   richContentEdited = true;
+  updateEditorMeta();
   saveDraft();
 });
 editor.addEventListener('focus', () => {
   if (editor.innerText.trim() === '') editor.innerHTML = '';
 });
+editor.addEventListener('paste', async (e) => {
+  e.preventDefault();
+  const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+  document.execCommand('insertText', false, text);
+});
+
+// Markdown-style shortcuts
+editor.addEventListener('keydown', (e) => {
+  if (e.key === ' ') {
+    const sel = window.getSelection();
+    if (!sel.rangeCount) return;
+    const node = sel.anchorNode;
+    if (!node || node.nodeType !== 3) return;
+    const text = node.textContent;
+    const offset = sel.anchorOffset;
+    const lineStart = text.lastIndexOf('\n', offset - 1) + 1;
+    const line = text.slice(lineStart, offset);
+    let cmd = null, value = null;
+    if (line === '#') { cmd = 'formatBlock'; value = 'h1'; }
+    else if (line === '##') { cmd = 'formatBlock'; value = 'h2'; }
+    else if (line === '###') { cmd = 'formatBlock'; value = 'h3'; }
+    else if (line === '>') { cmd = 'formatBlock'; value = 'blockquote'; }
+    else if (line === '-') { cmd = 'insertUnorderedList'; }
+    else if (line === '1.') { cmd = 'insertOrderedList'; }
+    if (cmd) {
+      e.preventDefault();
+      const range = document.createRange();
+      range.setStart(node, lineStart);
+      range.setEnd(node, offset);
+      sel.removeAllRanges();
+      sel.addRange(range);
+      document.execCommand('delete', false);
+      document.execCommand(cmd, false, value || null);
+      return;
+    }
+  }
+  if (e.ctrlKey || e.metaKey) {
+    if (e.key === 'b') { e.preventDefault(); formatDoc('bold'); }
+    else if (e.key === 'i') { e.preventDefault(); formatDoc('italic'); }
+    else if (e.key === 'u') { e.preventDefault(); formatDoc('underline'); }
+    else if (e.key === 'k') { e.preventDefault(); insertLink(); }
+  }
+});
 
 document.addEventListener('selectionchange', () => {
   if (document.activeElement !== editor) return;
-  // Update toolbar active states
   document.querySelectorAll('.rich-toolbar button').forEach(b => b.classList.remove('active'));
   try {
-    if (document.queryCommandState('bold')) document.querySelector('[title="Bold"]').classList.add('active');
-    if (document.queryCommandState('italic')) document.querySelector('[title="Italic"]').classList.add('active');
-    if (document.queryCommandState('underline')) document.querySelector('[title="Underline"]').classList.add('active');
+    if (document.queryCommandState('bold')) document.querySelector('[title="Bold (Ctrl+B)"]')?.classList.add('active');
+    if (document.queryCommandState('italic')) document.querySelector('[title="Italic (Ctrl+I)"]')?.classList.add('active');
+    if (document.queryCommandState('underline')) document.querySelector('[title="Underline (Ctrl+U)"]')?.classList.add('active');
   } catch (e) {}
 });
 
 function formatDoc(cmd, value) {
   document.execCommand(cmd, false, value || null);
   editor.focus();
+  updateEditorMeta();
+  saveDraft();
 }
 
 function insertLink() {
   const url = prompt('Enter URL (https://...):');
-  if (url) { document.execCommand('createLink', false, url); editor.focus(); }
+  if (url) { document.execCommand('createLink', false, url); editor.focus(); saveDraft(); }
+}
+
+function insertDivider() {
+  document.execCommand('insertHTML', false, '<hr style="border:none;border-top:1px solid #2a2a3a;margin:1em 0;">');
+  editor.focus();
+  saveDraft();
+}
+
+function insertMarker(marker) {
+  editor.focus();
+  const sel = window.getSelection();
+  if (!sel.rangeCount) return;
+  const range = sel.getRangeAt(0);
+  range.deleteContents();
+  const span = document.createElement('span');
+  span.style.color = marker === '✨' ? '#facc15' : marker === '✦' ? '#a78bfa' : '#93c5fd';
+  span.textContent = marker + ' ';
+  range.insertNode(span);
+  range.setStartAfter(span);
+  range.setEndAfter(span);
+  sel.removeAllRanges();
+  sel.addRange(range);
+  updateEditorMeta();
+  saveDraft();
+}
+
+function togglePreview() {
+  editorPreviewing = !editorPreviewing;
+  const btn = document.getElementById('previewBtn');
+  if (editorPreviewing) {
+    editor.dataset.savedHtml = editor.innerHTML;
+    editor.contentEditable = 'false';
+    editor.style.background = '#06060a';
+    btn.classList.add('active');
+    btn.innerHTML = '✎ Edit';
+  } else {
+    editor.contentEditable = 'true';
+    editor.style.background = '#0a0a12';
+    btn.classList.remove('active');
+    btn.innerHTML = '👁 Preview';
+  }
+}
+
+function updateEditorMeta() {
+  const text = editor.innerText || '';
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  const minutes = Math.max(1, Math.round(words / 200));
+  const chars = text.length;
+  document.getElementById('editorMeta').textContent = `${words} words · ${minutes} min read`;
+  const cc = document.getElementById('editorCharCount');
+  cc.textContent = `${chars} / 8000`;
+  cc.className = chars > 7600 ? 'text-red-400' : chars > 6400 ? 'text-yellow-400' : '';
 }
 
 // ===== DRAFT SAVING =====
 let draftTimer = null;
+function setAutosaveState(state) {
+  const dot = document.getElementById('autosaveDot');
+  const label = document.getElementById('autosaveLabel');
+  dot.classList.remove('saving', 'saved');
+  if (state === 'saving') { dot.classList.add('saving'); label.textContent = 'Saving…'; }
+  else if (state === 'saved') { dot.classList.add('saved'); label.textContent = 'Saved just now'; }
+  else { label.textContent = 'Ready'; }
+}
+
 function saveDraft() {
+  setAutosaveState('saving');
   clearTimeout(draftTimer);
   draftTimer = setTimeout(() => {
     const draft = {
@@ -250,10 +434,15 @@ function saveDraft() {
       pollO1: document.getElementById('pollOpt1').value,
       pollO2: document.getElementById('pollOpt2').value,
       pollO3: document.getElementById('pollOpt3').value,
-      pollO4: document.getElementById('pollOpt4').value
+      pollO4: document.getElementById('pollOpt4').value,
+      isQuestion: document.getElementById('qaChk').checked,
+      isAnon: document.getElementById('anonChk').checked,
+      crossId: document.getElementById('crossQuestionSelect').value
     };
     localStorage.setItem('moph_admin_draft', JSON.stringify(draft));
-  }, 800);
+    setAutosaveState('saved');
+    setTimeout(() => setAutosaveState('idle'), 3000);
+  }, 700);
 }
 
 function loadDraft() {
@@ -275,33 +464,57 @@ function loadDraft() {
     document.getElementById('pinChk').checked = !!d.pinned;
     document.getElementById('featuredChk').checked = !!d.featured;
     document.getElementById('pollChk').checked = !!d.pollOn;
+    syncPill('pollPill', 'pollChk');
     document.getElementById('pollQuestion').value = d.pollQ || '';
     document.getElementById('pollOpt1').value = d.pollO1 || '';
     document.getElementById('pollOpt2').value = d.pollO2 || '';
     document.getElementById('pollOpt3').value = d.pollO3 || '';
     document.getElementById('pollOpt4').value = d.pollO4 || '';
-    if (d.pollOn) togglePoll();
+    document.getElementById('qaChk').checked = !!d.isQuestion;
+    document.getElementById('anonChk').checked = !!d.isAnon;
+    syncPill('qaPill', 'qaChk');
+    syncPill('anonPill', 'anonChk');
+    currentCrossId = d.crossId || null;
+    if (d.pollOn) document.getElementById('pollFields').classList.remove('hidden');
     if (coverImageUrl) { document.getElementById('coverPreview').src = coverImageUrl; document.getElementById('coverPreview').classList.remove('hidden'); document.getElementById('coverLabel').textContent = '✓ Draft cover'; document.getElementById('clearCoverBtn').classList.remove('hidden'); }
     else if (existingCoverUrl) { document.getElementById('coverPreview').src = existingCoverUrl; document.getElementById('coverPreview').classList.remove('hidden'); document.getElementById('coverLabel').textContent = 'Current cover'; document.getElementById('clearCoverBtn').classList.remove('hidden'); }
     if (videoFileBase64) { document.getElementById('videoPreview').src = videoFileBase64; document.getElementById('videoPreview').classList.remove('hidden'); document.getElementById('clearVideoBtn').classList.remove('hidden'); }
     else if (existingVideoUrl) { document.getElementById('videoUrlInput').value = existingVideoUrl; document.getElementById('clearVideoBtn').classList.remove('hidden'); }
+    updateEditorMeta();
   } catch (e) {}
 }
 
-// ===== POLL TOGGLE =====
+// ===== TOGGLE PILLS =====
+function togglePill(pillId, chkId) {
+  const pill = document.getElementById(pillId);
+  const chk = document.getElementById(chkId);
+  setTimeout(() => {
+    pill.classList.toggle('on', chk.checked);
+  }, 0);
+}
+function syncPill(pillId, chkId) {
+  const pill = document.getElementById(pillId);
+  const chk = document.getElementById(chkId);
+  pill.classList.toggle('on', chk.checked);
+}
+
 function togglePoll() {
   const on = document.getElementById('pollChk').checked;
   document.getElementById('pollFields').classList.toggle('hidden', !on);
+  syncPill('pollPill', 'pollChk');
   saveDraft();
 }
 
-// Attach auto-save to all fields
+// Attach auto-save
 ['tTitle','tTags','pollQuestion','pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => {
   document.getElementById(id)?.addEventListener('input', saveDraft);
 });
-['pinChk','featuredChk'].forEach(id => {
-  document.getElementById(id)?.addEventListener('change', saveDraft);
+['pinChk','featuredChk','qaChk','anonChk'].forEach(id => {
+  document.getElementById(id)?.addEventListener('change', () => { saveDraft(); });
 });
+document.getElementById('qaChk').addEventListener('change', () => syncPill('qaPill','qaChk'));
+document.getElementById('anonChk').addEventListener('change', () => syncPill('anonPill','anonChk'));
+document.getElementById('crossQuestionSelect').addEventListener('change', (e) => { currentCrossId = e.target.value || null; saveDraft(); });
 
 // ===== COVER =====
 document.getElementById('coverDrop').addEventListener('click', () => document.getElementById('coverInput').click());
@@ -378,6 +591,7 @@ function showAdmin() {
   document.getElementById('adminApp').classList.remove('hidden');
   loadRecent();
   loadDraft();
+  updateEditorMeta();
 }
 
 function newTeaching() {
@@ -387,18 +601,26 @@ function newTeaching() {
   document.getElementById('tTags').value = '';
   document.getElementById('pinChk').checked = false;
   document.getElementById('featuredChk').checked = false;
+  document.getElementById('qaChk').checked = false;
+  document.getElementById('anonChk').checked = false;
+  syncPill('qaPill', 'qaChk');
+  syncPill('anonPill', 'anonChk');
   document.getElementById('sendEmailChk').checked = true;
   document.getElementById('emailChkWrap').classList.remove('hidden');
   document.getElementById('pollChk').checked = false;
+  syncPill('pollPill', 'pollChk');
   document.getElementById('pollFields').classList.add('hidden');
   document.getElementById('pollQuestion').value = '';
   ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('crossQuestionSelect').value = '';
+  currentCrossId = null;
   clearCover(); clearVideo();
   document.getElementById('publishText').textContent = 'Publish Teaching';
   document.getElementById('modeLabel').textContent = 'Create mode';
   document.getElementById('newBtn').classList.add('hidden');
   document.getElementById('pubStatus').classList.add('hidden');
   localStorage.removeItem('moph_admin_draft');
+  updateEditorMeta();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -414,6 +636,10 @@ async function publish() {
   const pinned = document.getElementById('pinChk').checked;
   const featured = document.getElementById('featuredChk').checked;
   const sendEmail = document.getElementById('sendEmailChk').checked;
+  const isQuestion = document.getElementById('qaChk').checked;
+  const isAnonymous = document.getElementById('anonChk').checked;
+  const crossQuestionId = document.getElementById('crossQuestionSelect').value;
+  const crossQuestionIdNum = crossQuestionId ? Number(crossQuestionId) : null;
 
   let poll = null;
   if (document.getElementById('pollChk').checked) {
@@ -422,6 +648,8 @@ async function publish() {
     if (!q) { showStatus('Poll question required.', 'error'); return; }
     if (opts.length < 2) { showStatus('Poll needs at least 2 options.', 'error'); return; }
     poll = { question: q, options: opts };
+  } else if (isEdit) {
+    poll = null;
   }
 
   const btn = document.getElementById('publishBtn');
@@ -431,7 +659,14 @@ async function publish() {
   showStatus(isEdit ? 'Updating...' : 'Sending...', 'info');
 
   try {
-    const payload = { adminKey, action: isEdit ? 'update' : 'create', title, content, tags, pinned, featured, poll };
+    const payload = {
+      adminKey,
+      action: isEdit ? 'update' : 'create',
+      title, content, tags, pinned, featured, poll,
+      is_question: isQuestion,
+      is_anonymous: isAnonymous,
+      cross_question_id: crossQuestionIdNum
+    };
     if (isEdit) payload.id = editId;
     if (coverImageUrl) payload.cover_image = coverImageUrl;
     else if (isEdit && !existingCoverUrl) payload.cover_image = null;
@@ -451,15 +686,19 @@ async function publish() {
     let msg = isEdit ? '✓ Updated' : '✓ Published';
     if (featured) msg += ' · ⭐ Featured';
     if (poll) msg += ' · 📊 Poll attached';
+    if (isQuestion) msg += ' · Q&A';
+    if (isAnonymous) msg += ' · Anonymous';
+    if (crossQuestionIdNum) msg += ' · Linked';
     if (!isEdit && data.emailResult?.sent) msg += ' · Emails sent';
     else if (!isEdit && data.emailResult?.error) msg += ' · Email: ' + data.emailResult.error;
     showStatus(msg, 'success');
 
     localStorage.removeItem('moph_admin_draft');
     richContentEdited = false;
+    setAutosaveState('idle');
 
     if (isEdit) setTimeout(newTeaching, 1200);
-    else { document.getElementById('tTitle').value = ''; editor.innerHTML = ''; document.getElementById('tTags').value = ''; document.getElementById('pinChk').checked = false; document.getElementById('featuredChk').checked = false; document.getElementById('pollChk').checked = false; document.getElementById('pollFields').classList.add('hidden'); document.getElementById('pollQuestion').value = ''; ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => document.getElementById(id).value = ''); clearCover(); clearVideo(); }
+    else { document.getElementById('tTitle').value = ''; editor.innerHTML = ''; document.getElementById('tTags').value = ''; document.getElementById('pinChk').checked = false; document.getElementById('featuredChk').checked = false; document.getElementById('qaChk').checked = false; document.getElementById('anonChk').checked = false; syncPill('qaPill','qaChk'); syncPill('anonPill','anonChk'); document.getElementById('pollChk').checked = false; syncPill('pollPill','pollChk'); document.getElementById('pollFields').classList.add('hidden'); document.getElementById('pollQuestion').value = ''; ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => document.getElementById(id).value = ''); document.getElementById('crossQuestionSelect').value = ''; clearCover(); clearVideo(); updateEditorMeta(); }
 
     loadRecent();
   } catch (e) { showStatus('Network error: ' + e.message, 'error'); }
@@ -474,31 +713,41 @@ function showStatus(msg, type) {
   el.classList.remove('hidden');
 }
 
-// ===== LOAD LIST =====
+// ===== LOAD LIST + CROSS-QUESTION POPULATE =====
 async function loadRecent() {
   const el = document.getElementById('recentTeachings');
   el.innerHTML = '<div class="text-center py-4"><span class="spinner"></span></div>';
   try {
     const res = await fetch('/api/config');
     const cfg = await res.json();
-    const r = await fetch(`${cfg.supabaseUrl}/rest/v1/teachings?select=*&order=pinned.desc,created_at.desc&limit=100`, { headers: { 'apikey': cfg.supabaseAnonKey, 'Authorization': `Bearer ${cfg.supabaseAnonKey}` } });
+    const r = await fetch(`${cfg.supabaseUrl}/rest/v1/teachings?select=*&order=pinned.desc,created_at.desc&limit=200`, {
+      headers: { 'apikey': cfg.supabaseAnonKey, 'Authorization': `Bearer ${cfg.supabaseAnonKey}` }
+    });
     const data = await r.json();
+    allTeachingsCache = data || [];
     if (!data || data.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600">No teachings yet.</p>'; return; }
     const today = new Date().toISOString().split('T')[0];
+    const currentId = document.getElementById('editId').value;
+
     el.innerHTML = data.map(t => {
       const isFeatured = t.featured_date === today;
+      const isQ = !!t.is_question;
+      const isAnon = !!t.is_anonymous;
+      const isPinned = !!t.pinned;
       return `<div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1">
-            <div class="flex items-center gap-2 flex-wrap">
+            <div class="flex items-center gap-1.5 flex-wrap">
               <p class="text-xs text-gray-300 font-medium truncate">${escapeHtml(t.title || 'Untitled')}</p>
-              ${t.pinned ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gold-400/20 text-gold-300">📌</span>' : ''}
+              ${isPinned ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gold-400/20 text-gold-300">📌</span>' : ''}
               ${isFeatured ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amethyst-600/30 text-amethyst-300">⭐</span>' : ''}
+              ${isQ ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600/30 text-blue-300">Q&A</span>' : ''}
+              ${isAnon ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-600/30 text-gray-300">anon</span>' : ''}
             </div>
             <p class="text-[10px] text-gray-600 mt-1">${new Date(t.created_at).toLocaleString()}</p>
           </div>
           <div class="flex items-center gap-1 flex-shrink-0">
-            <button onclick='editTeaching(${JSON.stringify(t).replace(/'/g, "&#39;")})' class="p-1.5 text-gray-500 hover:text-amethyst-400 transition">
+            <button onclick="editTeachingById(${t.id})" class="p-1.5 text-gray-500 hover:text-amethyst-400 transition">
               <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
             </button>
             <button onclick="askDelete(${t.id})" class="p-1.5 text-gray-500 hover:text-red-400 transition">
@@ -508,7 +757,19 @@ async function loadRecent() {
         </div>
       </div>`;
     }).join('');
+
+    // Populate cross-question dropdown with Q&A teachings (excluding current edit)
+    const qaOptions = allTeachingsCache.filter(t => t.is_question === true && String(t.id) !== String(currentId));
+    const sel = document.getElementById('crossQuestionSelect');
+    const previous = sel.value;
+    sel.innerHTML = '<option value="">— None —</option>' + qaOptions.map(t => `<option value="${t.id}">${escapeHtml((t.title || 'Untitled').slice(0, 80))}</option>`).join('');
+    if (previous) sel.value = previous;
   } catch (e) { el.innerHTML = '<p class="text-xs text-red-400">Failed to load.</p>'; }
+}
+
+async function editTeachingById(id) {
+  const t = allTeachingsCache.find(x => x.id === id);
+  if (t) editTeaching(t);
 }
 
 async function editTeaching(t) {
@@ -519,27 +780,47 @@ async function editTeaching(t) {
   document.getElementById('tTags').value = (t.tags || []).join(', ');
   document.getElementById('pinChk').checked = !!t.pinned;
   document.getElementById('featuredChk').checked = t.featured_date === today;
+  document.getElementById('qaChk').checked = !!t.is_question;
+  document.getElementById('anonChk').checked = !!t.is_anonymous;
+  syncPill('qaPill', 'qaChk');
+  syncPill('anonPill', 'anonChk');
   document.getElementById('emailChkWrap').classList.add('hidden');
   document.getElementById('publishText').textContent = 'Update Teaching';
   document.getElementById('modeLabel').textContent = 'Edit mode';
   document.getElementById('newBtn').classList.remove('hidden');
   document.getElementById('pubStatus').classList.add('hidden');
 
-  // Load poll
+  // Load cross-question link
+  currentCrossId = t.cross_question_id ? String(t.cross_question_id) : null;
+  // Repopulate dropdown to exclude self, then set
+  const sel = document.getElementById('crossQuestionSelect');
+  const qaOptions = allTeachingsCache.filter(x => x.is_question === true && String(x.id) !== String(t.id));
+  sel.innerHTML = '<option value="">— None —</option>' + qaOptions.map(x => `<option value="${x.id}">${escapeHtml((x.title || 'Untitled').slice(0, 80))}</option>`).join('');
+  sel.value = currentCrossId || '';
+
+  // Load poll from teaching_polls (JSONB options)
   try {
     const cfg = await (await fetch('/api/config')).json();
-    const pr = await fetch(`${cfg.supabaseUrl}/rest/v1/polls?teaching_id=eq.${t.id}&select=*,poll_options(*)`, { headers: { 'apikey': cfg.supabaseAnonKey, 'Authorization': `Bearer ${cfg.supabaseAnonKey}` } });
+    const pr = await fetch(`${cfg.supabaseUrl}/rest/v1/teaching_polls?teaching_id=eq.${t.id}&select=*`, {
+      headers: { 'apikey': cfg.supabaseAnonKey, 'Authorization': `Bearer ${cfg.supabaseAnonKey}` }
+    });
     const polls = await pr.json();
     if (polls && polls.length > 0) {
       const p = polls[0];
+      let opts = p.options;
+      if (typeof opts === 'string') { try { opts = JSON.parse(opts); } catch (e) { opts = []; } }
+      if (!Array.isArray(opts)) opts = [];
       document.getElementById('pollChk').checked = true;
-      togglePoll();
+      syncPill('pollPill', 'pollChk');
+      document.getElementById('pollFields').classList.remove('hidden');
       document.getElementById('pollQuestion').value = p.question || '';
-      const opts = (p.poll_options || []).sort((a,b) => a.position - b.position);
-      ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach((id, i) => { document.getElementById(id).value = opts[i]?.option_text || ''; });
+      ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach((id, i) => {
+        document.getElementById(id).value = opts[i] || '';
+      });
     } else {
       document.getElementById('pollChk').checked = false;
-      togglePoll();
+      syncPill('pollPill', 'pollChk');
+      document.getElementById('pollFields').classList.add('hidden');
       document.getElementById('pollQuestion').value = '';
       ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => document.getElementById(id).value = '');
     }
@@ -555,8 +836,14 @@ async function editTeaching(t) {
     document.getElementById('clearVideoBtn').classList.remove('hidden');
     if (t.video_url.match(/\.(mp4|webm|mov)$/i) || t.video_url.includes('teaching-media')) { document.getElementById('videoPreview').src = t.video_url; document.getElementById('videoPreview').classList.remove('hidden'); }
     else { document.getElementById('videoUrlInput').value = t.video_url; }
-  } else { document.getElementById('videoPreview').classList.add('hidden'); document.getElementById('videoLabel').textContent = 'Tap to upload video (max 3MB) or paste link below'; document.getElementById('clearVideoBtn').classList.add('hidden'); }
+  } else {
+    document.getElementById('videoPreview').classList.add('hidden');
+    document.getElementById('videoLabel').textContent = 'Tap to upload video (max 3MB) or paste link below';
+    document.getElementById('clearVideoBtn').classList.add('hidden');
+    document.getElementById('videoUrlInput').value = '';
+  }
 
+  updateEditorMeta();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -567,7 +854,11 @@ async function confirmDelete() {
   if (!pendingDeleteId) return;
   const btn = document.getElementById('confirmDelBtn'); btn.textContent = 'Deleting...'; btn.disabled = true;
   try {
-    const res = await fetch('/api/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey, action: 'delete', id: pendingDeleteId }) });
+    const res = await fetch('/api/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminKey, action: 'delete', id: pendingDeleteId })
+    });
     const data = await res.json();
     if (!res.ok) { alert('Error: ' + (data.error || 'Unknown')); btn.textContent = 'Delete'; btn.disabled = false; return; }
     closeDeleteModal(); loadRecent();
@@ -585,23 +876,35 @@ async function loadAnalytics() {
   const el = document.getElementById('analyticsList');
   el.innerHTML = '<div class="text-center py-4"><span class="spinner"></span></div>';
   try {
-    const res = await fetch('/api/publish', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ adminKey, action: 'analytics' }) });
+    const res = await fetch('/api/publish', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ adminKey, action: 'analytics' })
+    });
     const data = await res.json();
     if (!res.ok || !data.analytics) { el.innerHTML = '<p class="text-xs text-red-400">Failed.</p>'; return; }
-    el.innerHTML = data.analytics.sort((a,b) => b.views - a.views).map(t => `
+    const sorted = data.analytics.slice().sort((a, b) => b.reads - a.reads);
+    el.innerHTML = sorted.map(t => `
       <div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
-        <p class="text-xs text-gray-300 font-medium truncate">${escapeHtml(t.title)}</p>
-        <div class="flex items-center gap-4 mt-2 text-[10px]">
-          <span class="text-gray-500">👁 <span class="text-amethyst-400 font-semibold">${t.views}</span> views</span>
-          <span class="text-gray-500">💬 <span class="text-amethyst-400 font-semibold">${t.comments}</span> comments</span>
-          <span class="text-gray-500">❤️ <span class="text-amethyst-400 font-semibold">${t.reactions}</span> reactions</span>
+        <div class="flex items-start justify-between gap-2 mb-2">
+          <p class="text-xs text-gray-300 font-medium truncate flex-1">${escapeHtml(t.title)}</p>
+          <div class="flex items-center gap-1 flex-shrink-0">
+            ${t.is_question ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600/30 text-blue-300">Q&A</span>' : ''}
+            ${t.hasPoll ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-green-600/30 text-green-300">poll</span>' : ''}
+          </div>
+        </div>
+        <div class="grid grid-cols-4 gap-2 text-[10px]">
+          <div><p class="text-gray-600">Reads</p><p class="text-amethyst-400 font-semibold text-xs">${t.reads}</p></div>
+          <div><p class="text-gray-600">Comments</p><p class="text-amethyst-400 font-semibold text-xs">${t.comments}</p></div>
+          <div><p class="text-gray-600">Reactions</p><p class="text-amethyst-400 font-semibold text-xs">${t.reactions}</p></div>
+          <div><p class="text-gray-600">Votes</p><p class="text-amethyst-400 font-semibold text-xs">${t.votes}</p></div>
         </div>
       </div>
     `).join('');
   } catch (e) { el.innerHTML = '<p class="text-xs text-red-400">Failed.</p>'; }
 }
 
-function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
 
 if (adminKey) { document.getElementById('adminKeyInput').value = adminKey; showAdmin(); }
 document.getElementById('adminKeyInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') unlock(); });
