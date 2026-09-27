@@ -82,29 +82,31 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .reaction-trigger { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; background: rgba(40,40,60,0.5); border: 1px solid rgba(120,90,160,0.15); font-size: 13px; cursor: pointer; transition: all 0.18s; user-select: none; }
 .reaction-trigger:hover { background: rgba(var(--accent-rgb),0.15); border-color: rgba(var(--accent-rgb),0.35); }
 .reaction-trigger.has-reaction { background: rgba(var(--accent-rgb),0.35); border-color: rgba(var(--accent-rgb),0.55); }
-.reaction-picker { position: absolute; bottom: 100%; left: 0; margin-bottom: 8px; background: #161624; border: 1px solid #3a3a5a; border-radius: 24px; padding: 6px; display: flex; gap: 2px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); z-index: 50; animation: fadeIn 0.15s ease; }
-.reaction-picker button { width: 38px; height: 38px; border-radius: 50%; font-size: 20px; cursor: pointer; transition: all 0.15s; background: transparent; border: none; display: flex; align-items: center; justify-content: center; }
+.reaction-picker { position: absolute; bottom: 100%; left: 0; margin-bottom: 8px; background: #161624; border: 1px solid #3a3a5a; border-radius: 24px; padding: 6px; display: flex; gap: 2px; box-shadow: 0 12px 32px rgba(0,0,0,0.6); z-index: 50; animation: fadeIn 0.15s ease; max-width: calc(100vw - 24px); }
+.reaction-picker.right-anchor { left: auto; right: 0; }
+.reaction-picker button { width: 36px; height: 36px; border-radius: 50%; font-size: 19px; cursor: pointer; transition: all 0.15s; background: transparent; border: none; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .reaction-picker button:hover { background: rgba(var(--accent-rgb),0.2); transform: scale(1.15); }
 .reaction-picker button.is-selected { background: rgba(var(--accent-rgb),0.4); }
-.sub-tabs { display: flex; border-bottom: 1px solid #2a2a3a; }
+.sub-tabs { display: flex; }
 .sub-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 500; color: #6a6a8a; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
 .sub-tab.active { color: var(--accent-400); border-bottom-color: var(--accent-500); }
 .composer { background: rgba(16,16,28,0.55); border: 1px solid #2a2a3a; border-radius: 20px; padding: 12px 14px; transition: all 0.2s; }
+.composer.compact { padding: 10px 12px; border-radius: 16px; }
 .composer:focus-within { border-color: rgba(var(--accent-rgb),0.5); box-shadow: 0 0 0 3px rgba(var(--accent-rgb),0.08); }
 .composer-textarea { width: 100%; background: transparent; border: none; outline: none; resize: none; color: #d0d0e8; font-size: 15px; font-family: inherit; min-height: 24px; line-height: 1.5; padding: 4px 0; }
 .composer-textarea::placeholder { color: #4a4a5a; }
-.composer-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(var(--accent-rgb),0.15); }
-.composer-tools { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
-.composer-tool { padding: 8px; border-radius: 12px; color: #6a6a8a; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; }
+.composer-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 8px; padding-top: 8px; border-top: 1px dashed rgba(var(--accent-rgb),0.15); gap: 8px; }
+.composer-tools { display: flex; gap: 4px; flex-wrap: nowrap; align-items: center; overflow-x: auto; }
+.composer-tool { padding: 8px; border-radius: 12px; color: #6a6a8a; cursor: pointer; transition: all 0.15s; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .composer-tool:hover { color: var(--accent-400); background: rgba(var(--accent-rgb),0.1); }
-.composer-submit { padding: 8px 20px; border-radius: 20px; background: linear-gradient(135deg, var(--accent-600), var(--accent-700)); color: #fff; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; }
+.composer-submit { padding: 8px 18px; border-radius: 20px; background: linear-gradient(135deg, var(--accent-600), var(--accent-700)); color: #fff; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: all 0.18s; flex-shrink: 0; }
 .composer-submit:disabled { opacity: 0.4; cursor: not-allowed; }
 .read-time { font-size: 10px; color: #6a6a8a; }
 .network-error { position: fixed; top: 0; left: 0; right: 0; background: linear-gradient(135deg, #7f1d1d, #991b1b); color: #fff; padding: 10px 16px; text-align: center; z-index: 200; font-size: 12px; font-weight: 500; transform: translateY(-100%); transition: transform 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; }
 .network-error.show { transform: translateY(0); }
 .retry-btn { background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: #fff; padding: 4px 12px; border-radius: 12px; font-size: 11px; cursor: pointer; font-weight: 600; }
 
-/* ===== Delivery 2 ===== */
+/* Delivery 2 */
 .q-badge { display:inline-flex; align-items:center; justify-content:center; padding:1px 6px; background:rgba(var(--accent-rgb),0.22); border:1px solid rgba(var(--accent-rgb),0.45); color:var(--accent-400); border-radius:6px; font-size:9px; font-weight:700; letter-spacing:.4px; }
 .accepted-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.45); color:#4ade80; padding:2px 8px; border-radius:10px; font-size:9px; font-weight:700; letter-spacing:.3px; }
 .accepted-comment-body { border:1px solid rgba(34,197,94,0.35) !important; background:rgba(34,197,94,0.04) !important; }
@@ -126,10 +128,9 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .quote-preview .qp-x { color: #6a6a8a; background: transparent; border: none; padding: 0 4px; cursor: pointer; font-size: 14px; line-height: 1; }
 .quoted-inline { border-left: 2px solid rgba(var(--accent-rgb),0.35); padding: 4px 10px; margin: 6px 0 4px 0; background: rgba(var(--accent-rgb),0.04); border-radius: 8px; font-size: 11px; color: #8a8aa8; font-style: italic; }
 .quoted-inline .qi-user { color: var(--accent-400); font-weight: 600; font-style: normal; }
-.smart-toggle { display:inline-flex; align-items:center; gap:5px; padding:4px 10px; border-radius:14px; cursor:pointer; font-size:11px; font-weight:600; transition:all .15s; user-select:none; }
+.smart-toggle { display:inline-flex; align-items:center; gap:4px; padding:5px 9px; border-radius:12px; cursor:pointer; font-size:11px; font-weight:600; transition:all .15s; user-select:none; flex-shrink:0; }
 .smart-toggle input { display:none; }
 .smart-toggle.qa { background:rgba(var(--accent-rgb),0.10); border:1px solid rgba(var(--accent-rgb),0.30); color:var(--accent-400); }
-.smart-toggle.qa:hover { background:rgba(var(--accent-rgb),0.18); }
 .smart-toggle.qa.active { background:rgba(var(--accent-rgb),0.35); border-color:rgba(var(--accent-rgb),0.65); color:#fff; }
 .smart-toggle.anon { background:rgba(120,120,140,0.10); border:1px solid rgba(120,120,140,0.28); color:#9a9ab8; }
 .smart-toggle.anon.active { background:rgba(120,120,140,0.28); border-color:rgba(120,120,140,0.55); color:#d0d0e8; }
@@ -141,21 +142,16 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .activity-cell.today { box-shadow: 0 0 0 1.5px var(--accent-400); }
 .activity-legend { display:flex; align-items:center; gap:4px; font-size:9px; color:#6a6a8a; }
 .activity-legend .activity-cell { width:10px; height:10px; aspect-ratio:auto; }
-.cross-qa-card { display:block; width:100%; text-align:left; margin-top:10px; padding:10px 12px; border-radius:12px; background:rgba(var(--accent-rgb),0.06); border:1px solid rgba(var(--accent-rgb),0.28); border-left:3px solid var(--accent-500); cursor:pointer; transition:all .15s; }
-.cross-qa-card:hover { background:rgba(var(--accent-rgb),0.12); }
-.cross-qa-card .cq-label { font-size:10px; color:var(--accent-400); font-weight:700; letter-spacing:.4px; text-transform:uppercase; margin-bottom:3px; }
-.cross-qa-card .cq-text { font-size:12px; color:#d0d0e8; }
-.cross-qa-card .cq-arrow { color:var(--accent-400); font-size:11px; margin-top:4px; }
 .push-btn { padding: 11px 16px; border-radius: 14px; font-size: 12px; font-weight: 600; border: 1px solid rgba(var(--accent-rgb),0.4); background: rgba(var(--accent-rgb),0.1); color: var(--accent-400); cursor: pointer; transition: all .18s; width: 100%; }
 .push-btn:hover { background: rgba(var(--accent-rgb),0.2); }
 .push-btn.enabled { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.1); color: #4ade80; cursor: default; }
-.collapsed-hint { padding: 10px 0; text-align: center; font-size: 11px; color: #6a6a8a; cursor: pointer; transition: color .15s; }
-.collapsed-hint:hover { color: var(--accent-400); }
+
+/* Thread line on nested comments */
+.comment-thread { position: relative; padding-left: 20px; border-left: 1.5px solid rgba(var(--accent-rgb),0.22); margin-left: 8px; }
 </style>
 </head>
 <body class="font-sans text-gray-200" data-theme="amethyst">
 
-<!-- NETWORK ERROR BANNER -->
 <div id="networkBanner" class="network-error">
   <span id="networkBannerText">The signal is lost. Restore your connection.</span>
   <button class="retry-btn" onclick="retryConnection()">Retry</button>
@@ -314,25 +310,31 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
     </div>
   </main>
 
-  <main id="panelTeachings" class="hidden flex-1 overflow-y-auto px-3 sm:px-4 py-4 space-y-4">
-    <div id="featuredBanner" class="hidden"></div>
-    <div class="glass card p-5 border border-void-600 space-y-3.5">
-      <div class="sub-tabs -mx-5 -mt-5 px-5 mb-3">
+  <main id="panelTeachings" class="hidden flex-1 overflow-y-auto">
+    <!-- Sticky sub-tabs -->
+    <div class="sticky top-0 z-30 glass border-b border-void-600">
+      <div class="sub-tabs">
         <div class="sub-tab active" id="subTabAll" onclick="switchSubTab('all')">All</div>
         <div class="sub-tab" id="subTabFollowing" onclick="switchSubTab('following')">Following</div>
         <div class="sub-tab" id="subTabQA" onclick="switchSubTab('qa')">Q&amp;A</div>
       </div>
-      <div class="relative">
-        <svg class="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-        <input type="text" id="searchInput" placeholder="Search the teachings..." oninput="filterTeachings()" class="w-full bg-void-900 border border-void-600 rounded-2xl pl-10 pr-3.5 py-2.5 text-sm focus:border-amethyst-500 focus:outline-none transition">
-      </div>
-      <div id="tagFilters" class="flex flex-wrap gap-1.5"></div>
     </div>
-    <div id="teachingsFeed" class="space-y-4"></div>
+
+    <div class="px-3 sm:px-4 py-4 space-y-4">
+      <div id="featuredBanner" class="hidden"></div>
+      <div class="glass card p-5 border border-void-600 space-y-3.5">
+        <div class="relative">
+          <svg class="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" id="searchInput" placeholder="Search the teachings..." oninput="filterTeachings()" class="w-full bg-void-900 border border-void-600 rounded-2xl pl-10 pr-3.5 py-2.5 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        </div>
+        <div id="tagFilters" class="flex flex-wrap gap-1.5"></div>
+      </div>
+      <div id="teachingsFeed" class="space-y-4"></div>
+    </div>
   </main>
 
   <main id="panelProfile" class="hidden flex-1 overflow-y-auto px-3 sm:px-4 pb-4">
-    <div class="glass card p-5 border border-void-600 mb-3">
+    <div class="glass card p-5 border border-void-600 mb-3 mt-4">
       <div class="flex items-start gap-4">
         <div id="avatarUpload" class="w-20 h-20 rounded-full bg-void-700 border-2 border-void-600 flex items-center justify-center cursor-pointer hover:border-amethyst-500/50 transition overflow-hidden flex-shrink-0 relative">
           <svg id="avatarPlaceholder" class="w-8 h-8 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
@@ -394,8 +396,6 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p><p id="pGift" class="text-sm font-medium text-gray-400">—</p></div>
         </div>
       </div>
-
-      <!-- Delivery 2: Activity Calendar -->
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-3">Last 30 Days</h3>
         <div id="activityGrid" class="activity-grid"></div>
@@ -415,14 +415,11 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           <div class="flex justify-between text-[10px] text-gray-500"><span>Poll votes</span><span id="statVotes" class="text-gray-400 font-medium">0</span></div>
         </div>
       </div>
-
-      <!-- Delivery 2: Push notifications -->
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-3">Notifications</h3>
         <button id="pushEnableBtn" class="push-btn" onclick="enablePush()">Enable push notifications</button>
         <p class="text-[10px] text-gray-600 mt-2 text-center">A signal when someone replies, mentions, or waves.</p>
       </div>
-
       <div class="glass card p-5 border border-void-600">
         <div class="flex items-center gap-2 mb-3.5"><svg class="w-4 h-4 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><h3 class="text-sm font-semibold">Golden Moments</h3></div>
         <div id="goldenList" class="space-y-2.5"><p class="text-xs text-gray-600">Your first golden moment is still unwritten.</p></div>
@@ -569,33 +566,23 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 </div>
 
 <script>
-// ===== NETWORK HANDLING =====
+// ===== NETWORK =====
 function showNetworkBanner(msg) {
-  const b = document.getElementById('networkBanner');
-  const t = document.getElementById('networkBannerText');
-  t.textContent = msg || 'The signal is lost. Restore your connection.';
-  b.classList.add('show');
+  document.getElementById('networkBannerText').textContent = msg || 'The signal is lost. Restore your connection.';
+  document.getElementById('networkBanner').classList.add('show');
 }
 function hideNetworkBanner() { document.getElementById('networkBanner').classList.remove('show'); }
 function isOnline() { return navigator.onLine !== false; }
-
 window.addEventListener('online', () => { hideNetworkBanner(); });
 window.addEventListener('offline', () => { showNetworkBanner('The signal is lost. Restore your connection.'); });
-
 async function safeFetch(url, options) {
   if (!isOnline()) { showNetworkBanner('The signal is lost. Restore your connection.'); throw new Error('offline'); }
   try { return await fetch(url, options); }
-  catch (e) {
-    if (!isOnline()) showNetworkBanner('The signal is lost. Restore your connection.');
-    else showNetworkBanner('The mirror is out of reach. Trying again...');
-    throw e;
-  }
+  catch (e) { showNetworkBanner('The mirror is out of reach. Trying again...'); throw e; }
 }
-
 function retryConnection() {
   if (!isOnline()) { showNetworkBanner('Still offline. Check your network.'); return; }
-  hideNetworkBanner();
-  location.reload();
+  hideNetworkBanner(); location.reload();
 }
 
 // ===== PWA =====
@@ -622,11 +609,11 @@ let state = {
   goldenStars: [], teachings: [], profileCache: {}, notifications: [], usedResponses: [], activeTag: null,
   myPosts: [], myBookmarks: [], myBookmarkedIds: new Set(), myFollowing: new Set(), myFollowers: new Set(),
   selectedTheme: 'amethyst', viewingUserId: null, featuredTeaching: null,
-  activeSubTab: 'all', followingFeedData: null, myPostsSearch: '',
-  // Delivery 2 state
-  expandedCommentTeachingIds: new Set(), // teachings whose comment area is expanded
-  openReplyCommentId: null,              // only one reply composer at a time
-  quoteTarget: null                      // { teachingId, commentId, username, excerpt }
+  activeSubTab: 'all', myPostsSearch: '',
+  // Delivery 2
+  expandedCommentTeachingIds: new Set(),
+  openReplyCommentId: null,
+  quoteTarget: null
 };
 const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
 
@@ -655,31 +642,13 @@ function selectTheme(theme) { applyTheme(theme); document.querySelectorAll('.the
 
 function readingTime(content) {
   const words = (content || '').trim().split(/\s+/).length;
-  const minutes = Math.max(1, Math.round(words / 200));
-  return minutes + ' min read';
+  return Math.max(1, Math.round(words / 200)) + ' min read';
 }
 
 const TRAIT_REWARDS = {
-  element: {
-    Fire: "✨ I see you clearly now. You are a **Fire Soul** — passion, intensity, transformation. Your anger is not destruction — it is fuel that has not yet been aimed.\n\nThis is your first golden moment.",
-    Water: "✨ I see you clearly now. You are a **Water Soul** — depth, emotion, fluidity. Your depth is not weakness; it is the deepest gift.\n\nThis is your first golden moment.",
-    Earth: "✨ I see you clearly now. You are an **Earth Soul** — grounded, patient, practical. Your wound is confusing stillness with being stuck.\n\nThis is your first golden moment.",
-    Air: "✨ I see you clearly now. You are an **Air Soul** — your mind is a compass, not a cage. Your gift is clarity.\n\nThis is your first golden moment."
-  },
-  wound: {
-    Betrayal: "✨ A deeper truth has surfaced. Your core wound is **Betrayal** — trust has been broken. This is not a curse. It is a filter.",
-    Abandonment: "✨ A deeper truth has surfaced. Your core wound is **Abandonment** — you have been left. This is not a curse. It is self-reliance.",
-    Worthlessness: "✨ A deeper truth has surfaced. Your core wound is **Worthlessness**. Your existence is the proof of your worth.",
-    Powerlessness: "✨ A deeper truth has surfaced. Your core wound is **Powerlessness**. True power is surrender.",
-    Invisibility: "✨ A deeper truth has surfaced. Your core wound is **Invisibility**. You see others deeply. This is your hidden gift."
-  },
-  gift: {
-    Intuition: "✨ Your gift has revealed itself. You carry **Intuition** — know without proof.",
-    Healing: "✨ Your gift has revealed itself. You carry **Healing** — hold space without fixing.",
-    Teaching: "✨ Your gift has revealed itself. You carry **Teaching** — show by example, not preaching.",
-    Creation: "✨ Your gift has revealed itself. You carry **Creation** — build from nothing.",
-    Protection: "✨ Your gift has revealed itself. You carry **Protection** — shield others, but shield yourself first."
-  }
+  element: { Fire: "✨ I see you clearly now. You are a **Fire Soul** — passion, intensity, transformation. Your anger is not destruction — it is fuel that has not yet been aimed.\n\nThis is your first golden moment.", Water: "✨ I see you clearly now. You are a **Water Soul** — depth, emotion, fluidity. Your depth is not weakness; it is the deepest gift.\n\nThis is your first golden moment.", Earth: "✨ I see you clearly now. You are an **Earth Soul** — grounded, patient, practical. Your wound is confusing stillness with being stuck.\n\nThis is your first golden moment.", Air: "✨ I see you clearly now. You are an **Air Soul** — your mind is a compass, not a cage. Your gift is clarity.\n\nThis is your first golden moment." },
+  wound: { Betrayal: "✨ A deeper truth has surfaced. Your core wound is **Betrayal** — trust has been broken. This is not a curse. It is a filter.", Abandonment: "✨ A deeper truth has surfaced. Your core wound is **Abandonment** — you have been left. This is not a curse. It is self-reliance.", Worthlessness: "✨ A deeper truth has surfaced. Your core wound is **Worthlessness**. Your existence is the proof of your worth.", Powerlessness: "✨ A deeper truth has surfaced. Your core wound is **Powerlessness**. True power is surrender.", Invisibility: "✨ A deeper truth has surfaced. Your core wound is **Invisibility**. You see others deeply. This is your hidden gift." },
+  gift: { Intuition: "✨ Your gift has revealed itself. You carry **Intuition** — know without proof.", Healing: "✨ Your gift has revealed itself. You carry **Healing** — hold space without fixing.", Teaching: "✨ Your gift has revealed itself. You carry **Teaching** — show by example, not preaching.", Creation: "✨ Your gift has revealed itself. You carry **Creation** — build from nothing.", Protection: "✨ Your gift has revealed itself. You carry **Protection** — shield others, but shield yourself first." }
 };
 
 const wisdom = {
@@ -789,7 +758,7 @@ function formatResponse(text) {
   html = html.replace(/\n\n/g, '<br><br>').replace(/\n/g, '<br>');
   return html;
 }
-function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t; return d.innerHTML; }
+function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
 
 function relativeTime(dateStr) {
   const diff = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
@@ -916,13 +885,20 @@ async function enterApp(user) {
   logActivity('app_open');
   Promise.all([ loadGoldenStars(), loadTeachings(), loadNotifications(), loadFollowing(), loadBookmarks(), loadFollowers() ]).then(() => {
     renderProfile(); renderTeachings(); renderNotifications();
+    // Restore saved tab (Bug 9 — minimize / return state)
+    const savedTab = localStorage.getItem('moph_active_tab');
+    if (savedTab && ['chat','teachings','profile'].includes(savedTab) && savedTab !== 'chat') {
+      switchTab(savedTab);
+    }
+    const savedSub = localStorage.getItem('moph_active_subtab');
+    if (savedSub && ['all','following','qa'].includes(savedSub)) switchSubTab(savedSub);
   }).catch(err => console.error('Load error:', err));
   updateStreak();
   if (notifPoll) clearInterval(notifPoll);
   notifPoll = setInterval(() => { if (document.visibilityState === 'visible' && state.user) loadNotifications(); }, 30000);
 }
 
-// ===== ACTIVITY LOG (Delivery 2) =====
+// ===== ACTIVITY LOG (correct shape: user_id, kind, day) =====
 async function logActivity(kind) {
   try {
     if (!state.user) return;
@@ -963,35 +939,21 @@ async function loadActivityCalendar() {
   } catch (e) { /* silent */ }
 }
 
-// ===== PUSH NOTIFICATIONS (Delivery 2) =====
 function enablePush() {
   const btn = document.getElementById('pushEnableBtn');
   if (!('Notification' in window)) { alert('Notifications are not supported on this device.'); return; }
-  if (Notification.permission === 'granted') {
-    btn.classList.add('enabled');
-    btn.textContent = 'Notifications enabled';
-    btn.disabled = true;
-    return;
-  }
+  if (Notification.permission === 'granted') { btn.classList.add('enabled'); btn.textContent = 'Notifications enabled'; btn.disabled = true; return; }
   Notification.requestPermission().then(perm => {
     if (perm === 'granted') {
-      btn.classList.add('enabled');
-      btn.textContent = 'Notifications enabled';
-      btn.disabled = true;
+      btn.classList.add('enabled'); btn.textContent = 'Notifications enabled'; btn.disabled = true;
       try { new Notification('Moph Echo Mirror', { body: 'The mirror will signal you when someone speaks.' }); } catch (e) {}
-    } else {
-      btn.textContent = 'Permission denied — try again';
-    }
+    } else { btn.textContent = 'Permission denied — try again'; }
   });
 }
 function refreshPushButton() {
   const btn = document.getElementById('pushEnableBtn');
   if (!btn) return;
-  if ('Notification' in window && Notification.permission === 'granted') {
-    btn.classList.add('enabled');
-    btn.textContent = 'Notifications enabled';
-    btn.disabled = true;
-  }
+  if ('Notification' in window && Notification.permission === 'granted') { btn.classList.add('enabled'); btn.textContent = 'Notifications enabled'; btn.disabled = true; }
 }
 
 // ===== STREAK =====
@@ -1050,11 +1012,8 @@ async function saveMessage(role, text) { await sb.from('journal_entries').insert
 async function loadGoldenStars() { const { data } = await sb.from('golden_moments').select('*').eq('user_id', state.user.id).order('created_at', { ascending: false }); if (data) state.goldenStars = data.map(g => ({ text: g.content, trait_type: g.trait_type || null, trait_value: g.trait_value || null, date: new Date(g.created_at).toLocaleString() })); }
 async function saveGoldenStar(text, trait_type, trait_value) { await sb.from('golden_moments').insert({ user_id: state.user.id, content: text, trait_type, trait_value }); state.goldenStars.unshift({ text, trait_type, trait_value, date: new Date().toLocaleString() }); }
 
-// ===== FOLLOW SYSTEM =====
-async function loadFollowing() {
-  const { data } = await sb.from('follows').select('to_user').eq('from_user', state.user.id);
-  state.myFollowing = new Set((data || []).map(f => f.to_user));
-}
+// ===== FOLLOWS / BOOKMARKS =====
+async function loadFollowing() { const { data } = await sb.from('follows').select('to_user').eq('from_user', state.user.id); state.myFollowing = new Set((data || []).map(f => f.to_user)); }
 async function loadFollowers() {
   const { data } = await sb.from('follows').select('from_user').eq('to_user', state.user.id);
   state.myFollowers = new Set((data || []).map(f => f.from_user));
@@ -1079,28 +1038,13 @@ async function unfollowUser(toUserId, btn) {
     if (btn) { btn.className = 'follow-btn not-following'; btn.textContent = 'Follow'; btn.disabled = false; }
   } catch (e) { if (btn) { btn.disabled = false; btn.textContent = 'Following'; } }
 }
-function toggleFollow(toUserId, btn) {
-  if (state.myFollowing.has(toUserId)) unfollowUser(toUserId, btn);
-  else followUser(toUserId, btn);
-}
+function toggleFollow(toUserId, btn) { if (state.myFollowing.has(toUserId)) unfollowUser(toUserId, btn); else followUser(toUserId, btn); }
 
-// ===== BOOKMARKS =====
-async function loadBookmarks() {
-  const { data } = await sb.from('bookmarks').select('teaching_id').eq('user_id', state.user.id);
-  state.myBookmarkedIds = new Set((data || []).map(b => b.teaching_id));
-}
+async function loadBookmarks() { const { data } = await sb.from('bookmarks').select('teaching_id').eq('user_id', state.user.id); state.myBookmarkedIds = new Set((data || []).map(b => b.teaching_id)); }
 async function toggleBookmark(teachingId, btn) {
   const isBookmarked = state.myBookmarkedIds.has(teachingId);
-  if (isBookmarked) {
-    await sb.from('bookmarks').delete().eq('user_id', state.user.id).eq('teaching_id', teachingId);
-    state.myBookmarkedIds.delete(teachingId);
-    if (btn) btn.classList.remove('active');
-  } else {
-    await sb.from('bookmarks').insert({ user_id: state.user.id, teaching_id: teachingId });
-    state.myBookmarkedIds.add(teachingId);
-    if (btn) btn.classList.add('active');
-    logActivity('bookmark');
-  }
+  if (isBookmarked) { await sb.from('bookmarks').delete().eq('user_id', state.user.id).eq('teaching_id', teachingId); state.myBookmarkedIds.delete(teachingId); if (btn) btn.classList.remove('active'); }
+  else { await sb.from('bookmarks').insert({ user_id: state.user.id, teaching_id: teachingId }); state.myBookmarkedIds.add(teachingId); if (btn) btn.classList.add('active'); logActivity('bookmark'); }
   renderTeachings();
   if (!document.getElementById('profileSaved').classList.contains('hidden')) loadMySaved();
 }
@@ -1117,7 +1061,7 @@ async function loadTeachings(force) {
     const { data: tReactions } = await sb.from('teaching_reactions').select('*').in('teaching_id', ids);
     const { data: cReactions } = cids.length > 0 ? await sb.from('comment_reactions').select('*').in('comment_id', cids) : { data: [] };
 
-    // Delivery 2: load polls + votes
+    // Polls
     let polls = [], votes = [];
     try {
       const { data: p } = await sb.from('teaching_polls').select('*').in('teaching_id', ids);
@@ -1127,7 +1071,7 @@ async function loadTeachings(force) {
         const { data: v } = await sb.from('poll_votes').select('*').in('poll_id', pollIds);
         votes = v || [];
       }
-    } catch (e) { /* polls table missing or empty */ }
+    } catch (e) {}
 
     const userIds = new Set();
     (allComments || []).forEach(c => userIds.add(c.user_id));
@@ -1141,7 +1085,6 @@ async function loadTeachings(force) {
     const cByT = {};
     (allComments || []).forEach(c => { if (!cByT[c.teaching_id]) cByT[c.teaching_id] = []; cByT[c.teaching_id].push({ ...c, reactions: crByC[c.id] || [] }); });
 
-    // Delivery 2: group polls and votes by teaching
     const pollByT = {};
     polls.forEach(p => { pollByT[p.teaching_id] = p; });
     const votesByPoll = {};
@@ -1183,6 +1126,7 @@ function setTag(tag) { state.activeTag = tag; renderTagFilters(); filterTeaching
 
 function switchSubTab(tab) {
   state.activeSubTab = tab;
+  localStorage.setItem('moph_active_subtab', tab);
   document.getElementById('subTabAll').classList.toggle('active', tab === 'all');
   document.getElementById('subTabFollowing').classList.toggle('active', tab === 'following');
   document.getElementById('subTabQA').classList.toggle('active', tab === 'qa');
@@ -1208,21 +1152,11 @@ function filterTeachings() {
 function renderFollowingFeed() {
   const el = document.getElementById('teachingsFeed');
   const followedIds = [...state.myFollowing];
-  if (followedIds.length === 0) {
-    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">You are not following anyone yet. Tap a @username in any comment to view their profile and follow.</p></div>';
-    return;
-  }
+  if (followedIds.length === 0) { el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">You are not following anyone yet. Tap a @username in any comment to view their profile and follow.</p></div>'; return; }
   const posts = [];
-  state.teachings.forEach(t => {
-    t.comments.forEach(c => {
-      if (followedIds.includes(c.user_id)) posts.push({ comment: c, teaching: t });
-    });
-  });
+  state.teachings.forEach(t => { t.comments.forEach(c => { if (followedIds.includes(c.user_id)) posts.push({ comment: c, teaching: t }); }); });
   posts.sort((a, b) => new Date(b.comment.created_at) - new Date(a.comment.created_at));
-  if (posts.length === 0) {
-    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No recent activity from the people you follow.</p></div>';
-    return;
-  }
+  if (posts.length === 0) { el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No recent activity from the people you follow.</p></div>'; return; }
   el.innerHTML = posts.slice(0, 40).map(p => renderFollowPost(p.comment, p.teaching)).join('');
 }
 
@@ -1235,21 +1169,14 @@ function renderFollowPost(c, t) {
       <span>·</span><span>${relativeTime(c.created_at)}</span>
     </div>
     <button onclick="scrollToTeaching(${t.id})" class="text-[10px] px-3 py-1.5 rounded-full bg-void-800 border border-void-600 text-gray-400 hover:border-amethyst-500/40 hover:text-amethyst-400 transition mb-2 inline-flex items-center gap-1.5">
-      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
       Replying on: ${escapeHtml(t.title || 'Untitled')}
     </button>
     ${c.content ? `<p class="text-sm text-gray-200 prose-content">${escapeHtml(c.content)}</p>` : ''}
     ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
-    <div class="mt-3" onclick="event.stopPropagation()">${reactionTriggerHtml(c)}</div>
+    <div class="mt-3" onclick="event.stopPropagation()">${reactionTriggerHtml(c, 'comment')}</div>
     <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
-      <button onclick="scrollToTeaching(${t.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition flex items-center gap-1">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-        Read full teaching
-      </button>
-      <button onclick="jumpToTeachingComments(${t.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition flex items-center gap-1">
-        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-        Show comments (${t.comments.length})
-      </button>
+      <button onclick="scrollToTeaching(${t.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Read full teaching</button>
+      <button onclick="jumpToTeachingComments(${t.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Show comments (${t.comments.length})</button>
     </div>
   </article>`;
 }
@@ -1258,32 +1185,26 @@ function scrollToTeaching(tid) { switchSubTab('all'); setTimeout(() => { const e
 function jumpToTeachingComments(tid) {
   state.expandedCommentTeachingIds.add(tid);
   switchSubTab('all');
-  setTimeout(() => {
-    const el = document.querySelector(`[data-teaching-id="${tid}"]`);
-    if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }
-  }, 100);
+  setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${tid}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
 }
 
 function renderTeachings() { filterTeachings(); renderFeaturedBanner(); }
-function countEmoji(reactions, emoji) { return reactions.filter(r => r.emoji === emoji).length; }
-function userReacted(reactions, emoji) { return reactions.some(r => r.user_id === state.user.id && r.emoji === emoji); }
 
-// ===== REACTION TRIGGER (collapsed) =====
-function reactionTriggerHtml(c) {
+// FIXED: explicit type param — Bug 7
+function reactionTriggerHtml(c, type) {
   const myReaction = (c.reactions || []).find(r => r.user_id === state.user.id);
   const totalCount = (c.reactions || []).length;
-  const type = c.teaching_id ? 'teaching' : 'comment';
-  const id = c.id;
   const display = myReaction ? myReaction.emoji : '🙂';
   const hasReaction = !!myReaction;
   return `<div class="relative inline-block">
-    <button class="reaction-trigger ${hasReaction ? 'has-reaction' : ''}" onclick="toggleReactionPicker(event, '${type}', ${id})">
+    <button class="reaction-trigger ${hasReaction ? 'has-reaction' : ''}" onclick="toggleReactionPicker(event, '${type}', ${c.id})">
       <span>${display}</span>
       ${totalCount > 0 ? `<span>${totalCount}</span>` : ''}
     </button>
   </div>`;
 }
 
+// FIXED: emoji picker overflow — Bug 6
 function toggleReactionPicker(event, type, id) {
   event.stopPropagation();
   document.querySelectorAll('.reaction-picker').forEach(p => p.remove());
@@ -1297,6 +1218,9 @@ function toggleReactionPicker(event, type, id) {
   const myReaction = reactions.find(r => r.user_id === state.user.id);
   picker.innerHTML = EMOJIS.map(e => `<button class="${myReaction && myReaction.emoji === e ? 'is-selected' : ''}" onclick="selectReaction(event, '${type}', ${id}, '${e}')">${e}</button>`).join('');
   wrap.appendChild(picker);
+  // Smart anchor: if picker would overflow right, anchor right
+  const rect = picker.getBoundingClientRect();
+  if (rect.right > window.innerWidth - 8) picker.classList.add('right-anchor');
   setTimeout(() => {
     const closer = (ev) => { if (!picker.contains(ev.target) && ev.target !== btn) { picker.remove(); document.removeEventListener('click', closer); } };
     document.addEventListener('click', closer);
@@ -1310,7 +1234,7 @@ async function selectReaction(event, type, id, emoji) {
   else await toggleCommentReaction(id, emoji);
 }
 
-// ===== Delivery 2: Poll render + vote =====
+// ===== POLLS =====
 function renderPollHtml(t) {
   if (!t.poll) return '';
   const poll = t.poll;
@@ -1319,9 +1243,8 @@ function renderPollHtml(t) {
   if (!Array.isArray(opts)) opts = [];
   const votes = t.pollVotes || [];
   const myVote = votes.find(v => v.user_id === state.user.id);
-  const isAdmin = state.profile && state.profile.is_admin === true;
   const total = votes.length || 1;
-  const showResults = !!myVote || isAdmin;
+  const showResults = !!myVote;
   return `<div class="poll-wrap" data-poll-id="${poll.id}">
     ${poll.question ? `<p class="poll-question">${escapeHtml(poll.question)}</p>` : ''}
     ${opts.map((opt, i) => {
@@ -1330,10 +1253,7 @@ function renderPollHtml(t) {
       const mine = myVote && myVote.option_index === i;
       return `<button class="poll-option ${mine ? 'mine' : ''} ${showResults ? 'voted' : ''}" onclick="votePoll(${poll.id}, ${i}, ${t.id})" ${myVote ? 'disabled' : ''}>
         ${showResults ? `<div class="poll-fill" style="width:${pct}%"></div>` : ''}
-        <div class="poll-content">
-          <span>${mine ? '◉' : '○'} ${escapeHtml(opt)}</span>
-          ${showResults ? `<span class="poll-pct">${pct}%</span>` : ''}
-        </div>
+        <div class="poll-content"><span>${mine ? '◉' : '○'} ${escapeHtml(opt)}</span>${showResults ? `<span class="poll-pct">${pct}%</span>` : ''}</div>
       </button>`;
     }).join('')}
     <p class="poll-meta">${showResults ? `${votes.length} vote${votes.length === 1 ? '' : 's'}` : 'Vote to see results'}</p>
@@ -1350,29 +1270,7 @@ async function votePoll(pollId, optionIndex, teachingId) {
   } catch (e) { alert('Could not record vote.'); }
 }
 
-// ===== Delivery 2: Q&A cross-link =====
-function renderCrossQaCard(t) {
-  if (!t.cross_question_id) return '';
-  const target = state.teachings.find(x => x.id === t.cross_question_id);
-  if (!target) return '';
-  const preview = (target.title || target.content || '').replace(/<[^>]*>/g, '').slice(0, 100);
-  return `<button class="cross-qa-card" onclick="jumpToQA(${t.cross_question_id})">
-    <div class="cq-label">Linked question</div>
-    <div class="cq-text">${escapeHtml(preview)}</div>
-    <div class="cq-arrow">Open in Q&amp;A →</div>
-  </button>`;
-}
-
-function jumpToQA(teachingId) {
-  switchTab('teachings');
-  switchSubTab('qa');
-  setTimeout(() => {
-    const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 150);
-}
-
-// ===== Delivery 2: question detection for smart toggle =====
+// ===== QUESTION DETECTION =====
 function looksLikeQuestion(text) {
   const t = (text || '').trim();
   if (!t) return false;
@@ -1389,11 +1287,8 @@ function updateSmartToggles(uid) {
   const isTopLevel = !uid.startsWith('reply-');
   const show = isTopLevel || looksLikeQuestion(ta.value);
   const qa = document.getElementById(uid + '-qa');
-  const anon = document.getElementById(uid + '-anon');
   if (qa) qa.style.display = show ? 'inline-flex' : 'none';
-  if (anon) anon.style.display = show ? 'inline-flex' : 'none';
   if (!show && qa) { const i = qa.querySelector('input'); if (i) i.checked = false; qa.classList.remove('active'); }
-  if (!show && anon) { const i = anon.querySelector('input'); if (i) i.checked = false; anon.classList.remove('active'); }
 }
 
 function toggleSmartFlag(el) {
@@ -1403,7 +1298,7 @@ function toggleSmartFlag(el) {
   el.classList.toggle('active', cb.checked);
 }
 
-// ===== Delivery 2: Quote handling =====
+// ===== QUOTE =====
 function setQuote(teachingId, comment) {
   state.quoteTarget = {
     teachingId,
@@ -1411,18 +1306,12 @@ function setQuote(teachingId, comment) {
     username: comment.user_id === state.user.id ? (state.profile.username || 'you') : (state.profileCache[comment.user_id]?.username || 'seeker'),
     excerpt: (comment.content || '[image]').slice(0, 120)
   };
-  // Ensure the teaching's comments are expanded so the composer is visible
   state.expandedCommentTeachingIds.add(teachingId);
+  state.openReplyCommentId = null;
   renderTeachings();
-  setTimeout(() => {
-    const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 100);
+  setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${teachingId}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
 }
-function clearQuote() {
-  state.quoteTarget = null;
-  renderTeachings();
-}
+function clearQuote() { state.quoteTarget = null; renderTeachings(); }
 
 function renderTeachingPost(t) {
   const tagHtml = (t.tags || []).map(tag => `<span class="text-[10px] px-2.5 py-1 rounded-full bg-void-800 border border-void-600 text-gray-400">#${escapeHtml(tag)}</span>`).join('');
@@ -1440,19 +1329,17 @@ function renderTeachingPost(t) {
   }
   if (t.cover_image) mediaHtml += `<img src="${escapeHtml(t.cover_image)}" class="w-full rounded-2xl mb-3.5 cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(t.cover_image)}')">`;
 
-  // Delivery 2: comments collapsed by default
   const commentsBlock = expanded
     ? `<div class="pt-4">${renderComposer(t.id, null)}</div>
        <div id="comments-${t.id}" class="space-y-3 mt-1">${renderCommentsFor(t) || '<p class="text-xs text-gray-600 text-center py-4">No one has spoken yet. Open the thread.</p>'}</div>`
     : '';
-
   const toggleLabel = expanded ? 'Hide comments' : `${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}`;
 
   return `<article class="glass card-lg border border-void-600 overflow-hidden fade-in" data-teaching-id="${t.id}">
     <div class="p-5">
       <div class="flex items-start justify-between gap-2 mb-2.5">
         <div class="flex flex-wrap gap-1.5 flex-1 items-center">${featuredHtml}${pinnedHtml}${qBadge}${tagHtml}</div>
-        <button onclick="toggleBookmark(${t.id}, this)" class="bookmark-btn ${isBookmarked ? 'active' : ''}" title="${isBookmarked ? 'Remove bookmark' : 'Save teaching'}">
+        <button onclick="toggleBookmark(${t.id}, this)" class="bookmark-btn ${isBookmarked ? 'active' : ''}">
           <svg class="w-4 h-4" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
         </button>
       </div>
@@ -1460,13 +1347,10 @@ function renderTeachingPost(t) {
       ${mediaHtml}
       <div class="text-sm text-gray-300 prose-content">${formatResponse(t.content)}</div>
       ${renderPollHtml(t)}
-      ${renderCrossQaCard(t)}
       <div class="flex items-center gap-3 mt-3.5 text-[10px] text-gray-600">
-        <span>${relativeTime(t.created_at)}</span>
-        <span>·</span>
-        <span class="read-time">${readingTime(t.content)}</span>
+        <span>${relativeTime(t.created_at)}</span><span>·</span><span class="read-time">${readingTime(t.content)}</span>
       </div>
-      <div class="mt-3.5">${reactionTriggerHtml(t)}</div>
+      <div class="mt-3.5">${reactionTriggerHtml(t, 'teaching')}</div>
       <div class="flex items-center justify-between mt-3.5 ${expanded ? 'pb-3.5' : ''} border-b border-void-600">
         <button onclick="toggleTeachingComments(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
           <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
@@ -1493,7 +1377,6 @@ function toggleTeachingComments(tid) {
 }
 
 function renderCommentsFor(t) {
-  // Sort root-level: accepted first, then by created_at
   const acceptedId = t.accepted_answer_id;
   const sorted = [...t.comments].sort((a, b) => {
     if (a.id === acceptedId) return -1;
@@ -1503,11 +1386,11 @@ function renderCommentsFor(t) {
   return renderCommentTree(sorted, null, t.id, 0, t);
 }
 
-// ===== COMPOSER (X-style) with Delivery 2 toggles =====
+// ===== COMPOSER (compact on nested) =====
 function renderComposer(teachingId, parentId) {
   const uid = parentId ? `reply-${parentId}` : `comment-${teachingId}`;
   const isTopLevel = !parentId;
-  const placeholder = parentId ? 'Post your reply' : 'Post your reply';
+  const placeholder = 'Post your reply';
   const quoteBlock = (state.quoteTarget && !parentId) ? `
     <div class="quote-preview">
       <div class="qp-body">
@@ -1517,8 +1400,9 @@ function renderComposer(teachingId, parentId) {
       <button class="qp-x" onclick="clearQuote()" title="Remove quote">×</button>
     </div>` : '';
   const qaDisplay = isTopLevel ? 'inline-flex' : 'none';
-  const anonDisplay = isTopLevel ? 'inline-flex' : 'none';
-  return `<div class="composer">
+  const compact = !isTopLevel ? ' compact' : '';
+  // On nested replies: only image, camera, Q&A (icons only), Reply, Cancel
+  return `<div class="composer${compact}">
     <div class="flex gap-2.5">
       ${avatarHtml(state.user.id, 'sm')}
       <div class="flex-1 min-w-0">
@@ -1536,16 +1420,11 @@ function renderComposer(teachingId, parentId) {
               <input type="file" id="${uid}-camera" accept="image/*" capture="environment" class="hidden" onchange="previewCommentImage(${teachingId}, ${parentId || 'null'}, '${uid}')">
             </label>
             <label class="smart-toggle qa" id="${uid}-qa" style="display:${qaDisplay};" onclick="event.preventDefault(); toggleSmartFlag(this);">
-              <input type="checkbox">
-              <span>Q&amp;A</span>
+              <input type="checkbox"><span>Q&amp;A</span>
             </label>
-            <label class="smart-toggle anon" id="${uid}-anon" style="display:${anonDisplay};" onclick="event.preventDefault(); toggleSmartFlag(this);">
-              <input type="checkbox">
-              <span>Anonymous</span>
-            </label>
-            ${parentId ? `<button onclick="cancelReply(${parentId})" class="text-[10px] text-gray-500 hover:text-gray-300 px-2 py-1 ml-auto transition">Cancel</button>` : ''}
+            ${parentId ? `<button onclick="cancelReply(${parentId})" class="text-[11px] text-gray-500 hover:text-gray-300 px-2 py-1 transition flex-shrink-0">Cancel</button>` : ''}
           </div>
-          <button id="${uid}-submit" onclick="submitComment(${teachingId}, ${parentId || 'null'}, '${uid}')" class="composer-submit" disabled>${parentId ? 'Reply' : 'Reply'}</button>
+          <button id="${uid}-submit" onclick="submitComment(${teachingId}, ${parentId || 'null'}, '${uid}')" class="composer-submit" disabled>Reply</button>
         </div>
       </div>
     </div>
@@ -1601,6 +1480,7 @@ function removeCommentImage(uid) {
   if (btn) btn.disabled = !txt.value.trim();
 }
 
+// FIXED: deeper indent + thread line — Bug 2
 function renderCommentTree(comments, parentId, teachingId, depth = 0, teaching = null) {
   const children = comments.filter(c => (c.parent_id || null) === parentId);
   if (children.length === 0) return '';
@@ -1614,16 +1494,13 @@ function renderComment(c, teachingId, depth, repliesHtml, teaching) {
   const isQuestion = c.is_question === true;
   const isAccepted = teaching && teaching.accepted_answer_id === c.id;
   const isTeachingAuthor = teaching && teaching.user_id === state.user.id;
-  const canAccept = teaching && teaching.is_question && isTeachingAuthor && !isAccepted;
-  const maxDepth = Math.min(depth, 6);
-  const indentStyle = maxDepth > 0 ? `margin-left:${maxDepth * 12}px;padding-left:11px;border-left:1px solid rgba(var(--accent-rgb),0.22);` : '';
+  const canAccept = teaching && teaching.is_question && isTeachingAuthor && !isAccepted && c.user_id !== state.user.id;
+  const depthClass = depth > 0 ? 'comment-thread' : '';
   const edited = c.updated_at && c.updated_at !== c.created_at;
   const pendingClass = c._pending ? 'pending-opacity' : '';
   const displayName = isAnon ? 'anonymous' : info.username;
-  const avatarForAnon = isAnon ? `<div class="avatar-sm">?</div>` : avatarHtml(c.user_id, 'sm');
   const contentWithMentions = (c.content || '').replace(/@([a-z0-9_]+)/gi, '<button onclick="openPublicProfileByUsername(\'$1\')" class="text-amethyst-300 font-medium hover:underline">@$1</button>');
 
-  // Quoted comment inline preview
   let quotedHtml = '';
   if (c.quoted_comment_id) {
     const allComments = teaching ? teaching.comments : [];
@@ -1640,15 +1517,13 @@ function renderComment(c, teachingId, depth, repliesHtml, teaching) {
   const anonBadge = isAnon ? `<span class="anon-badge">anon</span>` : '';
   const bodyClass = isAccepted ? 'accepted-comment-body' : '';
 
-  return `<div style="${indentStyle}" class="mb-2.5 ${pendingClass}" id="comment-${c.id}">
+  return `<div class="mb-3 ${pendingClass} ${depthClass}" id="comment-${c.id}">
     <div class="flex gap-2.5">
-      ${isAnon ? `<div>${avatarForAnon}</div>` : `<button onclick="openPublicProfile('${c.user_id}')">${avatarHtml(c.user_id, 'sm')}</button>`}
+      ${isAnon ? `<div>${avatarHtml('__anon__', 'sm')}</div>` : `<button onclick="openPublicProfile('${c.user_id}')">${avatarHtml(c.user_id, 'sm')}</button>`}
       <div class="flex-1 min-w-0">
         <div class="${bodyClass}" style="${bodyClass ? 'padding:10px 12px; border-radius:12px;' : ''}">
           <div class="flex items-center gap-2 flex-wrap">
-            ${isAnon
-              ? `<span class="text-xs font-medium text-gray-500">@anonymous</span>`
-              : `<button onclick="openPublicProfile('${c.user_id}')" class="text-xs font-medium text-amethyst-300 hover:underline">@${escapeHtml(displayName)}</button>`}
+            ${isAnon ? `<span class="text-xs font-medium text-gray-500">@anonymous</span>` : `<button onclick="openPublicProfile('${c.user_id}')" class="text-xs font-medium text-amethyst-300 hover:underline">@${escapeHtml(displayName)}</button>`}
             ${qBadge}${acceptedBadge}${anonBadge}
             <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
             ${edited ? `<span class="text-[10px] text-gray-700">· edited</span>` : ''}
@@ -1659,8 +1534,8 @@ function renderComment(c, teachingId, depth, repliesHtml, teaching) {
           ${contentWithMentions ? `<p class="text-sm text-gray-300 prose-content mt-1.5">${contentWithMentions}</p>` : ''}
           ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-2.5 max-h-64 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
         </div>
-        <div class="mt-2.5 flex items-center gap-4">
-          ${reactionTriggerHtml(c)}
+        <div class="mt-2.5 flex items-center gap-4 flex-wrap">
+          ${reactionTriggerHtml(c, 'comment')}
           <button onclick="showReplyBox(${c.id}, ${teachingId})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Reply</button>
           ${canAccept ? `<button onclick="acceptAnswer(${c.id}, ${teachingId})" class="text-[10px] text-green-400 hover:text-green-300 transition">Accept as answer</button>` : ''}
         </div>
@@ -1676,26 +1551,27 @@ async function acceptAnswer(commentId, teachingId) {
     await sb.from('teachings').update({ accepted_answer_id: commentId }).eq('id', teachingId);
     const t = state.teachings.find(x => x.id === teachingId);
     if (t) t.accepted_answer_id = commentId;
-    // notify the accepted author
     const comment = t ? t.comments.find(c => c.id === commentId) : null;
     if (comment && comment.user_id !== state.user.id) {
-      await sb.from('notifications').insert({
-        user_id: comment.user_id, type: 'accepted',
-        actor_id: state.user.id, actor_username: state.profile.username,
-        teaching_id: teachingId, message: 'Your answer was accepted.'
-      });
+      await sb.from('notifications').insert({ user_id: comment.user_id, type: 'accepted', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, message: 'Your answer was accepted.' });
     }
     renderTeachings();
   } catch (e) { alert('Could not mark as accepted.'); }
 }
 
-function avatarHtml(userId, size) { const info = state.profileCache[userId] || {}; const cls = size === 'xs' ? 'avatar-xs' : size === 'lg' ? 'avatar-lg' : 'avatar-sm'; if (info.avatar_url) return `<img src="${info.avatar_url}" class="${cls}" alt="">`; const initial = (info.username || '?')[0].toUpperCase(); return `<div class="${cls}">${initial}</div>`; }
+function avatarHtml(userId, size) {
+  const cls = size === 'xs' ? 'avatar-xs' : size === 'lg' ? 'avatar-lg' : 'avatar-sm';
+  if (userId === '__anon__') return `<div class="${cls}">?</div>`;
+  const info = state.profileCache[userId] || {};
+  if (info.avatar_url) return `<img src="${info.avatar_url}" class="${cls}" alt="">`;
+  const initial = (info.username || '?')[0].toUpperCase();
+  return `<div class="${cls}">${initial}</div>`;
+}
 
 function showReplyBox(commentId, teachingId) {
-  // Delivery 2: only one reply composer open at a time
   const box = document.getElementById('reply-box-' + commentId);
   if (!box) return;
-  // If a different reply composer is open, close it first
+  // Only one open at a time
   if (state.openReplyCommentId && state.openReplyCommentId !== commentId) {
     const prev = document.getElementById('reply-box-' + state.openReplyCommentId);
     if (prev) { prev.classList.add('hidden'); prev.innerHTML = ''; }
@@ -1733,7 +1609,7 @@ async function sendPoke(toUserId, btn) {
   } catch (e) { btn.disabled = false; btn.textContent = '👋'; }
 }
 
-// ===== COMMENT MENU (Delivery 2: adds Quote) =====
+// ===== COMMENT MENU =====
 function openCommentMenu(commentId, teachingId) {
   let comment = null;
   for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; break; } }
@@ -1825,17 +1701,14 @@ async function submitComment(teachingId, parentId, uid) {
   const file = (f1 && f1.files[0]) || (f2 && f2.files[0]);
   if (!text && !file) return;
 
-  // Delivery 2: read toggles
   const qaEl = document.getElementById(uid + '-qa');
-  const anonEl = document.getElementById(uid + '-anon');
   const isQuestion = qaEl && qaEl.querySelector('input') && qaEl.querySelector('input').checked;
-  const isAnonymous = anonEl && anonEl.querySelector('input') && anonEl.querySelector('input').checked;
   const quotedId = (!parentId && state.quoteTarget) ? state.quoteTarget.commentId : null;
 
   const tempId = 'temp-' + Date.now();
   const hasPreview = previewEl && !previewEl.classList.contains('hidden');
   const previewImgSrc = hasPreview ? previewEl.querySelector('img')?.src : null;
-  const optimistic = { id: tempId, teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url: previewImgSrc, parent_id: parentId || null, created_at: new Date().toISOString(), reactions: [], is_question: isQuestion, is_anonymous: isAnonymous, quoted_comment_id: quotedId, _pending: true };
+  const optimistic = { id: tempId, teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url: previewImgSrc, parent_id: parentId || null, created_at: new Date().toISOString(), reactions: [], is_question: isQuestion, is_anonymous: false, quoted_comment_id: quotedId, _pending: true };
   const t = state.teachings.find(x => x.id === teachingId);
   if (t) {
     t.comments.push(optimistic);
@@ -1853,38 +1726,29 @@ async function submitComment(teachingId, parentId, uid) {
       const { error } = await sb.storage.from('comment-images').upload(path, file);
       if (!error) { const { data } = sb.storage.from('comment-images').getPublicUrl(path); image_url = data.publicUrl; }
     }
-    const payload = {
-      teaching_id: teachingId,
-      user_id: state.user.id,
-      content: text || null,
-      image_url,
-      parent_id: parentId || null,
-    };
-    // Only include the Delivery 2 fields if they carry a value or the column exists
+    const payload = { teaching_id: teachingId, user_id: state.user.id, content: text || null, image_url, parent_id: parentId || null };
     if (isQuestion) payload.is_question = true;
-    if (isAnonymous) payload.is_anonymous = true;
     if (quotedId) payload.quoted_comment_id = quotedId;
 
     const { data: inserted, error } = await sb.from('teaching_comments').insert(payload).select().single();
     if (error) throw error;
     if (t) { const idx = t.comments.findIndex(c => c.id === tempId); if (idx >= 0) t.comments[idx] = { ...inserted, reactions: [] }; }
 
-    // Notifications
     if (parentId) {
       const p = t.comments.find(c => c.id === parentId);
-      if (p && p.user_id !== state.user.id) await sb.from('notifications').insert({ user_id: p.user_id, type: 'reply', actor_id: state.user.id, actor_username: isAnonymous ? 'anonymous' : state.profile.username, teaching_id: teachingId, comment_id: parentId, message: (isAnonymous ? '@anonymous' : '@' + state.profile.username) + ' replied to your comment' });
+      if (p && p.user_id !== state.user.id) await sb.from('notifications').insert({ user_id: p.user_id, type: 'reply', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: parentId, message: '@' + state.profile.username + ' replied to your comment' });
     }
     if (t && t.user_id && t.user_id !== state.user.id) {
-      await sb.from('notifications').insert({ user_id: t.user_id, type: 'comment', actor_id: state.user.id, actor_username: isAnonymous ? 'anonymous' : state.profile.username, teaching_id: teachingId, comment_id: inserted.id, message: (isAnonymous ? '@anonymous' : '@' + state.profile.username) + ' commented on your teaching' });
+      await sb.from('notifications').insert({ user_id: t.user_id, type: 'comment', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: inserted.id, message: '@' + state.profile.username + ' commented on your teaching' });
     }
     for (const mu of extractMentions(text)) {
       const { data: u } = await sb.from('profiles').select('id').ilike('username', mu).limit(1).maybeSingle();
-      if (u && u.id !== state.user.id) await sb.from('notifications').insert({ user_id: u.id, type: 'mention', actor_id: state.user.id, actor_username: isAnonymous ? 'anonymous' : state.profile.username, teaching_id: teachingId, comment_id: inserted.id, message: (isAnonymous ? '@anonymous' : '@' + state.profile.username) + ' mentioned you' });
+      if (u && u.id !== state.user.id) await sb.from('notifications').insert({ user_id: u.id, type: 'mention', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: inserted.id, message: '@' + state.profile.username + ' mentioned you' });
     }
 
-    // Delivery 2: log activity + clear quote + accepted-answer hint
     logActivity(isQuestion && parentId ? 'qa_answer' : 'comment');
     if (quotedId) state.quoteTarget = null;
+    state.openReplyCommentId = null;
 
     renderTeachings();
   } catch (e) {
@@ -1902,7 +1766,8 @@ async function toggleTeachingReaction(teachingId, emoji) {
   if (ex) await sb.from('teaching_reactions').delete().eq('id', ex.id);
   else {
     await sb.from('teaching_reactions').delete().eq('teaching_id', teachingId).eq('user_id', state.user.id);
-    await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
+    const { error } = await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
+    if (error) { console.error(error); await loadTeachings(); renderTeachings(); }
   }
 }
 
@@ -1917,7 +1782,8 @@ async function toggleCommentReaction(commentId, emoji) {
   if (ex) await sb.from('comment_reactions').delete().eq('id', ex.id);
   else {
     await sb.from('comment_reactions').delete().eq('comment_id', commentId).eq('user_id', state.user.id);
-    await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
+    const { error } = await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
+    if (error) { console.error(error); await loadTeachings(); renderTeachings(); return; }
     if (comment.user_id !== state.user.id) await sb.from('notifications').insert({ user_id: comment.user_id, type: 'reaction', actor_id: state.user.id, actor_username: state.profile.username, teaching_id: teachingId, comment_id: commentId, message: '@' + state.profile.username + ' reacted ' + emoji + ' to your comment' });
   }
 }
@@ -2050,8 +1916,8 @@ function closePublicProfile() { document.getElementById('publicProfileModal').cl
 
 function renderPublicProfile(p, followersCount, followingCount) {
   const socials = ['social_x', 'social_instagram', 'social_youtube', 'social_tiktok', 'social_whatsapp', 'social_linkedin'].filter(k => p[k]).map(k => `<a href="${escapeHtml(p[k])}" target="_blank" rel="noopener" class="social-icon">${SOCIAL_ICONS[k].svg}</a>`).join('');
-  const websiteHtml = p.website ? `<a href="${escapeHtml(p.website)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs text-amethyst-400 hover:underline mt-2"><svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>${escapeHtml(p.website)}</a>` : '';
-  const priv = `<p class="private-badge"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>Private</p>`;
+  const websiteHtml = p.website ? `<a href="${escapeHtml(p.website)}" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-xs text-amethyst-400 hover:underline mt-2">${escapeHtml(p.website)}</a>` : '';
+  const priv = `<p class="private-badge">Private</p>`;
   const e = p.privacy_element !== false ? `<p class="text-sm font-medium ${p.element ? 'text-amethyst-400' : 'text-gray-400'}">${p.element || '—'}</p>` : priv;
   const s = p.privacy_stage !== false ? `<p class="text-sm font-medium ${p.stage ? 'text-amethyst-400' : 'text-gray-400'}">${p.stage || '—'}</p>` : priv;
   const w = p.privacy_wound !== false ? `<p class="text-sm font-medium ${p.wound ? 'text-amethyst-400' : 'text-gray-400'}">${p.wound || '—'}</p>` : priv;
@@ -2114,10 +1980,12 @@ function renderProfile() {
   loadMyPosts();
 }
 
+// FIXED: now that columns exist, this works — Bug 4
 async function loadMyPosts() {
   const el = document.getElementById('myPostsList');
   el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading your posts...</p>';
-  const { data } = await sb.from('teaching_comments').select('id, content, image_url, teaching_id, created_at, is_question, is_anonymous').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(50);
+  const { data, error } = await sb.from('teaching_comments').select('id, content, image_url, teaching_id, created_at, is_question, is_anonymous').eq('user_id', state.user.id).order('created_at', { ascending: false }).limit(50);
+  if (error) { console.error('loadMyPosts error:', error); el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Could not load your posts. Pull down to refresh.</p></div>'; return; }
   state.myPosts = data || [];
   renderMyPosts();
 }
@@ -2166,14 +2034,8 @@ async function loadMySaved() {
 function jumpToComment(teachingId, commentId) {
   state.expandedCommentTeachingIds.add(teachingId);
   switchTab('teachings'); switchSubTab('all');
-  setTimeout(() => {
-    const el = document.querySelector(`[data-teaching-id="${teachingId}"]`);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }, 300);
+  setTimeout(() => { const el = document.querySelector(`[data-teaching-id="${teachingId}"]`); if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 300);
 }
-
-function openUsernameEditor() { openSettings(); }
-function closeUsernameEditor() { document.getElementById('usernameModal')?.classList.add('hidden'); }
 
 async function handleAvatarUpload(e) {
   const file = e.target.files[0]; if (!file) return;
@@ -2194,6 +2056,7 @@ async function handleAvatarUpload(e) {
 document.getElementById('avatarUpload').addEventListener('click', () => document.getElementById('avatarInput').click());
 document.getElementById('avatarInput').addEventListener('change', handleAvatarUpload);
 
+// FIXED: saves tab for minimize/return — Bug 9
 function switchTab(tab) {
   ['chat','teachings','profile'].forEach(t => {
     const panel = document.getElementById('panel' + t.charAt(0).toUpperCase() + t.slice(1));
@@ -2203,6 +2066,7 @@ function switchTab(tab) {
   });
   document.getElementById('panel' + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.remove('hidden');
   document.getElementById('tab' + tab.charAt(0).toUpperCase() + tab.slice(1)).className = 'flex-1 py-2 text-[11px] font-medium rounded-xl bg-amethyst-600/25 text-amethyst-300 border border-amethyst-500/25 flex items-center justify-center gap-1.5 transition';
+  localStorage.setItem('moph_active_tab', tab);
   if (tab === 'profile') renderProfile();
   if (tab === 'teachings') renderTeachings();
 }
