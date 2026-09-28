@@ -1,12 +1,12 @@
 /* ============================================================
    app.js — Moph Echo Mirror
-   v2.2 — read state, unified Q&A, poll tab, comments-focused
-   viewer, emoji toggle, pull-from-header, logout confirm.
+   v2.3 — sanitizeRich for teachings, human error messages.
    ============================================================ */
 
 import {
   generateReflection,
   formatResponse,
+  sanitizeRich,
   escapeHtml,
   TRAIT_REWARDS
 } from './engine.js';
@@ -22,13 +22,45 @@ function showNetworkBanner(msg) {
 function hideNetworkBanner() { document.getElementById('networkBanner').classList.remove('show'); }
 function isOnline() { return navigator.onLine !== false; }
 
+/**
+ * Turn any error into a sentence a human can act on.
+ * Never returns "Failed to fetch".
+ */
+function describeError(e) {
+  if (!navigator.onLine) {
+    return 'You are offline. Turn on data or Wi-Fi, then try again.';
+  }
+  const msg = (e && e.message) || String(e || '');
+  const lower = msg.toLowerCase();
+  if (lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('load failed') || lower.includes('network request failed')) {
+    return 'Cannot reach the mirror. Check your connection and try again.';
+  }
+  if (lower.includes('timeout') || lower.includes('timed out') || lower.includes('aborted')) {
+    return 'The mirror is taking too long. Try again in a moment.';
+  }
+  if (lower.includes('jwt') || lower.includes('token') || lower.includes('session')) {
+    return 'Your session expired. Please sign in again.';
+  }
+  if (lower.includes('duplicate') || lower.includes('unique')) {
+    return 'That has already been done.';
+  }
+  if (msg && msg.length < 200 && !lower.includes('json')) return msg;
+  return 'Something went wrong. Try again.';
+}
+
 window.addEventListener('online', () => { hideNetworkBanner(); });
-window.addEventListener('offline', () => { showNetworkBanner('The signal is lost. Restore your connection.'); });
+window.addEventListener('offline', () => { showNetworkBanner('You are offline. Turn on data or Wi-Fi.'); });
 
 async function safeFetch(url, options) {
-  if (!isOnline()) { showNetworkBanner('The signal is lost. Restore your connection.'); throw new Error('offline'); }
+  if (!isOnline()) {
+    showNetworkBanner('You are offline. Turn on data or Wi-Fi.');
+    throw new Error('offline');
+  }
   try { return await fetch(url, options); }
-  catch (e) { showNetworkBanner('The mirror is out of reach. Trying again...'); throw e; }
+  catch (e) {
+    showNetworkBanner('Cannot reach the mirror. Check your connection.');
+    throw e;
+  }
 }
 
 function retryConnection() {
@@ -200,7 +232,7 @@ function selectTheme(theme) {
 }
 
 function readingTime(content) {
-  const words = (content || '').trim().split(/\s+/).length;
+  const words = (content || '').replace(/<[^>]*>/g, ' ').trim().split(/\s+/).filter(Boolean).length;
   return Math.max(1, Math.round(words / 200));
 }
 
@@ -275,7 +307,7 @@ async function initConfig() {
     document.getElementById('loadingMsg').textContent = 'Waiting for network...';
     document.getElementById('fatalError').classList.remove('hidden');
     document.getElementById('loadingScreen').classList.add('hidden');
-    document.getElementById('fatalErrorMsg').textContent = 'No internet connection. Turn on mobile data or Wi-Fi and tap Retry.';
+    document.getElementById('fatalErrorMsg').textContent = 'You are offline. Turn on data or Wi-Fi, then tap Retry.';
     return;
   }
   try {
@@ -289,8 +321,9 @@ async function initConfig() {
   } catch (e) {
     document.getElementById('loadingScreen').classList.add('hidden');
     document.getElementById('fatalError').classList.remove('hidden');
-    if (!isOnline()) document.getElementById('fatalErrorMsg').textContent = 'No internet connection. Turn on mobile data or Wi-Fi and tap Retry.';
-    else document.getElementById('fatalErrorMsg').textContent = 'The mirror is out of reach. Try again.';
+    document.getElementById('fatalErrorMsg').textContent = isOnline()
+      ? 'Cannot reach the mirror. Check your connection and tap Retry.'
+      : 'You are offline. Turn on data or Wi-Fi, then tap Retry.';
   }
 }
 
@@ -314,36 +347,40 @@ async function checkSession() {
 async function signIn() {
   const email = document.getElementById('authEmail').value.trim();
   const pass = document.getElementById('authPassword').value.trim();
-  if (!isOnline()) { showError('The signal is lost. Restore your connection.'); return; }
+  if (!isOnline()) { showError('You are offline. Turn on data or Wi-Fi, then try again.'); return; }
   if (!email || !pass) { showError('Enter email and password.'); return; }
 
   if (signupMode) {
     const confirm = document.getElementById('authConfirmPassword').value.trim();
     if (pass !== confirm) { showError('Passwords do not match.'); return; }
     if (pass.length < 6) { showError('Password must be at least 6 characters.'); return; }
-    const { data, error } = await sb.auth.signUp({ email, password: pass });
-    if (error) { showError(error.message); return; }
-    if (data.user) {
-      pendingEmail = email;
-      document.getElementById('otpEmail').textContent = email;
-      document.getElementById('authScreen').classList.add('hidden');
-      document.getElementById('otpScreen').classList.remove('hidden');
-      document.getElementById('otpInput').focus();
-    }
-  } else {
-    const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-    if (error) {
-      if (error.message.toLowerCase().includes('email not confirmed')) {
+    try {
+      const { data, error } = await sb.auth.signUp({ email, password: pass });
+      if (error) { showError(describeError(error)); return; }
+      if (data.user) {
         pendingEmail = email;
         document.getElementById('otpEmail').textContent = email;
         document.getElementById('authScreen').classList.add('hidden');
         document.getElementById('otpScreen').classList.remove('hidden');
+        document.getElementById('otpInput').focus();
+      }
+    } catch (e) { showError(describeError(e)); }
+  } else {
+    try {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
+      if (error) {
+        if (error.message.toLowerCase().includes('email not confirmed')) {
+          pendingEmail = email;
+          document.getElementById('otpEmail').textContent = email;
+          document.getElementById('authScreen').classList.add('hidden');
+          document.getElementById('otpScreen').classList.remove('hidden');
+          return;
+        }
+        showError(describeError(error));
         return;
       }
-      showError(error.message);
-      return;
-    }
-    if (data.user) await enterApp(data.user);
+      if (data.user) await enterApp(data.user);
+    } catch (e) { showError(describeError(e)); }
   }
 }
 
@@ -355,21 +392,30 @@ async function verifyOtp() {
   const btn = document.getElementById('otpBtnText');
   btn.textContent = 'Verifying...';
 
-  const { data, error } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: 'signup' });
-  if (error) {
-    const { data: d2, error: e2 } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: 'email' });
-    if (e2) { err.textContent = error.message || 'Invalid code.'; err.classList.remove('hidden'); btn.textContent = 'Verify & Enter'; return; }
-    if (d2.user) { document.getElementById('otpScreen').classList.add('hidden'); await enterApp(d2.user); return; }
+  try {
+    const { data, error } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: 'signup' });
+    if (error) {
+      const { data: d2, error: e2 } = await sb.auth.verifyOtp({ email: pendingEmail, token, type: 'email' });
+      if (e2) { err.textContent = describeError(error); err.classList.remove('hidden'); btn.textContent = 'Verify & Enter'; return; }
+      if (d2.user) { document.getElementById('otpScreen').classList.add('hidden'); await enterApp(d2.user); return; }
+    }
+    if (data?.user) { document.getElementById('otpScreen').classList.add('hidden'); await enterApp(data.user); }
+    else { err.textContent = 'That code did not work. Try again.'; err.classList.remove('hidden'); btn.textContent = 'Verify & Enter'; }
+  } catch (e) {
+    err.textContent = describeError(e); err.classList.remove('hidden'); btn.textContent = 'Verify & Enter';
   }
-  if (data?.user) { document.getElementById('otpScreen').classList.add('hidden'); await enterApp(data.user); }
-  else { err.textContent = 'Verification failed.'; err.classList.remove('hidden'); btn.textContent = 'Verify & Enter'; }
 }
 
 async function resendOtp() {
-  const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail });
-  const err = document.getElementById('otpError');
-  if (error) { err.textContent = error.message; err.classList.remove('hidden'); }
-  else { err.textContent = 'Code resent.'; err.classList.remove('hidden', 'text-red-400'); err.classList.add('text-green-400'); }
+  try {
+    const { error } = await sb.auth.resend({ type: 'signup', email: pendingEmail });
+    const err = document.getElementById('otpError');
+    if (error) { err.textContent = describeError(error); err.classList.remove('hidden'); }
+    else { err.textContent = 'Code resent.'; err.classList.remove('hidden', 'text-red-400'); err.classList.add('text-green-400'); }
+  } catch (e) {
+    const err = document.getElementById('otpError');
+    err.textContent = describeError(e); err.classList.remove('hidden');
+  }
 }
 function backToAuth() {
   document.getElementById('otpScreen').classList.add('hidden');
@@ -435,7 +481,7 @@ async function enterApp(user) {
 }
 
 /* ============================================================
-   PULL TO REFRESH — from header zone, on all three panels
+   PULL TO REFRESH
    ============================================================ */
 
 function attachPullToRefresh() {
@@ -467,11 +513,9 @@ function attachPullToRefresh() {
   }
 
   app.addEventListener('touchstart', (e) => {
-    // Ignore drags that start inside an input/textarea
     if (e.target.closest('input, textarea, [contenteditable="true"]')) return;
     const active = getActiveScrollContainer();
     if (!active) return;
-    // Only begin pull when the active panel is at the top
     if (active.el.scrollTop <= 0) {
       startY = e.touches[0].clientY;
       pulling = true;
@@ -849,7 +893,6 @@ function renderFeaturedBanner() {
   el.innerHTML = `<div style="background:linear-gradient(135deg, rgba(var(--accent-rgb),0.2), rgba(var(--accent-rgb),0.08)); border:1px solid rgba(var(--accent-rgb),0.4); border-radius:1.25rem; padding:14px 18px;">
     <span class="text-[10px] px-2 py-0.5 rounded-full bg-gold-400/20 text-gold-300 border border-gold-400/40 font-semibold tracking-wider">TODAY'S TEACHING</span>
     <h3 class="text-base font-semibold text-gray-100 mt-2 mb-1 break-words">${escapeHtml(state.featuredTeaching.title || 'Untitled')}</h3>
-    <p class="text-xs text-gray-400 line-clamp-2">${escapeHtml((state.featuredTeaching.content || '').replace(/<[^>]*>/g,'').substring(0, 140))}...</p>
     <button onclick="openTeachingViewer(${state.featuredTeaching.id})" class="mt-2 text-[10px] text-amethyst-400 hover:text-amethyst-300 font-semibold">Open →</button>
   </div>`;
 }
@@ -947,30 +990,19 @@ function renderFollowPost(c, t) {
 function renderQaFeed() {
   const el = document.getElementById('teachingsFeed');
   const items = [];
-
-  // Q&A teachings
   state.teachings.forEach(t => {
-    if (t.is_question === true) {
-      items.push({ type: 'teaching', date: t.created_at, payload: t });
-    }
+    if (t.is_question === true) items.push({ type: 'teaching', date: t.created_at, payload: t });
   });
-
-  // Q&A comments
   state.teachings.forEach(t => {
     t.comments.forEach(c => {
-      if (c.is_question === true) {
-        items.push({ type: 'comment', date: c.created_at, payload: { comment: c, teaching: t } });
-      }
+      if (c.is_question === true) items.push({ type: 'comment', date: c.created_at, payload: { comment: c, teaching: t } });
     });
   });
-
   if (items.length === 0) {
     el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">No questions have been asked yet.</p></div>';
     return;
   }
-
   items.sort((a, b) => new Date(b.date) - new Date(a.date));
-
   el.innerHTML = items.map(item => {
     if (item.type === 'teaching') return renderTeachingPost(item.payload);
     return renderQaCommentCard(item.payload.comment, item.payload.teaching);
@@ -982,7 +1014,6 @@ function renderQaCommentCard(c, t) {
   const isOwner = c.user_id === state.user.id;
   const isAnon = c.is_anonymous === true;
   const isAccepted = c.accepted_answer_id;
-  const acceptedText = isAccepted ? '✓ Accepted' : '';
   const kids = t.comments.filter(x => x.parent_id === c.id);
   const acceptedReply = isAccepted ? t.comments.find(x => x.id === isAccepted) : null;
 
@@ -1007,7 +1038,6 @@ function renderQaCommentCard(c, t) {
       <div class="flex items-center gap-4 mt-3.5 flex-wrap">
         <span class="text-[10px] text-gray-500">${kids.length} ${kids.length === 1 ? 'answer' : 'answers'}</span>
         <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true, focusCommentId: ${c.id}})" class="text-[10px] text-amethyst-400 hover:text-amethyst-300 transition font-medium">View answers →</button>
-        ${isOwner && !isAccepted && kids.length > 0 ? `<span class="text-[10px] text-gray-600">Open to mark an answer</span>` : ''}
       </div>
     </div>
   </article>`;
@@ -1063,10 +1093,8 @@ function toggleReactionPicker(event, type, id) {
   const btn = event.currentTarget;
   const wrap = btn.parentElement;
   const existing = wrap.querySelector('.reaction-picker');
-  // If a picker for THIS trigger is already open, close it.
   if (existing) { existing.remove(); return; }
 
-  // Close any other open pickers first
   document.querySelectorAll('.reaction-picker').forEach(p => p.remove());
 
   const picker = document.createElement('div');
@@ -1139,12 +1167,12 @@ function renderPollHtml(t) {
 async function votePoll(pollId, optionIndex, teachingId) {
   try {
     const { error } = await sb.from('poll_votes').insert({ poll_id: pollId, user_id: state.user.id, option_index: optionIndex });
-    if (error) { alert(error.message); return; }
+    if (error) { alert(describeError(error)); return; }
     logActivity('poll_vote');
     await loadTeachings(true);
     renderTeachings();
     if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
-  } catch (e) { alert('Could not record vote.'); }
+  } catch (e) { alert(describeError(e)); }
 }
 
 /* ============================================================
@@ -1201,7 +1229,7 @@ function clearQuote() {
 }
 
 /* ============================================================
-   TEACHING CARD
+   TEACHING CARD — uses sanitizeRich
    ============================================================ */
 
 function renderTeachingPost(t) {
@@ -1212,6 +1240,7 @@ function renderTeachingPost(t) {
   const pollBadge = t.poll ? `<span class="q-badge" style="background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.45); color:#4ade80;">POLL</span>` : '';
   const isBookmarked = state.myBookmarkedIds.has(t.id);
   const isRead = state.readTeachingIds.has(t.id);
+  const hasContent = t.content && t.content.replace(/<[^>]*>/g, '').trim().length > 0;
 
   let mediaHtml = '';
   if (t.video_url) {
@@ -1233,7 +1262,7 @@ function renderTeachingPost(t) {
       </div>
       ${t.title ? `<h3 class="text-base font-semibold mb-2.5 break-words">${escapeHtml(t.title)}</h3>` : ''}
       ${mediaHtml}
-      <div class="text-sm text-gray-300 prose-content">${formatResponse(t.content)}</div>
+      ${hasContent ? `<div class="text-sm text-gray-300 prose-content">${sanitizeRich(t.content)}</div>` : ''}
       ${renderPollHtml(t)}
       <div class="flex items-center gap-3 mt-3.5 text-[10px] text-gray-600">
         <span>${relativeTime(t.created_at)}</span><span>·</span>
@@ -1255,7 +1284,7 @@ function renderTeachingPost(t) {
 }
 
 /* ============================================================
-   FOCUSED TEACHING VIEWER
+   FOCUSED TEACHING VIEWER — uses sanitizeRich
    ============================================================ */
 
 function ensureTeachingViewer() {
@@ -1293,6 +1322,7 @@ function openTeachingViewer(id, opts = {}) {
   const prevScroll = (opts.keepScroll || wasOpen) ? scroller.scrollTop : 0;
   const isBookmarked = state.myBookmarkedIds.has(t.id);
   const isRead = state.readTeachingIds.has(t.id);
+  const hasContent = t.content && t.content.replace(/<[^>]*>/g, '').trim().length > 0;
 
   let mediaHtml = '';
   if (t.video_url) {
@@ -1315,7 +1345,7 @@ function openTeachingViewer(id, opts = {}) {
       </div>
       ${t.title ? `<h3 class="text-lg font-semibold mb-3 break-words">${escapeHtml(t.title)}</h3>` : ''}
       ${mediaHtml}
-      <div class="text-sm text-gray-300 prose-content">${formatResponse(t.content)}</div>
+      ${hasContent ? `<div class="text-sm text-gray-300 prose-content">${sanitizeRich(t.content)}</div>` : ''}
       ${renderPollHtml(t)}
       <div class="flex items-center gap-3 mt-3.5 text-[10px] text-gray-600">
         <span>${relativeTime(t.created_at)}</span><span>·</span>
@@ -1360,7 +1390,6 @@ function openTeachingViewer(id, opts = {}) {
     }
   });
 
-  // Mark read after 3 seconds of the viewer being open on this teaching
   setTimeout(() => {
     if (state.teachingViewerId === id && Date.now() - state.viewerOpenedAt >= 2900) {
       markTeachingRead(id);
@@ -1459,10 +1488,6 @@ function renderCommentNode(c, teaching, depth) {
   const expandCollapseBtn = (hasKids && repliesExpanded)
     ? `<button onclick="toggleReplies(${c.id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Hide replies</button>`
     : '';
-
-  // Accept as answer for Q&A-flagged comments (comment author only)
-  const isCommentAuthor = c.user_id === state.user.id;
-  const canAcceptOnComment = isQuestion && isCommentAuthor && !c.accepted_answer_id;
 
   return `<div class="mb-3 ${pendingClass} ${depthClass} min-w-0" id="comment-${c.id}">
     <div class="flex gap-2.5 min-w-0">
@@ -1643,15 +1668,11 @@ function avatarHtml(userId, size) {
 
 async function acceptAnswer(commentId, teachingId) {
   try {
-    // Try to set on the teaching first. If the comment itself is a Q&A with an
-    // accepted_answer_id, we set it there instead.
     const t = state.teachings.find(x => x.id === teachingId);
     if (!t) return;
     const targetComment = t.comments.find(c => c.id === commentId);
     if (!targetComment) return;
 
-    // If the comment we are accepting is a reply under a Q&A comment, use the
-    // comment-level accepted_answer_id. Otherwise use the teaching-level one.
     if (targetComment.parent_id) {
       await sb.from('teaching_comments').update({ accepted_answer_id: commentId }).eq('id', targetComment.parent_id);
       const parent = t.comments.find(c => c.id === targetComment.parent_id);
@@ -1670,7 +1691,7 @@ async function acceptAnswer(commentId, teachingId) {
     }
     if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
     else renderTeachings();
-  } catch (e) { alert('Could not mark as accepted.'); }
+  } catch (e) { alert(describeError(e)); }
 }
 
 async function sendPoke(toUserId, btn) {
@@ -1917,6 +1938,7 @@ async function submitComment(teachingId, parentId, uid) {
     else renderTeachings();
   } catch (e) {
     console.error(e);
+    alert(describeError(e));
     if (t) {
       const idx = t.comments.findIndex(c => c.id === tempId);
       if (idx >= 0) t.comments[idx]._error = true;
@@ -1939,13 +1961,15 @@ async function toggleTeachingReaction(teachingId, emoji) {
 
   updateReactionButton('teaching', teachingId, t.reactions);
 
-  if (ex) {
-    await sb.from('teaching_reactions').delete().eq('id', ex.id);
-  } else {
-    await sb.from('teaching_reactions').delete().eq('teaching_id', teachingId).eq('user_id', state.user.id);
-    const { error } = await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
-    if (error) { console.error(error); await loadTeachings(true); renderTeachings(); }
-  }
+  try {
+    if (ex) {
+      await sb.from('teaching_reactions').delete().eq('id', ex.id);
+    } else {
+      await sb.from('teaching_reactions').delete().eq('teaching_id', teachingId).eq('user_id', state.user.id);
+      const { error } = await sb.from('teaching_reactions').insert({ teaching_id: teachingId, user_id: state.user.id, emoji });
+      if (error) { console.error(error); await loadTeachings(true); renderTeachings(); }
+    }
+  } catch (e) { console.error(describeError(e)); }
 }
 
 async function toggleCommentReaction(commentId, emoji) {
@@ -1961,21 +1985,23 @@ async function toggleCommentReaction(commentId, emoji) {
 
   updateReactionButton('comment', commentId, comment.reactions);
 
-  if (ex) {
-    await sb.from('comment_reactions').delete().eq('id', ex.id);
-  } else {
-    await sb.from('comment_reactions').delete().eq('comment_id', commentId).eq('user_id', state.user.id);
-    const { error } = await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
-    if (error) { console.error(error); await loadTeachings(true); renderTeachings(); return; }
-    if (comment.user_id !== state.user.id) {
-      await sb.from('notifications').insert({
-        user_id: comment.user_id, type: 'reaction',
-        actor_id: state.user.id, actor_username: state.profile.username,
-        teaching_id: teachingId, comment_id: commentId,
-        message: '@' + state.profile.username + ' reacted ' + emoji + ' to your comment'
-      });
+  try {
+    if (ex) {
+      await sb.from('comment_reactions').delete().eq('id', ex.id);
+    } else {
+      await sb.from('comment_reactions').delete().eq('comment_id', commentId).eq('user_id', state.user.id);
+      const { error } = await sb.from('comment_reactions').insert({ comment_id: commentId, user_id: state.user.id, emoji });
+      if (error) { console.error(error); await loadTeachings(true); renderTeachings(); return; }
+      if (comment.user_id !== state.user.id) {
+        await sb.from('notifications').insert({
+          user_id: comment.user_id, type: 'reaction',
+          actor_id: state.user.id, actor_username: state.profile.username,
+          teaching_id: teachingId, comment_id: commentId,
+          message: '@' + state.profile.username + ' reacted ' + emoji + ' to your comment'
+        });
+      }
     }
-  }
+  } catch (e) { console.error(describeError(e)); }
 }
 
 /* ============================================================
@@ -2136,7 +2162,7 @@ async function saveSettings() {
   const { error } = await sb.from('profiles').update(updates).eq('id', state.user.id);
   btn.textContent = 'Save';
   btn.disabled = false;
-  if (error) { err.textContent = error.message; err.classList.remove('hidden'); return; }
+  if (error) { err.textContent = describeError(error); err.classList.remove('hidden'); return; }
   Object.assign(state.profile, updates);
   state.profileCache[state.user.id] = { username: newUsername, avatar_url: state.profile.avatar_url };
   applyTheme(state.selectedTheme);
@@ -2342,7 +2368,7 @@ async function handleAvatarUpload(e) {
   const { error } = await sb.storage.from('avatars').upload(path, file, { upsert: true });
   if (error) {
     document.getElementById('avatarLoading').classList.add('hidden');
-    alert('Upload failed');
+    alert(describeError(error));
     return;
   }
   const { data } = sb.storage.from('avatars').getPublicUrl(path);
