@@ -32,11 +32,6 @@ body { background:#06060a; }
 #richEditor a { color: #a78bfa; text-decoration: underline; }
 #richEditor b, #richEditor strong { color: #e0e0f0; }
 
-.ql-tip { position: absolute; background: #161624; border: 1px solid #3a3a5a; border-radius: 10px; padding: 6px 10px; font-size: 11px; color: #b0b0c8; box-shadow: 0 8px 24px rgba(0,0,0,0.6); z-index: 80; pointer-events: none; white-space: nowrap; }
-
-.marker-btn { background: rgba(124,58,237,0.10); border: 1px solid rgba(124,58,237,0.30); color: #a78bfa; font-weight: 700; }
-.marker-btn:hover { background: rgba(124,58,237,0.25); }
-
 .toggle-pill { display:inline-flex; align-items:center; gap:8px; padding: 10px 14px; border-radius: 12px; background: rgba(16,16,28,0.6); border: 1px solid #2a2a3a; cursor: pointer; transition: all 0.15s; user-select: none; }
 .toggle-pill:hover { border-color: rgba(124,58,237,0.35); }
 .toggle-pill.on { background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.55); }
@@ -88,6 +83,15 @@ body { background:#06060a; }
   <div class="glass rounded-2xl p-5 border border-void-600 space-y-4">
     <input type="hidden" id="editId" value="">
 
+    <!-- Edit mode banner -->
+    <div id="editBanner" class="hidden bg-amethyst-600/10 border border-amethyst-500/30 rounded-xl p-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-2 min-w-0">
+        <svg class="w-4 h-4 text-amethyst-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        <span class="text-xs text-gray-300 truncate">Editing an existing teaching</span>
+      </div>
+      <button onclick="cancelEdit()" class="text-[11px] text-amethyst-300 hover:text-amethyst-200 font-medium flex-shrink-0">Cancel edit</button>
+    </div>
+
     <div>
       <label class="text-xs text-gray-500 uppercase tracking-wider">Title (optional)</label>
       <input type="text" id="tTitle" placeholder="e.g., On Stillness" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
@@ -119,7 +123,6 @@ body { background:#06060a; }
       <input type="text" id="tTags" placeholder="e.g., Gnosis, Discipline" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
     </div>
 
-    <!-- ============ TEACHING TYPE ============ -->
     <div>
       <label class="text-xs text-gray-500 uppercase tracking-wider mb-2 block">Teaching type</label>
       <div class="flex flex-wrap gap-2">
@@ -137,7 +140,6 @@ body { background:#06060a; }
       <p class="text-[10px] text-gray-600 mt-2">Q&amp;A teachings appear in the Q&amp;A tab. Anonymous hides the author and posts as @anonymous.</p>
     </div>
 
-    <!-- ============ CROSS-QUESTION LINK ============ -->
     <div>
       <label class="text-xs text-gray-500 uppercase tracking-wider">Link to a Q&amp;A question (optional)</label>
       <select id="crossQuestionSelect" class="w-full mt-1 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
@@ -146,10 +148,9 @@ body { background:#06060a; }
       <p class="text-[10px] text-gray-600 mt-1">The selected question will show as a linked card inside this teaching.</p>
     </div>
 
-    <!-- ============ RICH EDITOR ============ -->
     <div>
       <div class="flex items-center justify-between mb-2">
-        <label class="text-xs text-gray-500 uppercase tracking-wider">Content</label>
+        <label class="text-xs text-gray-500 uppercase tracking-wider">Content <span class="text-gray-600 normal-case tracking-normal">(optional if media attached)</span></label>
         <div class="flex items-center gap-2">
           <span id="autosaveLabel" class="text-[10px] text-gray-500">Ready</span>
           <span id="autosaveDot" class="autosave-dot"></span>
@@ -175,9 +176,9 @@ body { background:#06060a; }
         <button type="button" onclick="insertLink()" title="Link (Ctrl+K)">🔗</button>
         <button type="button" onclick="formatDoc('removeFormat')" title="Clear format">✕</button>
         <span class="divider"></span>
-        <button type="button" class="marker-btn" onclick="insertMarker('✦')" title="Insert insight marker">✦</button>
-        <button type="button" class="marker-btn" onclick="insertMarker('❓')" title="Insert question marker">❓</button>
-        <button type="button" class="marker-btn" onclick="insertMarker('✨')" title="Insert golden moment marker">✨</button>
+        <button type="button" class="marker-btn" onclick="insertMarker('✦')" title="Insert insight marker" style="background:rgba(124,58,237,0.10); border:1px solid rgba(124,58,237,0.30); color:#a78bfa; font-weight:700;">✦</button>
+        <button type="button" class="marker-btn" onclick="insertMarker('❓')" title="Insert question marker" style="background:rgba(124,58,237,0.10); border:1px solid rgba(124,58,237,0.30); color:#a78bfa; font-weight:700;">❓</button>
+        <button type="button" class="marker-btn" onclick="insertMarker('✨')" title="Insert golden moment marker" style="background:rgba(124,58,237,0.10); border:1px solid rgba(124,58,237,0.30); color:#a78bfa; font-weight:700;">✨</button>
         <span class="divider"></span>
         <button type="button" onclick="togglePreview()" id="previewBtn" title="Preview">👁 Preview</button>
       </div>
@@ -190,7 +191,6 @@ body { background:#06060a; }
       </div>
     </div>
 
-    <!-- ============ POLL ============ -->
     <div class="border-t border-void-600 pt-4">
       <label class="toggle-pill" id="pollPill" onclick="togglePill('pollPill', 'pollChk'); togglePoll();">
         <input type="checkbox" id="pollChk">
@@ -207,7 +207,6 @@ body { background:#06060a; }
       </div>
     </div>
 
-    <!-- ============ FLAGS ============ -->
     <label class="flex items-center gap-2 cursor-pointer select-none">
       <input type="checkbox" id="pinChk" class="w-4 h-4 rounded border-void-600 bg-void-900 accent-amethyst-600">
       <span class="text-xs text-gray-400">📌 Pin to top of feed</span>
@@ -223,9 +222,12 @@ body { background:#06060a; }
       <span class="text-xs text-gray-400">Send email to all users after publishing</span>
     </label>
 
-    <button onclick="publish()" id="publishBtn" class="w-full py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm flex items-center justify-center gap-2">
-      <span id="publishText">Publish Teaching</span>
-    </button>
+    <div class="flex gap-2">
+      <button onclick="cancelEdit()" id="cancelBtn" class="hidden flex-1 py-3 rounded-xl bg-void-800 border border-void-600 text-gray-300 font-medium text-sm">Cancel</button>
+      <button onclick="publish()" id="publishBtn" class="flex-1 py-3 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white font-medium text-sm flex items-center justify-center gap-2">
+        <span id="publishText">Publish Teaching</span>
+      </button>
+    </div>
     <p id="pubStatus" class="hidden text-xs text-center"></p>
   </div>
 
@@ -269,11 +271,31 @@ let coverImageUrl = null, videoFileBase64 = null, videoUrlExternal = null;
 let existingCoverUrl = null, existingVideoUrl = null, pendingDeleteId = null;
 let richContentEdited = false;
 let editorPreviewing = false;
-let cachedQaTeachings = [];
 let currentCrossId = null;
 let allTeachingsCache = [];
 
-// ===== RICH TEXT EDITOR =====
+/* ============================================================
+   ERROR MESSAGES — never show raw "Failed to fetch"
+   ============================================================ */
+function describeError(e) {
+  if (!navigator.onLine) return 'You are offline. Turn on data or Wi-Fi, then try again.';
+  const msg = (e && e.message) || String(e || '');
+  const lower = msg.toLowerCase();
+  if (lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('load failed')) {
+    return 'Cannot reach the server. Check your connection and try again.';
+  }
+  if (lower.includes('timeout') || lower.includes('timed out') || lower.includes('aborted')) {
+    return 'The server is taking too long. Try again in a moment.';
+  }
+  if (lower.includes('unauthorized') || lower.includes('401')) return 'Your admin key is invalid or expired.';
+  if (lower.includes('duplicate') || lower.includes('unique')) return 'That already exists.';
+  if (msg && msg.length < 200 && !lower.includes('json')) return msg;
+  return 'Something went wrong. Try again.';
+}
+
+/* ============================================================
+   RICH TEXT EDITOR
+   ============================================================ */
 const editor = document.getElementById('richEditor');
 
 editor.addEventListener('input', () => {
@@ -284,13 +306,12 @@ editor.addEventListener('input', () => {
 editor.addEventListener('focus', () => {
   if (editor.innerText.trim() === '') editor.innerHTML = '';
 });
-editor.addEventListener('paste', async (e) => {
+editor.addEventListener('paste', (e) => {
   e.preventDefault();
   const text = (e.clipboardData || window.clipboardData).getData('text/plain');
   document.execCommand('insertText', false, text);
 });
 
-// Markdown-style shortcuts
 editor.addEventListener('keydown', (e) => {
   if (e.key === ' ') {
     const sel = window.getSelection();
@@ -378,7 +399,6 @@ function togglePreview() {
   editorPreviewing = !editorPreviewing;
   const btn = document.getElementById('previewBtn');
   if (editorPreviewing) {
-    editor.dataset.savedHtml = editor.innerHTML;
     editor.contentEditable = 'false';
     editor.style.background = '#06060a';
     btn.classList.add('active');
@@ -402,7 +422,9 @@ function updateEditorMeta() {
   cc.className = chars > 7600 ? 'text-red-400' : chars > 6400 ? 'text-yellow-400' : '';
 }
 
-// ===== DRAFT SAVING =====
+/* ============================================================
+   DRAFT SAVING
+   ============================================================ */
 let draftTimer = null;
 function setAutosaveState(state) {
   const dot = document.getElementById('autosaveDot');
@@ -476,6 +498,7 @@ function loadDraft() {
     syncPill('anonPill', 'anonChk');
     currentCrossId = d.crossId || null;
     if (d.pollOn) document.getElementById('pollFields').classList.remove('hidden');
+    if (d.id) applyEditMode(true);
     if (coverImageUrl) { document.getElementById('coverPreview').src = coverImageUrl; document.getElementById('coverPreview').classList.remove('hidden'); document.getElementById('coverLabel').textContent = '✓ Draft cover'; document.getElementById('clearCoverBtn').classList.remove('hidden'); }
     else if (existingCoverUrl) { document.getElementById('coverPreview').src = existingCoverUrl; document.getElementById('coverPreview').classList.remove('hidden'); document.getElementById('coverLabel').textContent = 'Current cover'; document.getElementById('clearCoverBtn').classList.remove('hidden'); }
     if (videoFileBase64) { document.getElementById('videoPreview').src = videoFileBase64; document.getElementById('videoPreview').classList.remove('hidden'); document.getElementById('clearVideoBtn').classList.remove('hidden'); }
@@ -484,13 +507,13 @@ function loadDraft() {
   } catch (e) {}
 }
 
-// ===== TOGGLE PILLS =====
+/* ============================================================
+   TOGGLE PILLS
+   ============================================================ */
 function togglePill(pillId, chkId) {
   const pill = document.getElementById(pillId);
   const chk = document.getElementById(chkId);
-  setTimeout(() => {
-    pill.classList.toggle('on', chk.checked);
-  }, 0);
+  setTimeout(() => { pill.classList.toggle('on', chk.checked); }, 0);
 }
 function syncPill(pillId, chkId) {
   const pill = document.getElementById(pillId);
@@ -505,7 +528,6 @@ function togglePoll() {
   saveDraft();
 }
 
-// Attach auto-save
 ['tTitle','tTags','pollQuestion','pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => {
   document.getElementById(id)?.addEventListener('input', saveDraft);
 });
@@ -516,11 +538,13 @@ document.getElementById('qaChk').addEventListener('change', () => syncPill('qaPi
 document.getElementById('anonChk').addEventListener('change', () => syncPill('anonPill','anonChk'));
 document.getElementById('crossQuestionSelect').addEventListener('change', (e) => { currentCrossId = e.target.value || null; saveDraft(); });
 
-// ===== COVER =====
+/* ============================================================
+   COVER
+   ============================================================ */
 document.getElementById('coverDrop').addEventListener('click', () => document.getElementById('coverInput').click());
 document.getElementById('coverInput').addEventListener('change', (e) => {
   const file = e.target.files[0]; if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { alert('Max 3MB.'); return; }
+  if (file.size > 3 * 1024 * 1024) { alert('Image too large. Max 3MB.'); return; }
   const reader = new FileReader();
   reader.onload = () => {
     coverImageUrl = reader.result;
@@ -542,11 +566,13 @@ function clearCover() {
   saveDraft();
 }
 
-// ===== VIDEO =====
+/* ============================================================
+   VIDEO
+   ============================================================ */
 document.getElementById('videoDrop').addEventListener('click', (e) => { if (e.target.id !== 'videoPreview') document.getElementById('videoInput').click(); });
 document.getElementById('videoInput').addEventListener('change', (e) => {
   const file = e.target.files[0]; if (!file) return;
-  if (file.size > 3 * 1024 * 1024) { alert('Video too large. Max 3MB.'); document.getElementById('videoInput').value = ''; return; }
+  if (file.size > 3 * 1024 * 1024) { alert('Video too large. Max 3MB. Use a link instead.'); document.getElementById('videoInput').value = ''; return; }
   const reader = new FileReader();
   reader.onload = () => {
     videoFileBase64 = reader.result;
@@ -578,7 +604,9 @@ function clearVideo() {
   saveDraft();
 }
 
-// ===== AUTH =====
+/* ============================================================
+   AUTH
+   ============================================================ */
 function unlock() {
   const key = document.getElementById('adminKeyInput').value.trim();
   if (!key) { showLockError('Enter the key'); return; }
@@ -594,6 +622,28 @@ function showAdmin() {
   updateEditorMeta();
 }
 
+/* ============================================================
+   EDIT MODE HELPERS — cancel without leaving admin
+   ============================================================ */
+function applyEditMode(isEdit) {
+  document.getElementById('modeLabel').textContent = isEdit ? 'Edit mode' : 'Create mode';
+  document.getElementById('publishText').textContent = isEdit ? 'Update Teaching' : 'Publish Teaching';
+  document.getElementById('newBtn').classList.toggle('hidden', !isEdit);
+  document.getElementById('cancelBtn').classList.toggle('hidden', !isEdit);
+  document.getElementById('editBanner').classList.toggle('hidden', !isEdit);
+  document.getElementById('emailChkWrap').classList.toggle('hidden', isEdit);
+  document.getElementById('pubStatus').classList.add('hidden');
+}
+
+function cancelEdit() {
+  const isEdit = !!document.getElementById('editId').value;
+  if (isEdit) {
+    const ok = window.confirm('Discard changes and exit edit mode?');
+    if (!ok) return;
+  }
+  newTeaching();
+}
+
 function newTeaching() {
   document.getElementById('editId').value = '';
   document.getElementById('tTitle').value = '';
@@ -606,7 +656,6 @@ function newTeaching() {
   syncPill('qaPill', 'qaChk');
   syncPill('anonPill', 'anonChk');
   document.getElementById('sendEmailChk').checked = true;
-  document.getElementById('emailChkWrap').classList.remove('hidden');
   document.getElementById('pollChk').checked = false;
   syncPill('pollPill', 'pollChk');
   document.getElementById('pollFields').classList.add('hidden');
@@ -614,23 +663,48 @@ function newTeaching() {
   ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('crossQuestionSelect').value = '';
   currentCrossId = null;
-  clearCover(); clearVideo();
-  document.getElementById('publishText').textContent = 'Publish Teaching';
-  document.getElementById('modeLabel').textContent = 'Create mode';
-  document.getElementById('newBtn').classList.add('hidden');
-  document.getElementById('pubStatus').classList.add('hidden');
+  coverImageUrl = null; videoFileBase64 = null; videoUrlExternal = null;
+  existingCoverUrl = null; existingVideoUrl = null;
+  document.getElementById('coverPreview').classList.add('hidden'); document.getElementById('coverPreview').src = '';
+  document.getElementById('coverLabel').textContent = 'Tap to upload cover image (max 3MB)';
+  document.getElementById('coverInput').value = '';
+  document.getElementById('clearCoverBtn').classList.add('hidden');
+  document.getElementById('videoPreview').classList.add('hidden'); document.getElementById('videoPreview').src = '';
+  document.getElementById('videoInput').value = ''; document.getElementById('videoUrlInput').value = '';
+  document.getElementById('videoLabel').textContent = 'Tap to upload video (max 3MB) or paste link below';
+  document.getElementById('clearVideoBtn').classList.add('hidden');
+  applyEditMode(false);
   localStorage.removeItem('moph_admin_draft');
   updateEditorMeta();
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ===== PUBLISH =====
+/* ============================================================
+   PUBLISH
+   ============================================================ */
+function hasMedia() {
+  return !!(coverImageUrl || existingCoverUrl || videoFileBase64 || videoUrlExternal || existingVideoUrl);
+}
+
+function hasContent() {
+  const html = editor.innerHTML.trim();
+  const plain = editor.innerText.trim();
+  return html && plain.length > 0;
+}
+
 async function publish() {
   const editId = document.getElementById('editId').value;
   const isEdit = !!editId;
   const title = document.getElementById('tTitle').value.trim();
   const content = editor.innerHTML.trim();
-  if (!content || editor.innerText.trim() === '') { showStatus('Content is required.', 'error'); return; }
+  const mediaPresent = hasMedia();
+  const contentPresent = hasContent();
+
+  if (!contentPresent && !mediaPresent) {
+    showStatus('Add content or media before publishing.', 'error');
+    return;
+  }
+
   const tagsInput = document.getElementById('tTags').value.trim();
   const tags = tagsInput ? tagsInput.split(',').map(t => t.trim().toLowerCase()).filter(Boolean) : [];
   const pinned = document.getElementById('pinChk').checked;
@@ -656,7 +730,7 @@ async function publish() {
   const txt = document.getElementById('publishText');
   btn.disabled = true;
   txt.innerHTML = '<span class="spinner"></span> ' + (isEdit ? 'Updating...' : 'Publishing...');
-  showStatus(isEdit ? 'Updating...' : 'Sending...', 'info');
+  showStatus(isEdit ? 'Updating...' : 'Publishing...', 'info');
 
   try {
     const payload = {
@@ -680,8 +754,16 @@ async function publish() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    const data = await res.json();
-    if (!res.ok) { showStatus('Error: ' + (data.error || 'Unknown'), 'error'); btn.disabled = false; txt.textContent = isEdit ? 'Update Teaching' : 'Publish Teaching'; return; }
+
+    let data = {};
+    try { data = await res.json(); } catch (parseErr) { data = {}; }
+
+    if (!res.ok) {
+      showStatus('Could not save: ' + (data.error || 'server did not respond'), 'error');
+      btn.disabled = false;
+      txt.textContent = isEdit ? 'Update Teaching' : 'Publish Teaching';
+      return;
+    }
 
     let msg = isEdit ? '✓ Updated' : '✓ Published';
     if (featured) msg += ' · ⭐ Featured';
@@ -690,6 +772,7 @@ async function publish() {
     if (isAnonymous) msg += ' · Anonymous';
     if (crossQuestionIdNum) msg += ' · Linked';
     if (!isEdit && data.emailResult?.sent) msg += ' · Emails sent';
+    else if (!isEdit && data.emailResult?.timeout) msg += ' · Email pending';
     else if (!isEdit && data.emailResult?.error) msg += ' · Email: ' + data.emailResult.error;
     showStatus(msg, 'success');
 
@@ -697,11 +780,39 @@ async function publish() {
     richContentEdited = false;
     setAutosaveState('idle');
 
-    if (isEdit) setTimeout(newTeaching, 1200);
-    else { document.getElementById('tTitle').value = ''; editor.innerHTML = ''; document.getElementById('tTags').value = ''; document.getElementById('pinChk').checked = false; document.getElementById('featuredChk').checked = false; document.getElementById('qaChk').checked = false; document.getElementById('anonChk').checked = false; syncPill('qaPill','qaChk'); syncPill('anonPill','anonChk'); document.getElementById('pollChk').checked = false; syncPill('pollPill','pollChk'); document.getElementById('pollFields').classList.add('hidden'); document.getElementById('pollQuestion').value = ''; ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => document.getElementById(id).value = ''); document.getElementById('crossQuestionSelect').value = ''; clearCover(); clearVideo(); updateEditorMeta(); }
-
-    loadRecent();
-  } catch (e) { showStatus('Network error: ' + e.message, 'error'); }
+    if (isEdit) {
+      setTimeout(() => { newTeaching(); loadRecent(); }, 1200);
+    } else {
+      document.getElementById('tTitle').value = '';
+      editor.innerHTML = '';
+      document.getElementById('tTags').value = '';
+      document.getElementById('pinChk').checked = false;
+      document.getElementById('featuredChk').checked = false;
+      document.getElementById('qaChk').checked = false;
+      document.getElementById('anonChk').checked = false;
+      syncPill('qaPill','qaChk'); syncPill('anonPill','anonChk');
+      document.getElementById('pollChk').checked = false;
+      syncPill('pollPill','pollChk');
+      document.getElementById('pollFields').classList.add('hidden');
+      document.getElementById('pollQuestion').value = '';
+      ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => document.getElementById(id).value = '');
+      document.getElementById('crossQuestionSelect').value = '';
+      coverImageUrl = null; videoFileBase64 = null; videoUrlExternal = null;
+      existingCoverUrl = null; existingVideoUrl = null;
+      document.getElementById('coverPreview').classList.add('hidden'); document.getElementById('coverPreview').src = '';
+      document.getElementById('coverLabel').textContent = 'Tap to upload cover image (max 3MB)';
+      document.getElementById('coverInput').value = '';
+      document.getElementById('clearCoverBtn').classList.add('hidden');
+      document.getElementById('videoPreview').classList.add('hidden'); document.getElementById('videoPreview').src = '';
+      document.getElementById('videoInput').value = ''; document.getElementById('videoUrlInput').value = '';
+      document.getElementById('videoLabel').textContent = 'Tap to upload video (max 3MB) or paste link below';
+      document.getElementById('clearVideoBtn').classList.add('hidden');
+      updateEditorMeta();
+      await loadRecent();
+    }
+  } catch (e) {
+    showStatus(describeError(e), 'error');
+  }
   btn.disabled = false;
   txt.textContent = isEdit ? 'Update Teaching' : 'Publish Teaching';
 }
@@ -713,7 +824,9 @@ function showStatus(msg, type) {
   el.classList.remove('hidden');
 }
 
-// ===== LOAD LIST + CROSS-QUESTION POPULATE =====
+/* ============================================================
+   LOAD LIST + CROSS-QUESTION DROPDOWN
+   ============================================================ */
 async function loadRecent() {
   const el = document.getElementById('recentTeachings');
   el.innerHTML = '<div class="text-center py-4"><span class="spinner"></span></div>';
@@ -725,7 +838,11 @@ async function loadRecent() {
     });
     const data = await r.json();
     allTeachingsCache = data || [];
-    if (!data || data.length === 0) { el.innerHTML = '<p class="text-xs text-gray-600">No teachings yet.</p>'; return; }
+    if (!data || data.length === 0) {
+      el.innerHTML = '<p class="text-xs text-gray-600">No teachings yet.</p>';
+      populateCrossQuestionDropdown();
+      return;
+    }
     const today = new Date().toISOString().split('T')[0];
     const currentId = document.getElementById('editId').value;
 
@@ -758,13 +875,21 @@ async function loadRecent() {
       </div>`;
     }).join('');
 
-    // Populate cross-question dropdown with Q&A teachings (excluding current edit)
-    const qaOptions = allTeachingsCache.filter(t => t.is_question === true && String(t.id) !== String(currentId));
-    const sel = document.getElementById('crossQuestionSelect');
-    const previous = sel.value;
-    sel.innerHTML = '<option value="">— None —</option>' + qaOptions.map(t => `<option value="${t.id}">${escapeHtml((t.title || 'Untitled').slice(0, 80))}</option>`).join('');
-    if (previous) sel.value = previous;
-  } catch (e) { el.innerHTML = '<p class="text-xs text-red-400">Failed to load.</p>'; }
+    populateCrossQuestionDropdown();
+  } catch (e) {
+    el.innerHTML = '<p class="text-xs text-red-400">' + escapeHtml(describeError(e)) + '</p>';
+  }
+}
+
+function populateCrossQuestionDropdown() {
+  const currentId = document.getElementById('editId').value;
+  const qaOptions = (allTeachingsCache || []).filter(t => t.is_question === true && String(t.id) !== String(currentId));
+  const sel = document.getElementById('crossQuestionSelect');
+  const previous = sel.value || currentCrossId || '';
+  sel.innerHTML = '<option value="">— None —</option>' + qaOptions.map(t =>
+    `<option value="${t.id}">${escapeHtml((t.title || 'Untitled').slice(0, 80))}</option>`
+  ).join('');
+  if (previous) sel.value = previous;
 }
 
 async function editTeachingById(id) {
@@ -784,21 +909,15 @@ async function editTeaching(t) {
   document.getElementById('anonChk').checked = !!t.is_anonymous;
   syncPill('qaPill', 'qaChk');
   syncPill('anonPill', 'anonChk');
-  document.getElementById('emailChkWrap').classList.add('hidden');
-  document.getElementById('publishText').textContent = 'Update Teaching';
-  document.getElementById('modeLabel').textContent = 'Edit mode';
-  document.getElementById('newBtn').classList.remove('hidden');
-  document.getElementById('pubStatus').classList.add('hidden');
 
-  // Load cross-question link
+  applyEditMode(true);
+
+  // Cross-question
   currentCrossId = t.cross_question_id ? String(t.cross_question_id) : null;
-  // Repopulate dropdown to exclude self, then set
-  const sel = document.getElementById('crossQuestionSelect');
-  const qaOptions = allTeachingsCache.filter(x => x.is_question === true && String(x.id) !== String(t.id));
-  sel.innerHTML = '<option value="">— None —</option>' + qaOptions.map(x => `<option value="${x.id}">${escapeHtml((x.title || 'Untitled').slice(0, 80))}</option>`).join('');
-  sel.value = currentCrossId || '';
+  populateCrossQuestionDropdown();
+  document.getElementById('crossQuestionSelect').value = currentCrossId || '';
 
-  // Load poll from teaching_polls (JSONB options)
+  // Load poll
   try {
     const cfg = await (await fetch('/api/config')).json();
     const pr = await fetch(`${cfg.supabaseUrl}/rest/v1/teaching_polls?teaching_id=eq.${t.id}&select=*`, {
@@ -826,16 +945,30 @@ async function editTeaching(t) {
     }
   } catch (e) {}
 
+  // Cover
   existingCoverUrl = t.cover_image || null; coverImageUrl = null;
-  if (t.cover_image) { document.getElementById('coverPreview').src = t.cover_image; document.getElementById('coverPreview').classList.remove('hidden'); document.getElementById('coverLabel').textContent = 'Current cover'; document.getElementById('clearCoverBtn').classList.remove('hidden'); }
-  else { document.getElementById('coverPreview').classList.add('hidden'); document.getElementById('coverLabel').textContent = 'Tap to upload cover image (max 3MB)'; document.getElementById('clearCoverBtn').classList.add('hidden'); }
+  if (t.cover_image) {
+    document.getElementById('coverPreview').src = t.cover_image;
+    document.getElementById('coverPreview').classList.remove('hidden');
+    document.getElementById('coverLabel').textContent = 'Current cover';
+    document.getElementById('clearCoverBtn').classList.remove('hidden');
+  } else {
+    document.getElementById('coverPreview').classList.add('hidden');
+    document.getElementById('coverLabel').textContent = 'Tap to upload cover image (max 3MB)';
+    document.getElementById('clearCoverBtn').classList.add('hidden');
+  }
 
+  // Video
   existingVideoUrl = t.video_url || null; videoFileBase64 = null; videoUrlExternal = null;
   if (t.video_url) {
     document.getElementById('videoLabel').textContent = 'Current video';
     document.getElementById('clearVideoBtn').classList.remove('hidden');
-    if (t.video_url.match(/\.(mp4|webm|mov)$/i) || t.video_url.includes('teaching-media')) { document.getElementById('videoPreview').src = t.video_url; document.getElementById('videoPreview').classList.remove('hidden'); }
-    else { document.getElementById('videoUrlInput').value = t.video_url; }
+    if (t.video_url.match(/\.(mp4|webm|mov)$/i) || t.video_url.includes('teaching-media')) {
+      document.getElementById('videoPreview').src = t.video_url;
+      document.getElementById('videoPreview').classList.remove('hidden');
+    } else {
+      document.getElementById('videoUrlInput').value = t.video_url;
+    }
   } else {
     document.getElementById('videoPreview').classList.add('hidden');
     document.getElementById('videoLabel').textContent = 'Tap to upload video (max 3MB) or paste link below';
@@ -847,7 +980,9 @@ async function editTeaching(t) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-// ===== DELETE =====
+/* ============================================================
+   DELETE
+   ============================================================ */
 function askDelete(id) { pendingDeleteId = id; document.getElementById('deleteModal').classList.remove('hidden'); }
 function closeDeleteModal() { pendingDeleteId = null; document.getElementById('deleteModal').classList.add('hidden'); }
 async function confirmDelete() {
@@ -859,14 +994,17 @@ async function confirmDelete() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adminKey, action: 'delete', id: pendingDeleteId })
     });
-    const data = await res.json();
-    if (!res.ok) { alert('Error: ' + (data.error || 'Unknown')); btn.textContent = 'Delete'; btn.disabled = false; return; }
+    let data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok) { alert('Could not delete: ' + (data.error || 'unknown error')); btn.textContent = 'Delete'; btn.disabled = false; return; }
     closeDeleteModal(); loadRecent();
-  } catch (e) { alert('Network error'); }
+  } catch (e) { alert(describeError(e)); }
   btn.textContent = 'Delete'; btn.disabled = false;
 }
 
-// ===== ANALYTICS =====
+/* ============================================================
+   ANALYTICS
+   ============================================================ */
 function showAnalytics() {
   document.getElementById('analyticsModal').classList.remove('hidden');
   loadAnalytics();
@@ -881,8 +1019,9 @@ async function loadAnalytics() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ adminKey, action: 'analytics' })
     });
-    const data = await res.json();
-    if (!res.ok || !data.analytics) { el.innerHTML = '<p class="text-xs text-red-400">Failed.</p>'; return; }
+    let data = {};
+    try { data = await res.json(); } catch (e) {}
+    if (!res.ok || !data.analytics) { el.innerHTML = '<p class="text-xs text-red-400">' + escapeHtml(describeError({ message: data.error || '' })) + '</p>'; return; }
     const sorted = data.analytics.slice().sort((a, b) => b.reads - a.reads);
     el.innerHTML = sorted.map(t => `
       <div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
@@ -901,7 +1040,7 @@ async function loadAnalytics() {
         </div>
       </div>
     `).join('');
-  } catch (e) { el.innerHTML = '<p class="text-xs text-red-400">Failed.</p>'; }
+  } catch (e) { el.innerHTML = '<p class="text-xs text-red-400">' + escapeHtml(describeError(e)) + '</p>'; }
 }
 
 function escapeHtml(t) { const d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
