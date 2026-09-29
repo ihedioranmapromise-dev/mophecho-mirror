@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Moph Echo">
-<meta name="app-version" content="v2.2">
+<meta name="app-version" content="v2.4">
 <title>Moph Echo Mirror</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icon.svg">
@@ -37,6 +37,18 @@ body { background:#06060a; min-height: 100dvh; transition: background-color .3s;
 .safe-top { padding-top: env(safe-area-inset-top); }
 input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0 1000px #0a0a12 inset !important; -webkit-text-fill-color: #d0d0e8 !important; }
 .prose-content { line-height: 1.72; white-space: pre-wrap; word-wrap: break-word; }
+.prose-content h1 { font-size: 1.4em; font-weight: 700; margin: 0.6em 0 0.4em; }
+.prose-content h2 { font-size: 1.2em; font-weight: 600; margin: 0.6em 0 0.4em; }
+.prose-content h3 { font-size: 1.05em; font-weight: 600; margin: 0.6em 0 0.4em; }
+.prose-content ul, .prose-content ol { padding-left: 1.5em; margin: 0.5em 0; }
+.prose-content blockquote { border-left: 3px solid var(--accent-500); padding-left: 12px; margin: 0.5em 0; color: #b0b0c8; font-style: italic; }
+.prose-content a { color: var(--accent-400); text-decoration: underline; }
+.prose-content strong, .prose-content b { color: #e0e0f0; }
+.prose-content hr { border: none; border-top: 1px solid #2a2a3a; margin: 1em 0; }
+
+.clamp-1 { display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical; overflow:hidden; }
+.clamp-4 { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; }
+
 .avatar-sm { width: 34px; height: 34px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--accent-400); flex-shrink: 0; }
 .avatar-xs { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 600; color: var(--accent-400); flex-shrink: 0; }
 .avatar-lg { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; background: #2a2a3a; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 600; color: var(--accent-400); flex-shrink: 0; }
@@ -327,7 +339,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
         </div>
         <div id="tagFilters" class="flex flex-wrap gap-1.5"></div>
       </div>
-      <div id="teachingsFeed" class="space-y-4"></div>
+      <div id="teachingsFeed" class="space-y-3"></div>
     </div>
   </main>
 
