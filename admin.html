@@ -42,6 +42,8 @@ body { background:#06060a; }
 .autosave-dot { width: 7px; height: 7px; border-radius: 50%; background: #3a3a5a; transition: all 0.3s; }
 .autosave-dot.saving { background: #eab308; box-shadow: 0 0 6px rgba(234,179,8,0.6); }
 .autosave-dot.saved { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,0.6); }
+
+.marker-btn { font-weight: 700; }
 </style>
 </head>
 <body class="font-sans text-gray-200 min-h-screen">
@@ -83,7 +85,6 @@ body { background:#06060a; }
   <div class="glass rounded-2xl p-5 border border-void-600 space-y-4">
     <input type="hidden" id="editId" value="">
 
-    <!-- Edit mode banner -->
     <div id="editBanner" class="hidden bg-amethyst-600/10 border border-amethyst-500/30 rounded-xl p-3 flex items-center justify-between gap-3">
       <div class="flex items-center gap-2 min-w-0">
         <svg class="w-4 h-4 text-amethyst-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -176,9 +177,9 @@ body { background:#06060a; }
         <button type="button" onclick="insertLink()" title="Link (Ctrl+K)">🔗</button>
         <button type="button" onclick="formatDoc('removeFormat')" title="Clear format">✕</button>
         <span class="divider"></span>
-        <button type="button" class="marker-btn" onclick="insertMarker('✦')" title="Insert insight marker" style="background:rgba(124,58,237,0.10); border:1px solid rgba(124,58,237,0.30); color:#a78bfa; font-weight:700;">✦</button>
-        <button type="button" class="marker-btn" onclick="insertMarker('❓')" title="Insert question marker" style="background:rgba(124,58,237,0.10); border:1px solid rgba(124,58,237,0.30); color:#a78bfa; font-weight:700;">❓</button>
-        <button type="button" class="marker-btn" onclick="insertMarker('✨')" title="Insert golden moment marker" style="background:rgba(124,58,237,0.10); border:1px solid rgba(124,58,237,0.30); color:#a78bfa; font-weight:700;">✨</button>
+        <button type="button" class="marker-btn" onclick="insertMarker('✦')" title="Insert insight marker" style="background:rgba(124,58,237,0.10); border:1px solid rgba(124,58,237,0.30); color:#a78bfa;">✦</button>
+        <button type="button" class="marker-btn" onclick="insertMarker('❓')" title="Insert question marker" style="background:rgba(124,58,237,0.10); border:1px solid rgba(124,58,237,0.30); color:#a78bfa;">❓</button>
+        <button type="button" class="marker-btn" onclick="insertMarker('✨')" title="Insert golden moment marker" style="background:rgba(124,58,237,0.10); border:1px solid rgba(124,58,237,0.30); color:#a78bfa;">✨</button>
         <span class="divider"></span>
         <button type="button" onclick="togglePreview()" id="previewBtn" title="Preview">👁 Preview</button>
       </div>
@@ -275,7 +276,7 @@ let currentCrossId = null;
 let allTeachingsCache = [];
 
 /* ============================================================
-   ERROR MESSAGES — never show raw "Failed to fetch"
+   ERROR MESSAGES
    ============================================================ */
 function describeError(e) {
   if (!navigator.onLine) return 'You are offline. Turn on data or Wi-Fi, then try again.';
@@ -623,7 +624,7 @@ function showAdmin() {
 }
 
 /* ============================================================
-   EDIT MODE HELPERS — cancel without leaving admin
+   EDIT MODE HELPERS
    ============================================================ */
 function applyEditMode(isEdit) {
   document.getElementById('modeLabel').textContent = isEdit ? 'Edit mode' : 'Create mode';
@@ -747,7 +748,6 @@ async function publish() {
     if (videoFileBase64) payload.video_file = videoFileBase64;
     else if (videoUrlExternal) payload.video_url = videoUrlExternal;
     else if (isEdit && !existingVideoUrl) payload.video_url = null;
-    if (!isEdit) payload.sendEmail = sendEmail;
 
     const res = await fetch('/api/publish', {
       method: 'POST',
@@ -771,17 +771,24 @@ async function publish() {
     if (isQuestion) msg += ' · Q&A';
     if (isAnonymous) msg += ' · Anonymous';
     if (crossQuestionIdNum) msg += ' · Linked';
-    if (!isEdit && data.emailResult?.sent) msg += ' · Emails sent';
-    else if (!isEdit && data.emailResult?.timeout) msg += ' · Email pending';
-    else if (!isEdit && data.emailResult?.error) msg += ' · Email: ' + data.emailResult.error;
+    if (!isEdit && sendEmail) msg += ' · 📨 Sending emails in background';
     showStatus(msg, 'success');
+
+    // Fire email in the background — do not await it
+    if (!isEdit && sendEmail && data.teaching && data.teaching.id) {
+      fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ adminKey, teachingId: data.teaching.id })
+      }).catch(() => { /* silent */ });
+    }
 
     localStorage.removeItem('moph_admin_draft');
     richContentEdited = false;
     setAutosaveState('idle');
 
     if (isEdit) {
-      setTimeout(() => { newTeaching(); loadRecent(); }, 1200);
+      setTimeout(() => { newTeaching(); loadRecent(); }, 900);
     } else {
       document.getElementById('tTitle').value = '';
       editor.innerHTML = '';
@@ -825,7 +832,7 @@ function showStatus(msg, type) {
 }
 
 /* ============================================================
-   LOAD LIST + CROSS-QUESTION DROPDOWN
+   LOAD LIST + CROSS-QUESTION
    ============================================================ */
 async function loadRecent() {
   const el = document.getElementById('recentTeachings');
@@ -844,7 +851,6 @@ async function loadRecent() {
       return;
     }
     const today = new Date().toISOString().split('T')[0];
-    const currentId = document.getElementById('editId').value;
 
     el.innerHTML = data.map(t => {
       const isFeatured = t.featured_date === today;
@@ -912,12 +918,10 @@ async function editTeaching(t) {
 
   applyEditMode(true);
 
-  // Cross-question
   currentCrossId = t.cross_question_id ? String(t.cross_question_id) : null;
   populateCrossQuestionDropdown();
   document.getElementById('crossQuestionSelect').value = currentCrossId || '';
 
-  // Load poll
   try {
     const cfg = await (await fetch('/api/config')).json();
     const pr = await fetch(`${cfg.supabaseUrl}/rest/v1/teaching_polls?teaching_id=eq.${t.id}&select=*`, {
@@ -945,7 +949,6 @@ async function editTeaching(t) {
     }
   } catch (e) {}
 
-  // Cover
   existingCoverUrl = t.cover_image || null; coverImageUrl = null;
   if (t.cover_image) {
     document.getElementById('coverPreview').src = t.cover_image;
@@ -958,7 +961,6 @@ async function editTeaching(t) {
     document.getElementById('clearCoverBtn').classList.add('hidden');
   }
 
-  // Video
   existingVideoUrl = t.video_url || null; videoFileBase64 = null; videoUrlExternal = null;
   if (t.video_url) {
     document.getElementById('videoLabel').textContent = 'Current video';
