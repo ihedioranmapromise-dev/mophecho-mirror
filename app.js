@@ -1,7 +1,16 @@
 /* ============================================================
    app.js — Moph Echo Mirror
-   v2.4 — X-style collapsed cards, loading states, pull-to-refresh
-   spinner fix, describeError for humans.
+   v2.5 — Delivery 1:
+     - Pin a post to profile
+     - Replies under profile posts
+     - Posts / Replies / Saved / About tabs
+     - Edit / delete from profile (modal, no prompt)
+     - Quote a teaching to profile
+     - Feed sort (Latest / Top week / Top all)
+     - Reading progress bar in viewer
+     - Bookmark folders
+     - Mute users
+     - Nested reply notifications
    ============================================================ */
 
 import {
@@ -24,9 +33,7 @@ function hideNetworkBanner() { document.getElementById('networkBanner').classLis
 function isOnline() { return navigator.onLine !== false; }
 
 function describeError(e) {
-  if (!navigator.onLine) {
-    return 'You are offline. Turn on data or Wi-Fi, then try again.';
-  }
+  if (!navigator.onLine) return 'You are offline. Turn on data or Wi-Fi, then try again.';
   const msg = (e && e.message) || String(e || '');
   const lower = msg.toLowerCase();
   if (lower.includes('failed to fetch') || lower.includes('networkerror') || lower.includes('load failed') || lower.includes('network request failed')) {
@@ -38,9 +45,7 @@ function describeError(e) {
   if (lower.includes('jwt') || lower.includes('token') || lower.includes('session')) {
     return 'Your session expired. Please sign in again.';
   }
-  if (lower.includes('duplicate') || lower.includes('unique')) {
-    return 'That has already been done.';
-  }
+  if (lower.includes('duplicate') || lower.includes('unique')) return 'That has already been done.';
   if (msg && msg.length < 200 && !lower.includes('json')) return msg;
   return 'Something went wrong. Try again.';
 }
@@ -49,15 +54,9 @@ window.addEventListener('online', () => { hideNetworkBanner(); });
 window.addEventListener('offline', () => { showNetworkBanner('You are offline. Turn on data or Wi-Fi.'); });
 
 async function safeFetch(url, options) {
-  if (!isOnline()) {
-    showNetworkBanner('You are offline. Turn on data or Wi-Fi.');
-    throw new Error('offline');
-  }
+  if (!isOnline()) { showNetworkBanner('You are offline. Turn on data or Wi-Fi.'); throw new Error('offline'); }
   try { return await fetch(url, options); }
-  catch (e) {
-    showNetworkBanner('Cannot reach the mirror. Check your connection.');
-    throw e;
-  }
+  catch (e) { showNetworkBanner('Cannot reach the mirror. Check your connection.'); throw e; }
 }
 
 function retryConnection() {
@@ -158,18 +157,25 @@ const state = {
   usedResponses: [],
   activeTag: null,
   myPosts: [],
+  myReplies: [],
+  mySavedRows: [],
   myBookmarks: [],
   myBookmarkedIds: new Set(),
+  myBookmarkFolders: {},
   myFollowing: new Set(),
   myFollowers: new Set(),
+  myMutes: new Set(),
   selectedTheme: 'amethyst',
   viewingUserId: null,
   featuredTeaching: null,
   activeSubTab: 'all',
   myPostsSearch: '',
+  activeSort: 'latest',
+  activeSavedFolder: '__all__',
 
   expandedCommentTeachingIds: new Set(),
   expandedReplies: new Set(),
+  expandedProfileReplies: new Set(),
   openReplyCommentId: null,
   quoteTarget: null,
   teachingViewerId: null,
@@ -177,7 +183,15 @@ const state = {
   readTeachingIds: new Set(),
   viewerOpenedAt: 0,
   expandedCards: new Set(),
-  teachingsLoading: false
+  teachingsLoading: false,
+
+  // Modals
+  editingCommentId: null,
+  editingCommentTeachingId: null,
+  quotingTeachingId: null,
+  pendingBookmarkTeachingId: null,
+  pendingDeleteCommentId: null,
+  pendingDeleteTeachingId: null
 };
 
 const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
@@ -461,7 +475,8 @@ async function enterApp(user) {
     loadFollowing(),
     loadBookmarks(),
     loadFollowers(),
-    loadReadState()
+    loadReadState(),
+    loadMutes()
   ]).then(() => {
     renderProfile(); renderTeachings(); renderNotifications();
     const savedTab = localStorage.getItem('moph_active_tab');
@@ -507,7 +522,7 @@ function attachPullToRefresh() {
     try {
       if (panel === 'chat') { state.messages = []; await loadMessages(); renderChat(); }
       else if (panel === 'teachings') { await loadTeachings(true); await loadReadState(); renderTeachings(); }
-      else if (panel === 'profile') { await Promise.all([loadFollowing(), loadFollowers(), loadBookmarks(), loadMyPosts(), loadGoldenStars()]); renderProfile(); }
+      else if (panel === 'profile') { await Promise.all([loadFollowing(), loadFollowers(), loadBookmarks(), loadMyPosts(), loadMyReplies(), loadGoldenStars()]); renderProfile(); }
     } catch (e) { console.error('refresh error', e); }
   }
 
@@ -624,6 +639,49 @@ async function markTeachingRead(teachingId) {
   try {
     await sb.from('teachings_read').insert({ user_id: state.user.id, teaching_id: teachingId });
   } catch (e) { /* silent */ }
+}
+
+/* ============================================================
+   MUTES
+   ============================================================ */
+
+async function loadMutes() {
+  if (!state.user) return;
+  try {
+    const { data, error } = await sb.from('mutes').select('muted_user_id').eq('user_id', state.user.id);
+    if (error) return;
+    state.myMutes = new Set((data || []).map(m => m.muted_user_id));
+  } catch (e) { /* silent */ }
+}
+
+async function muteUser(userId) {
+  if (userId === state.user.id) return;
+  try {
+    await sb.from('mutes').insert({ user_id: state.user.id, muted_user_id: userId });
+    state.myMutes.add(userId);
+    return true;
+  } catch (e) { alert(describeError(e)); return false; }
+}
+
+async function unmuteUser(userId) {
+  try {
+    await sb.from('mutes').delete().eq('user_id', state.user.id).eq('muted_user_id', userId);
+    state.myMutes.delete(userId);
+    return true;
+  } catch (e) { alert(describeError(e)); return false; }
+}
+
+async function toggleMuteUser(userId, btn) {
+  if (userId === state.user.id) return;
+  const isMuted = state.myMutes.has(userId);
+  if (isMuted) {
+    await unmuteUser(userId);
+    if (btn) { btn.textContent = 'Mute'; btn.className = 'text-[11px] text-gray-400 hover:text-red-400 transition'; }
+  } else {
+    await muteUser(userId);
+    if (btn) { btn.textContent = 'Unmute'; btn.className = 'text-[11px] text-red-400 hover:text-red-300 transition'; }
+  }
+  renderTeachings();
 }
 
 /* ============================================================
@@ -756,7 +814,7 @@ async function saveGoldenStar(text, trait_type, trait_value) {
 }
 
 /* ============================================================
-   FOLLOWS / BOOKMARKS
+   FOLLOWS / BOOKMARKS / FOLDERS
    ============================================================ */
 
 async function loadFollowing() {
@@ -797,18 +855,26 @@ function toggleFollow(toUserId, btn) {
 }
 
 async function loadBookmarks() {
-  const { data } = await sb.from('bookmarks').select('teaching_id').eq('user_id', state.user.id);
+  const { data } = await sb.from('bookmarks').select('teaching_id, folder').eq('user_id', state.user.id);
   state.myBookmarkedIds = new Set((data || []).map(b => b.teaching_id));
+  state.myBookmarkFolders = {};
+  (data || []).forEach(b => { state.myBookmarkFolders[b.teaching_id] = b.folder || null; });
+  state.mySavedRows = data || [];
 }
+
 async function toggleBookmark(teachingId, btn) {
   const isBookmarked = state.myBookmarkedIds.has(teachingId);
   if (isBookmarked) {
     await sb.from('bookmarks').delete().eq('user_id', state.user.id).eq('teaching_id', teachingId);
     state.myBookmarkedIds.delete(teachingId);
+    delete state.myBookmarkFolders[teachingId];
     if (btn) btn.classList.remove('active');
+    renderSavedFolderChips();
   } else {
+    // Save without folder first, user can move later from Saved tab
     await sb.from('bookmarks').insert({ user_id: state.user.id, teaching_id: teachingId });
     state.myBookmarkedIds.add(teachingId);
+    state.myBookmarkFolders[teachingId] = null;
     if (btn) btn.classList.add('active');
     logActivity('bookmark');
   }
@@ -817,6 +883,81 @@ async function toggleBookmark(teachingId, btn) {
     b.querySelector('svg')?.setAttribute('fill', state.myBookmarkedIds.has(teachingId) ? 'currentColor' : 'none');
   });
   if (!document.getElementById('profileSaved').classList.contains('hidden')) loadMySaved();
+}
+
+async function setBookmarkFolder(teachingId, folder) {
+  try {
+    await sb.from('bookmarks').update({ folder: folder || null }).eq('user_id', state.user.id).eq('teaching_id', teachingId);
+    state.myBookmarkFolders[teachingId] = folder || null;
+    renderSavedFolderChips();
+    renderMySavedList();
+  } catch (e) { alert(describeError(e)); }
+}
+
+function filterSavedFolder(folder) {
+  state.activeSavedFolder = folder;
+  document.querySelectorAll('.folder-chip').forEach(c => c.classList.toggle('active', c.dataset.folder === folder));
+  renderMySavedList();
+}
+
+function renderSavedFolderChips() {
+  const wrap = document.getElementById('folderChips');
+  if (!wrap) return;
+  const folders = new Set();
+  Object.values(state.myBookmarkFolders).forEach(f => { if (f) folders.add(f); });
+  const sorted = [...folders].sort();
+  wrap.innerHTML = `
+    <button class="folder-chip ${state.activeSavedFolder === '__all__' ? 'active' : ''}" data-folder="__all__" onclick="filterSavedFolder('__all__')">All</button>
+    <button class="folder-chip ${state.activeSavedFolder === '__none__' ? 'active' : ''}" data-folder="__none__" onclick="filterSavedFolder('__none__')">Unfiled</button>
+    ${sorted.map(f => `<button class="folder-chip ${state.activeSavedFolder === f ? 'active' : ''}" data-folder="${escapeHtml(f)}" onclick="filterSavedFolder('${escapeHtml(f)}')">${escapeHtml(f)}</button>`).join('')}
+  `;
+}
+
+async function loadMySaved() {
+  const el = document.getElementById('mySavedList');
+  el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading...</p>';
+  // Refresh bookmarks from DB to get latest folder state
+  await loadBookmarks();
+  renderSavedFolderChips();
+  renderMySavedList();
+}
+
+function renderMySavedList() {
+  const el = document.getElementById('mySavedList');
+  const filter = state.activeSavedFolder;
+  const ids = [...state.myBookmarkedIds].filter(id => {
+    const f = state.myBookmarkFolders[id] || null;
+    if (filter === '__all__') return true;
+    if (filter === '__none__') return !f;
+    return f === filter;
+  });
+  if (ids.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Nothing saved here yet.</p></div>';
+    return;
+  }
+  const saved = state.teachings.filter(t => ids.includes(t.id));
+  if (saved.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Nothing saved yet.</p></div>';
+    return;
+  }
+  el.innerHTML = saved.map(t => {
+    const f = state.myBookmarkFolders[t.id] || null;
+    return `<div class="post-card cursor-pointer min-w-0" onclick="openTeachingViewer(${t.id})">
+      <h4 class="text-sm font-semibold text-gray-200 mb-1.5 break-words">${escapeHtml(t.title || 'Untitled')}</h4>
+      <p class="text-xs text-gray-500 line-clamp-2">${escapeHtml((t.content || '').replace(/<[^>]*>/g,'').substring(0, 120))}...</p>
+      <div class="flex items-center justify-between mt-2">
+        <p class="text-[10px] text-gray-600">${readingTime(t.content)} min read</p>
+        <button onclick="event.stopPropagation(); moveToFolder(${t.id})" class="text-[10px] text-amethyst-400 hover:text-amethyst-300">${f ? '📁 ' + escapeHtml(f) : '📁 Move to folder'}</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function moveToFolder(teachingId) {
+  const current = state.myBookmarkFolders[teachingId] || '';
+  const name = window.prompt('Move to folder (leave empty to unfile):', current);
+  if (name === null) return;
+  setBookmarkFolder(teachingId, name.trim() || null);
 }
 
 /* ============================================================
@@ -918,6 +1059,12 @@ function renderTagFilters() {
 }
 function setTag(tag) { state.activeTag = tag; renderTagFilters(); filterTeachings(); }
 
+function setSort(sort) {
+  state.activeSort = sort;
+  document.querySelectorAll('.sort-pill').forEach(p => p.classList.toggle('active', p.dataset.sort === sort));
+  filterTeachings();
+}
+
 function switchSubTab(tab) {
   state.activeSubTab = tab;
   localStorage.setItem('moph_active_subtab', tab);
@@ -927,8 +1074,33 @@ function switchSubTab(tab) {
   document.getElementById('subTabPolls').classList.toggle('active', tab === 'polls');
   const searchWrap = document.getElementById('searchWrap');
   if (searchWrap) searchWrap.classList.toggle('hidden', tab !== 'all');
+  const sortWrap = document.getElementById('sortWrap');
+  if (sortWrap) sortWrap.classList.toggle('hidden', tab !== 'all');
   renderTagFilters();
   renderTeachings();
+}
+
+function computeReactionCount(t) {
+  return (t.reactions || []).length;
+}
+
+function sortTeachings(list) {
+  const now = Date.now();
+  const sorted = [...list];
+  if (state.activeSort === 'latest') {
+    sorted.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+  } else if (state.activeSort === 'top-week') {
+    const weekAgo = now - 7 * 86400000;
+    sorted.sort((a, b) => {
+      const aIn = new Date(a.created_at).getTime() >= weekAgo ? 1 : 0;
+      const bIn = new Date(b.created_at).getTime() >= weekAgo ? 1 : 0;
+      if (aIn !== bIn) return bIn - aIn;
+      return computeReactionCount(b) - computeReactionCount(a);
+    });
+  } else if (state.activeSort === 'top-all') {
+    sorted.sort((a, b) => computeReactionCount(b) - computeReactionCount(a));
+  }
+  return sorted;
 }
 
 function filterTeachings() {
@@ -945,6 +1117,7 @@ function filterTeachings() {
   let filtered = state.teachings;
   if (state.activeTag) filtered = filtered.filter(t => (t.tags || []).includes(state.activeTag));
   if (q) filtered = filtered.filter(t => ((t.title || '') + ' ' + (t.content || '')).toLowerCase().includes(q));
+  filtered = sortTeachings(filtered);
   if (filtered.length === 0) {
     el.innerHTML = `<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Nothing matches.</p></div>`;
     return;
@@ -961,7 +1134,9 @@ function renderFollowingFeed() {
   }
   const posts = [];
   state.teachings.forEach(t => {
-    t.comments.forEach(c => { if (followedIds.includes(c.user_id)) posts.push({ comment: c, teaching: t }); });
+    t.comments.forEach(c => {
+      if (followedIds.includes(c.user_id) && !state.myMutes.has(c.user_id)) posts.push({ comment: c, teaching: t });
+    });
   });
   posts.sort((a, b) => new Date(b.comment.created_at) - new Date(a.comment.created_at));
   if (posts.length === 0) {
@@ -1004,7 +1179,7 @@ function renderQaFeed() {
   });
   state.teachings.forEach(t => {
     t.comments.forEach(c => {
-      if (c.is_question === true) items.push({ type: 'comment', date: c.created_at, payload: { comment: c, teaching: t } });
+      if (c.is_question === true && !state.myMutes.has(c.user_id)) items.push({ type: 'comment', date: c.created_at, payload: { comment: c, teaching: t } });
     });
   });
   if (items.length === 0) {
@@ -1215,7 +1390,7 @@ function toggleSmartFlag(el) {
 }
 
 /* ============================================================
-   QUOTE
+   QUOTE COMMENT (existing) + QUOTE TEACHING (new)
    ============================================================ */
 
 function setQuote(teachingId, comment) {
@@ -1236,8 +1411,59 @@ function clearQuote() {
   else renderTeachings();
 }
 
+function openQuoteTeachingModal(teachingId) {
+  const t = state.teachings.find(x => x.id === teachingId);
+  if (!t) return;
+  state.quotingTeachingId = teachingId;
+  document.getElementById('quoteTeachingCaption').value = '';
+  const preview = document.getElementById('quoteTeachingPreview');
+  preview.innerHTML = `
+    <div class="quoted-teaching">
+      <div class="text-[10px] text-amethyst-400 font-semibold mb-1">QUOTING TEACHING</div>
+      ${t.title ? `<div class="text-sm font-semibold text-gray-200 break-words">${escapeHtml(t.title)}</div>` : ''}
+      <div class="text-xs text-gray-400 mt-1 line-clamp-2">${escapeHtml((t.content || '').replace(/<[^>]*>/g, ' ').trim().slice(0, 140))}</div>
+    </div>
+  `;
+  document.getElementById('quoteTeachingModal').classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+}
+function closeQuoteTeachingModal() {
+  document.getElementById('quoteTeachingModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  state.quotingTeachingId = null;
+}
+async function submitQuoteTeaching() {
+  const teachingId = state.quotingTeachingId;
+  if (!teachingId) return;
+  const t = state.teachings.find(x => x.id === teachingId);
+  if (!t) return;
+  const caption = document.getElementById('quoteTeachingCaption').value.trim();
+  const btn = document.getElementById('quoteTeachingBtn');
+  btn.disabled = true;
+  btn.textContent = 'Posting...';
+  try {
+    const { error } = await sb.from('teaching_comments').insert({
+      teaching_id: teachingId,
+      user_id: state.user.id,
+      content: caption || null,
+      quoted_teaching_id: teachingId,
+      parent_id: null
+    });
+    if (error) throw error;
+    logActivity('comment');
+    closeQuoteTeachingModal();
+    await loadTeachings(true);
+    renderTeachings();
+    renderProfile();
+  } catch (e) {
+    alert(describeError(e));
+  }
+  btn.disabled = false;
+  btn.textContent = 'Post to profile';
+}
+
 /* ============================================================
-   CARD EXPAND (X-style)
+   CARD EXPAND
    ============================================================ */
 
 function toggleCardExpand(teachingId) {
@@ -1247,8 +1473,17 @@ function toggleCardExpand(teachingId) {
 }
 
 /* ============================================================
-   TEACHING CARD — X-style collapsed
+   TEACHING CARD
    ============================================================ */
+
+function renderQuotedTeaching(t) {
+  return `<div class="quoted-teaching" onclick="event.stopPropagation(); openTeachingViewer(${t.id})">
+    <div class="text-[10px] text-amethyst-400 font-semibold mb-1">QUOTED TEACHING</div>
+    ${t.title ? `<div class="text-sm font-semibold text-gray-200 break-words">${escapeHtml(t.title)}</div>` : ''}
+    <div class="text-xs text-gray-400 mt-1 line-clamp-2">${escapeHtml((t.content || '').replace(/<[^>]*>/g, ' ').trim().slice(0, 160))}</div>
+    <div class="text-[10px] text-amethyst-400 mt-2">Open teaching →</div>
+  </div>`;
+}
 
 function renderTeachingPost(t) {
   const tagHtml = (t.tags || []).slice(0, 3).map(tag => `<span class="text-[9px] px-2 py-0.5 rounded-full bg-void-800 border border-void-600 text-gray-400 max-w-[100px] truncate">#${escapeHtml(tag)}</span>`).join('');
@@ -1260,6 +1495,7 @@ function renderTeachingPost(t) {
   const isRead = state.readTeachingIds.has(t.id);
   const isExpanded = state.expandedCards.has(t.id);
   const hasContent = t.content && t.content.replace(/<[^>]*>/g, '').trim().length > 0;
+  const hasQuotedTeaching = t.quoted_teaching_id && state.teachings.some(x => x.id === t.quoted_teaching_id);
 
   const plainText = (t.content || '').replace(/<[^>]*>/g, ' ').trim();
   const contentIsLong = plainText.length > 220;
@@ -1296,6 +1532,7 @@ function renderTeachingPost(t) {
       ${hasContent ? `<div class="text-sm text-gray-300 prose-content ${contentClass}">${sanitizeRich(t.content)}</div>` : ''}
       ${showMoreLink}
       ${mediaHtml}
+      ${hasQuotedTeaching ? renderQuotedTeaching(state.teachings.find(x => x.id === t.quoted_teaching_id)) : ''}
       ${renderPollHtml(t)}
       <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-void-600/60">
         <div class="flex items-center gap-2" onclick="event.stopPropagation()">
@@ -1303,6 +1540,7 @@ function renderTeachingPost(t) {
           <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true})" class="text-[11px] text-gray-500 hover:text-amethyst-400 transition flex items-center gap-1">
             💬 ${t.comments.length}
           </button>
+          <button onclick="openQuoteTeachingModal(${t.id})" class="text-[11px] text-gray-500 hover:text-amethyst-400 transition">↻ Quote</button>
           <button onclick="shareTeaching(${t.id})" class="text-[11px] text-gray-500 hover:text-amethyst-400 transition">↗</button>
         </div>
         <div class="flex items-center gap-2 text-[10px] text-gray-600">
@@ -1325,6 +1563,7 @@ function ensureTeachingViewer() {
   modal.id = 'teachingViewerModal';
   modal.className = 'hidden fixed inset-0 z-[76] bg-void-900 overflow-y-auto';
   modal.innerHTML = `
+    <div class="reading-progress" id="viewerProgressWrap"><div class="reading-progress-fill" id="viewerProgressFill"></div></div>
     <div class="max-w-2xl mx-auto p-4 safe-top">
       <div class="flex items-center justify-between mb-4">
         <button onclick="closeTeachingViewer()" class="btn p-2 text-gray-400 hover:text-white rounded-xl transition">
@@ -1337,6 +1576,14 @@ function ensureTeachingViewer() {
     </div>
   `;
   document.body.appendChild(modal);
+  // Attach scroll listener for reading progress
+  modal.addEventListener('scroll', () => {
+    const fill = document.getElementById('viewerProgressFill');
+    if (!fill) return;
+    const max = modal.scrollHeight - modal.clientHeight;
+    const pct = max > 0 ? Math.min(100, Math.max(0, (modal.scrollTop / max) * 100)) : 0;
+    fill.style.width = pct + '%';
+  });
   return modal;
 }
 
@@ -1348,12 +1595,12 @@ function openTeachingViewer(id, opts = {}) {
   state.viewerOpenedAt = Date.now();
 
   const modal = ensureTeachingViewer();
-  const scroller = modal.firstElementChild;
   const content = document.getElementById('teachingViewerContent');
-  const prevScroll = (opts.keepScroll || wasOpen) ? scroller.scrollTop : 0;
+  const prevScroll = (opts.keepScroll || wasOpen) ? modal.scrollTop : 0;
   const isBookmarked = state.myBookmarkedIds.has(t.id);
   const isRead = state.readTeachingIds.has(t.id);
   const hasContent = t.content && t.content.replace(/<[^>]*>/g, '').trim().length > 0;
+  const hasQuotedTeaching = t.quoted_teaching_id && state.teachings.some(x => x.id === t.quoted_teaching_id);
 
   let mediaHtml = '';
   if (t.video_url) {
@@ -1377,6 +1624,7 @@ function openTeachingViewer(id, opts = {}) {
       ${t.title ? `<h3 class="text-lg font-semibold mb-3 break-words">${escapeHtml(t.title)}</h3>` : ''}
       ${mediaHtml}
       ${hasContent ? `<div class="text-sm text-gray-300 prose-content">${sanitizeRich(t.content)}</div>` : ''}
+      ${hasQuotedTeaching ? renderQuotedTeaching(state.teachings.find(x => x.id === t.quoted_teaching_id)) : ''}
       ${renderPollHtml(t)}
       <div class="flex items-center gap-3 mt-3.5 text-[10px] text-gray-600">
         <span>${relativeTime(t.created_at)}</span><span>·</span>
@@ -1387,7 +1635,10 @@ function openTeachingViewer(id, opts = {}) {
         <button id="viewer-comments-toggle-${t.id}" onclick="toggleViewerComments(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition">
           ${state.expandedCommentTeachingIds.has(t.id) ? 'Hide comments' : `${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}`}
         </button>
-        <button onclick="shareTeaching(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition">Share</button>
+        <div class="flex items-center gap-3">
+          <button onclick="openQuoteTeachingModal(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition">Quote</button>
+          <button onclick="shareTeaching(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition">Share</button>
+        </div>
       </div>
     </div>
     <div class="mt-3" id="viewer-comments-wrap-${t.id}" ${state.expandedCommentTeachingIds.has(t.id) ? '' : 'style="display:none"'}>
@@ -1403,6 +1654,10 @@ function openTeachingViewer(id, opts = {}) {
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
+  // Reset progress bar
+  const fill = document.getElementById('viewerProgressFill');
+  if (fill) fill.style.width = '0%';
+
   requestAnimationFrame(() => {
     if (opts.scrollToComments) {
       state.expandedCommentTeachingIds.add(t.id);
@@ -1417,7 +1672,7 @@ function openTeachingViewer(id, opts = {}) {
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
       });
     } else if (opts.keepScroll || wasOpen) {
-      scroller.scrollTop = prevScroll;
+      modal.scrollTop = prevScroll;
     }
   });
 
@@ -1450,7 +1705,8 @@ function toggleViewerComments(teachingId) {
 
 function renderCommentsFor(t) {
   const acceptedId = t.accepted_answer_id;
-  const sorted = [...t.comments].sort((a, b) => {
+  const visible = t.comments.filter(c => !state.myMutes.has(c.user_id));
+  const sorted = [...visible].sort((a, b) => {
     if (a.id === acceptedId) return -1;
     if (b.id === acceptedId) return 1;
     return new Date(a.created_at) - new Date(b.created_at);
@@ -1498,6 +1754,8 @@ function renderCommentNode(c, teaching, depth) {
     }
   }
 
+  const quotedTeaching = c.quoted_teaching_id ? state.teachings.find(x => x.id === c.quoted_teaching_id) : null;
+
   const acceptedBadge = isAccepted ? `<span class="accepted-badge">✓ Accepted</span>` : '';
   const qBadge = isQuestion ? `<span class="q-badge">Q&amp;A</span>` : '';
   const anonBadge = isAnon ? `<span class="anon-badge">anon</span>` : '';
@@ -1536,6 +1794,7 @@ function renderCommentNode(c, teaching, depth) {
           ${quotedHtml}
           ${contentWithMentions ? `<p class="text-sm text-gray-300 prose-content mt-1.5 break-words">${contentWithMentions}</p>` : ''}
           ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-2.5 max-h-64 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
+          ${quotedTeaching ? renderQuotedTeaching(quotedTeaching) : ''}
         </div>
         <div class="mt-2.5 flex items-center gap-4 flex-wrap">
           ${reactionTriggerHtml(c, 'comment')}
@@ -1694,7 +1953,7 @@ function avatarHtml(userId, size) {
 }
 
 /* ============================================================
-   ACCEPT / POKE / MENU
+   ACCEPT / POKE / COMMENT MENU / PIN
    ============================================================ */
 
 async function acceptAnswer(commentId, teachingId) {
@@ -1749,10 +2008,12 @@ function openCommentMenu(commentId, teachingId) {
   for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; break; } }
   if (!comment) return;
   const isOwner = comment.user_id === state.user.id;
+  const isPinned = comment.pinned === true;
   const menu = document.createElement('div');
   menu.className = 'fixed inset-0 z-[78] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4';
   menu.innerHTML = `<div class="glass card w-full max-w-sm border border-void-600 overflow-hidden">
-    ${isOwner ? `<button onclick="this.closest('.fixed').remove(); editComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Edit comment</button>` : ''}
+    ${isOwner ? `<button onclick="this.closest('.fixed').remove(); openEditCommentModal(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Edit comment</button>` : ''}
+    ${isOwner ? `<button onclick="this.closest('.fixed').remove(); pinComment(${commentId}, ${!isPinned})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">${isPinned ? 'Unpin from profile' : 'Pin to profile'}</button>` : ''}
     <button onclick="this.closest('.fixed').remove(); quoteComment(${teachingId}, ${commentId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Quote this comment</button>
     <button onclick="this.closest('.fixed').remove(); shareComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-gray-200 hover:bg-void-800 transition border-b border-void-600">Share as post</button>
     ${isOwner ? `<button onclick="this.closest('.fixed').remove(); askDeleteComment(${commentId}, ${teachingId})" class="btn w-full py-4 text-left px-5 text-sm text-red-400 hover:bg-void-800 transition border-b border-void-600">Delete comment</button>` : ''}
@@ -1762,24 +2023,86 @@ function openCommentMenu(commentId, teachingId) {
   document.body.appendChild(menu);
 }
 
+async function pinComment(commentId, shouldPin) {
+  try {
+    if (shouldPin) {
+      // Unpin any existing pinned comment for this user
+      await sb.from('teaching_comments').update({ pinned: false }).eq('user_id', state.user.id).eq('pinned', true);
+    }
+    await sb.from('teaching_comments').update({ pinned: shouldPin }).eq('id', commentId);
+    // Update local state
+    for (const t of state.teachings) {
+      t.comments.forEach(c => {
+        if (c.user_id === state.user.id) {
+          if (shouldPin && c.id === commentId) c.pinned = true;
+          else if (shouldPin) c.pinned = false;
+          else if (c.id === commentId) c.pinned = false;
+        }
+      });
+    }
+    // Refresh profile posts and replies
+    await loadMyPosts();
+    await loadMyReplies();
+    renderMyPosts();
+    renderMyReplies();
+  } catch (e) { alert(describeError(e)); }
+}
+
+/* ============================================================
+   EDIT COMMENT MODAL (replaces prompt)
+   ============================================================ */
+
+function openEditCommentModal(commentId, teachingId) {
+  let comment = null;
+  for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; break; } }
+  if (!comment) return;
+  state.editingCommentId = commentId;
+  state.editingCommentTeachingId = teachingId;
+  const modal = document.getElementById('editCommentModal');
+  const ta = document.getElementById('editCommentText');
+  ta.value = comment.content || '';
+  modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+  setTimeout(() => ta.focus(), 100);
+}
+function closeEditCommentModal() {
+  document.getElementById('editCommentModal').classList.add('hidden');
+  document.body.style.overflow = '';
+  state.editingCommentId = null;
+  state.editingCommentTeachingId = null;
+}
+async function saveEditedComment() {
+  const commentId = state.editingCommentId;
+  const teachingId = state.editingCommentTeachingId;
+  if (!commentId) return;
+  const newText = document.getElementById('editCommentText').value.trim();
+  if (!newText) { alert('Comment cannot be empty.'); return; }
+  const btn = document.getElementById('saveEditBtn');
+  btn.disabled = true;
+  btn.textContent = 'Saving...';
+  try {
+    await sb.from('teaching_comments').update({ content: newText, updated_at: new Date().toISOString() }).eq('id', commentId);
+    // Update local state
+    for (const t of state.teachings) {
+      const c = t.comments.find(x => x.id === commentId);
+      if (c) { c.content = newText; c.updated_at = new Date().toISOString(); break; }
+    }
+    closeEditCommentModal();
+    await loadTeachings(true);
+    if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
+    else renderTeachings();
+    renderProfile();
+  } catch (e) { alert(describeError(e)); }
+  btn.disabled = false;
+  btn.textContent = 'Save';
+}
+
 function quoteComment(teachingId, commentId) {
   const t = state.teachings.find(x => x.id === teachingId);
   if (!t) return;
   const c = t.comments.find(x => x.id === commentId);
   if (!c) return;
   setQuote(teachingId, c);
-}
-
-async function editComment(commentId, teachingId) {
-  let comment = null;
-  for (const t of state.teachings) { const c = t.comments.find(x => x.id === commentId); if (c) { comment = c; break; } }
-  if (!comment) return;
-  const newText = prompt('Edit your comment:', comment.content || '');
-  if (newText === null || newText === comment.content) return;
-  await sb.from('teaching_comments').update({ content: newText, updated_at: new Date().toISOString() }).eq('id', commentId);
-  await loadTeachings(true);
-  if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
-  else renderTeachings();
 }
 
 function shareComment(commentId, teachingId) {
@@ -1809,6 +2132,7 @@ function askDeleteComment(commentId, teachingId) {
     await loadTeachings(true);
     if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
     else renderTeachings();
+    renderProfile();
   }, 5000);
 }
 function undoDelete(commentId) {
@@ -1862,8 +2186,20 @@ function extractMentions(text) {
 }
 
 /* ============================================================
-   SUBMIT COMMENT
+   SUBMIT COMMENT (with nested reply notifications)
    ============================================================ */
+
+function findRootComment(comments, comment) {
+  let current = comment;
+  const seen = new Set();
+  while (current && current.parent_id && !seen.has(current.id)) {
+    seen.add(current.id);
+    const parent = comments.find(c => c.id === current.parent_id);
+    if (!parent) break;
+    current = parent;
+  }
+  return current;
+}
 
 async function submitComment(teachingId, parentId, uid) {
   const textEl = document.getElementById(uid + '-text');
@@ -1930,15 +2266,41 @@ async function submitComment(teachingId, parentId, uid) {
     }
     if (parentId) state.expandedReplies.add(parentId);
 
-    if (parentId) {
-      const p = t.comments.find(c => c.id === parentId);
-      if (p && p.user_id !== state.user.id) {
+    // Notifications
+    if (parentId && t) {
+      const parent = t.comments.find(c => c.id === parentId);
+      if (parent && parent.user_id !== state.user.id) {
+        // Direct reply to the parent
         await sb.from('notifications').insert({
-          user_id: p.user_id, type: 'reply',
+          user_id: parent.user_id, type: 'reply',
           actor_id: state.user.id, actor_username: state.profile.username,
           teaching_id: teachingId, comment_id: parentId,
           message: '@' + state.profile.username + ' replied to your comment'
         });
+      }
+      // Nested reply: find the root of this thread and notify its author once
+      if (parent && parent.parent_id) {
+        const root = findRootComment(t.comments, parent);
+        if (root && root.user_id !== state.user.id && root.id !== (parent ? parent.id : null)) {
+          // Check if we've already notified this root in the last 24h about this thread
+          const since = new Date(Date.now() - 86400000).toISOString();
+          const { data: existing } = await sb.from('notifications')
+            .select('id')
+            .eq('user_id', root.user_id)
+            .eq('teaching_id', teachingId)
+            .eq('comment_id', root.id)
+            .eq('type', 'nested_reply')
+            .gte('created_at', since)
+            .limit(1);
+          if (!existing || existing.length === 0) {
+            await sb.from('notifications').insert({
+              user_id: root.user_id, type: 'nested_reply',
+              actor_id: state.user.id, actor_username: state.profile.username,
+              teaching_id: teachingId, comment_id: root.id,
+              message: '@' + state.profile.username + ' replied in a thread you started'
+            });
+          }
+        }
       }
     }
     if (t && t.user_id && t.user_id !== state.user.id) {
@@ -1967,6 +2329,7 @@ async function submitComment(teachingId, parentId, uid) {
 
     if (state.teachingViewerId === teachingId) openTeachingViewer(teachingId, { keepScroll: true });
     else renderTeachings();
+    renderProfile();
   } catch (e) {
     console.error(e);
     alert(describeError(e));
@@ -2202,11 +2565,12 @@ async function saveSettings() {
 }
 
 function switchProfileTab(tab) {
-  ['posts','saved','about'].forEach(t => {
+  ['posts','replies','saved','about'].forEach(t => {
     document.getElementById('pTab' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('active', t === tab);
     document.getElementById('profile' + t.charAt(0).toUpperCase() + t.slice(1)).classList.toggle('hidden', t !== tab);
   });
   if (tab === 'posts') loadMyPosts();
+  if (tab === 'replies') loadMyReplies();
   if (tab === 'saved') loadMySaved();
   if (tab === 'about') { loadActivityCalendar(); refreshPushButton(); }
 }
@@ -2251,6 +2615,7 @@ function renderPublicProfile(p, followersCount, followingCount) {
   const g = p.privacy_gift !== false ? `<p class="text-sm font-medium ${p.gift ? 'text-amethyst-400' : 'text-gray-400'}">${p.gift || '—'}</p>` : priv;
   const avatar = p.avatar_url ? `<img src="${escapeHtml(p.avatar_url)}" class="avatar-lg mx-auto">` : `<div class="avatar-lg mx-auto">${(p.username || '?')[0].toUpperCase()}</div>`;
   const isFollowing = state.myFollowing.has(p.id);
+  const isMuted = state.myMutes.has(p.id);
   const streakHtml = (p.streak_count || 0) >= 2 ? `<div class="streak-badge mx-auto mt-3" style="display:inline-flex;"><span>🔥</span><span>${p.streak_count}</span></div>` : '';
   const followersPublic = p.privacy_followers !== false;
   const followingPublic = p.privacy_following !== false;
@@ -2264,6 +2629,9 @@ function renderPublicProfile(p, followersCount, followingCount) {
       ${websiteHtml}
       ${socials ? `<div class="flex flex-wrap justify-center gap-2 mt-4">${socials}</div>` : ''}
       <button onclick="toggleFollow('${p.id}', this)" class="follow-btn ${isFollowing ? 'following' : 'not-following'} mt-5">${isFollowing ? 'Following' : 'Follow'}</button>
+      <div class="mt-3">
+        <button onclick="toggleMuteUser('${p.id}', this)" class="text-[11px] ${isMuted ? 'text-red-400 hover:text-red-300' : 'text-gray-400 hover:text-red-400'} transition">${isMuted ? 'Unmute' : 'Mute'}</button>
+      </div>
       <div class="flex justify-center gap-6 mt-4">
         ${followersPublic ? `<div class="text-xs"><span class="font-semibold text-gray-200">${followersCount}</span> <span class="text-gray-500">Followers</span></div>` : `<div class="text-xs text-gray-600 italic">Followers hidden</div>`}
         ${followingPublic ? `<div class="text-xs"><span class="font-semibold text-gray-200">${followingCount}</span> <span class="text-gray-500">Following</span></div>` : `<div class="text-xs text-gray-600 italic">Following hidden</div>`}
@@ -2318,14 +2686,16 @@ function renderProfile() {
 
   updateStreakUI();
   loadMyPosts();
+  loadMyReplies();
 }
 
 async function loadMyPosts() {
   const el = document.getElementById('myPostsList');
   el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading your posts...</p>';
   const { data, error } = await sb.from('teaching_comments')
-    .select('id, content, image_url, teaching_id, created_at, is_question, is_anonymous')
+    .select('id, content, image_url, teaching_id, created_at, is_question, is_anonymous, pinned, quoted_teaching_id, parent_id')
     .eq('user_id', state.user.id)
+    .is('parent_id', null)
     .order('created_at', { ascending: false })
     .limit(50);
   if (error) {
@@ -2340,26 +2710,128 @@ async function loadMyPosts() {
 function renderMyPosts() {
   const el = document.getElementById('myPostsList');
   const q = (state.myPostsSearch || '').toLowerCase();
-  const filtered = q ? state.myPosts.filter(c => (c.content || '').toLowerCase().includes(q)) : state.myPosts;
+  let filtered = q ? state.myPosts.filter(c => (c.content || '').toLowerCase().includes(q)) : state.myPosts;
+  // Pin first
+  filtered = [...filtered].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
+
   if (!filtered || filtered.length === 0) {
     el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">' + (q ? 'Nothing matches.' : 'Nothing posted yet.') + '</p></div>';
     return;
   }
-  el.innerHTML = filtered.map(c => {
-    const t = state.teachings.find(x => x.id === c.teaching_id);
+  el.innerHTML = filtered.map(c => renderProfilePostCard(c)).join('');
+}
+
+function renderProfilePostCard(c) {
+  const t = state.teachings.find(x => x.id === c.teaching_id);
+  const title = t ? (t.title || 'Untitled teaching') : 'Teaching';
+  const qBadge = c.is_question ? '<span class="q-badge">Q&amp;A</span>' : '';
+  const anonBadge = c.is_anonymous ? '<span class="anon-badge">anon</span>' : '';
+  const pinBadge = c.pinned ? '<span class="pin-badge">📌 Pinned</span>' : '';
+  const quotedTeaching = c.quoted_teaching_id ? state.teachings.find(x => x.id === c.quoted_teaching_id) : null;
+  // Count direct replies
+  const replies = t ? t.comments.filter(x => x.parent_id === c.id && !state.myMutes.has(x.user_id)) : [];
+  const repliesExpanded = state.expandedProfileReplies.has(c.id);
+
+  let repliesHtml = '';
+  if (replies.length > 0) {
+    const toggleBtn = `<div class="replies-toggle" onclick="toggleProfileReplies(${c.id})">💬 ${replies.length} ${replies.length === 1 ? 'reply' : 'replies'} ${repliesExpanded ? '▲' : '▼'}</div>`;
+    const listHtml = repliesExpanded ? `<div class="mt-2 space-y-2 border-l-2 border-void-600 pl-3">
+      ${replies.slice(0, 5).map(r => {
+        const rInfo = state.profileCache[r.user_id] || { username: 'architect', avatar_url: null };
+        return `<div class="text-xs">
+          <div class="flex items-center gap-2 mb-1">
+            ${avatarHtml(r.user_id, 'xs')}
+            <button onclick="event.stopPropagation(); openPublicProfile('${r.user_id}')" class="text-amethyst-300 font-medium hover:underline">@${escapeHtml(rInfo.username)}</button>
+            <span class="text-gray-600">·</span>
+            <span class="text-gray-600">${relativeTime(r.created_at)}</span>
+          </div>
+          <p class="text-gray-300 break-words">${escapeHtml(r.content || '')}</p>
+        </div>`;
+      }).join('')}
+      ${replies.length > 5 ? `<button onclick="openTeachingViewer(${c.teaching_id}, {scrollToComments: true, focusCommentId: ${c.id}})" class="text-[10px] text-amethyst-400 hover:text-amethyst-300">View all ${replies.length} replies →</button>` : ''}
+    </div>` : '';
+    repliesHtml = toggleBtn + listHtml;
+  }
+
+  return `<div class="post-card min-w-0" data-comment-id="${c.id}">
+    <div class="flex items-center gap-2 mb-3 text-xs text-gray-500 min-w-0 flex-wrap">
+      ${pinBadge}
+      <span class="text-amethyst-400 flex-shrink-0">Replying to</span>
+      <span class="text-gray-400 truncate">${escapeHtml(title)}</span>
+      ${qBadge}${anonBadge}
+      <button onclick="openCommentMenuFromProfile(${c.id}, ${c.teaching_id})" class="ml-auto p-1 text-gray-600 hover:text-gray-300 transition">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z"/></svg>
+      </button>
+    </div>
+    ${c.content ? `<p class="text-sm text-gray-200 prose-content break-words">${escapeHtml(c.content)}</p>` : ''}
+    ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" onclick="event.stopPropagation(); openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
+    ${quotedTeaching ? renderQuotedTeaching(quotedTeaching) : ''}
+    ${repliesHtml}
+    <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
+      <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
+      <div class="flex items-center gap-3">
+        <button onclick="openTeachingViewer(${c.teaching_id}, {scrollToComments: true, focusCommentId: ${c.id}})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">View thread</button>
+        <button onclick="shareComment(${c.id}, ${c.teaching_id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Share</button>
+      </div>
+    </div>
+  </div>`;
+}
+
+function toggleProfileReplies(commentId) {
+  if (state.expandedProfileReplies.has(commentId)) state.expandedProfileReplies.delete(commentId);
+  else state.expandedProfileReplies.add(commentId);
+  renderMyPosts();
+}
+
+function openCommentMenuFromProfile(commentId, teachingId) {
+  openCommentMenu(commentId, teachingId);
+}
+
+async function loadMyReplies() {
+  const el = document.getElementById('myRepliesList');
+  if (!el) return;
+  el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading your replies...</p>';
+  const { data, error } = await sb.from('teaching_comments')
+    .select('id, content, image_url, teaching_id, created_at, is_question, is_anonymous, parent_id, quoted_comment_id, quoted_teaching_id')
+    .eq('user_id', state.user.id)
+    .not('parent_id', 'is', null)
+    .order('created_at', { ascending: false })
+    .limit(50);
+  if (error) {
+    console.error('loadMyReplies error:', error);
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Could not load your replies.</p></div>';
+    return;
+  }
+  state.myReplies = data || [];
+  renderMyReplies();
+}
+
+function renderMyReplies() {
+  const el = document.getElementById('myRepliesList');
+  if (!el) return;
+  if (!state.myReplies || state.myReplies.length === 0) {
+    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">You have not replied to any comment yet.</p></div>';
+    return;
+  }
+  el.innerHTML = state.myReplies.map(r => {
+    const t = state.teachings.find(x => x.id === r.teaching_id);
+    const parent = t ? t.comments.find(x => x.id === r.parent_id) : null;
+    const parentUser = parent ? (state.profileCache[parent.user_id]?.username || 'someone') : 'someone';
+    const parentExcerpt = parent ? (parent.content || '[image]').slice(0, 100) : '';
     const title = t ? (t.title || 'Untitled teaching') : 'Teaching';
-    const qBadge = c.is_question ? '<span class="q-badge">Q&amp;A</span>' : '';
-    const anonBadge = c.is_anonymous ? '<span class="anon-badge">anon</span>' : '';
     return `<div class="post-card min-w-0">
-      <div class="flex items-center gap-2 mb-3 text-xs text-gray-500 min-w-0"><span class="text-amethyst-400 flex-shrink-0">Replying to</span><span class="text-gray-400 truncate">${escapeHtml(title)}</span>${qBadge}${anonBadge}</div>
-      ${c.content ? `<p class="text-sm text-gray-200 prose-content break-words">${escapeHtml(c.content)}</p>` : ''}
-      ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
-      <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
-        <span class="text-[10px] text-gray-600">${relativeTime(c.created_at)}</span>
-        <div class="flex items-center gap-3">
-          <button onclick="openTeachingViewer(${c.teaching_id}, {scrollToComments: true, focusCommentId: ${c.id}})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">View thread</button>
-          <button onclick="shareComment(${c.id}, ${c.teaching_id})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">Share</button>
-        </div>
+      <div class="flex items-center gap-2 mb-2 text-xs text-gray-500 min-w-0">
+        <span class="text-gray-500">Replying to</span>
+        <button onclick="openPublicProfile('${parent ? parent.user_id : ''}')" class="text-amethyst-300 font-medium hover:underline">@${escapeHtml(parentUser)}</button>
+        <span>·</span>
+        <span class="text-gray-600">${relativeTime(r.created_at)}</span>
+      </div>
+      ${parentExcerpt ? `<div class="text-xs text-gray-500 border-l-2 border-void-600 pl-2 mb-2 italic break-words">${escapeHtml(parentExcerpt)}${parent && (parent.content || '').length > 100 ? '…' : ''}</div>` : ''}
+      ${r.content ? `<p class="text-sm text-gray-200 prose-content break-words">${escapeHtml(r.content)}</p>` : ''}
+      ${r.image_url ? `<img src="${escapeHtml(r.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" onclick="openImageViewer('${escapeHtml(r.image_url)}')">` : ''}
+      <div class="flex items-center justify-between mt-3 pt-3 border-t border-void-600/50">
+        <span class="text-[10px] text-gray-600 truncate">On: ${escapeHtml(title)}</span>
+        <button onclick="openTeachingViewer(${r.teaching_id}, {scrollToComments: true, focusCommentId: ${r.id}})" class="text-[10px] text-gray-500 hover:text-amethyst-400 transition">View thread</button>
       </div>
     </div>`;
   }).join('');
@@ -2368,26 +2840,6 @@ function renderMyPosts() {
 function filterMyPosts() {
   state.myPostsSearch = document.getElementById('searchMyPosts').value.trim();
   renderMyPosts();
-}
-
-async function loadMySaved() {
-  const el = document.getElementById('mySavedList');
-  el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading...</p>';
-  const ids = [...state.myBookmarkedIds];
-  if (ids.length === 0) {
-    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Nothing saved. Tap the bookmark on any teaching.</p></div>';
-    return;
-  }
-  const saved = state.teachings.filter(t => ids.includes(t.id));
-  if (saved.length === 0) {
-    el.innerHTML = '<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Nothing saved yet.</p></div>';
-    return;
-  }
-  el.innerHTML = saved.map(t => `<div class="post-card cursor-pointer min-w-0" onclick="openTeachingViewer(${t.id})">
-    <h4 class="text-sm font-semibold text-gray-200 mb-1.5 break-words">${escapeHtml(t.title || 'Untitled')}</h4>
-    <p class="text-xs text-gray-500 line-clamp-2">${escapeHtml((t.content || '').replace(/<[^>]*>/g,'').substring(0, 120))}...</p>
-    <p class="text-[10px] text-gray-600 mt-2">${readingTime(t.content)} min read · Saved</p>
-  </div>`).join('');
 }
 
 async function handleAvatarUpload(e) {
@@ -2588,18 +3040,23 @@ Object.assign(window, {
   showNotifications, closeNotifications, markAllRead, openNotification,
   openSettings, closeSettings, saveSettings, switchProfileTab,
   openPublicProfile, openPublicProfileByUsername, closePublicProfile,
-  switchTab, switchSubTab,
+  toggleMuteUser,
+  switchTab, switchSubTab, setSort,
   openImageViewer, closeImageViewer, openVideoViewer, closeVideoViewer,
   processEntry, enablePush, handleAvatarUpload,
   toggleFollow, toggleBookmark,
   filterTeachings, filterMyPosts, setTag, renderTeachings,
+  filterSavedFolder, moveToFolder,
   toggleReactionPicker, selectReaction, votePoll,
-  openCommentMenu, quoteComment, editComment, shareComment, askDeleteComment, undoDelete,
+  openCommentMenu, quoteComment, shareComment, askDeleteComment, undoDelete,
+  openEditCommentModal, closeEditCommentModal, saveEditedComment,
+  openQuoteTeachingModal, closeQuoteTeachingModal, submitQuoteTeaching,
   insertMention, submitComment, previewCommentImage, removeCommentImage, autoGrow, autoGrowChat,
-  handleMention, showReplyBox, cancelReply, sendPoke, acceptAnswer,
+  handleMention, showReplyBox, cancelReply, sendPoke, acceptAnswer, pinComment,
   setQuote, clearQuote, toggleSmartFlag, updateSmartToggles,
   openTeachingViewer, closeTeachingViewer, toggleReplies, toggleViewerComments, shareTeaching,
-  toggleCardExpand
+  toggleCardExpand, toggleProfileReplies, openCommentMenuFromProfile,
+  closeFolderPicker, createNewFolder
 });
 
 /* ============================================================
