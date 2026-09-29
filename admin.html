@@ -149,6 +149,16 @@ body { background:#06060a; }
       <p class="text-[10px] text-gray-600 mt-1">The selected question will show as a linked card inside this teaching.</p>
     </div>
 
+    <!-- ============ SERIES ============ -->
+    <div>
+      <label class="text-xs text-gray-500 uppercase tracking-wider mb-1 block">Series (optional)</label>
+      <div class="grid grid-cols-3 gap-2">
+        <input type="text" id="seriesName" placeholder="Series name e.g. On Stillness" class="col-span-2 bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        <input type="number" id="seriesOrder" min="1" step="1" placeholder="Part #" class="bg-void-900 border border-void-600 rounded-xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition">
+      </div>
+      <p class="text-[10px] text-gray-600 mt-1">If set, this teaching links to other teachings in the same series with a "Part N" indicator and a "Next in series" link.</p>
+    </div>
+
     <div>
       <div class="flex items-center justify-between mb-2">
         <label class="text-xs text-gray-500 uppercase tracking-wider">Content <span class="text-gray-600 normal-case tracking-normal">(optional if media attached)</span></label>
@@ -275,9 +285,6 @@ let editorPreviewing = false;
 let currentCrossId = null;
 let allTeachingsCache = [];
 
-/* ============================================================
-   ERROR MESSAGES
-   ============================================================ */
 function describeError(e) {
   if (!navigator.onLine) return 'You are offline. Turn on data or Wi-Fi, then try again.';
   const msg = (e && e.message) || String(e || '');
@@ -460,7 +467,9 @@ function saveDraft() {
       pollO4: document.getElementById('pollOpt4').value,
       isQuestion: document.getElementById('qaChk').checked,
       isAnon: document.getElementById('anonChk').checked,
-      crossId: document.getElementById('crossQuestionSelect').value
+      crossId: document.getElementById('crossQuestionSelect').value,
+      seriesName: document.getElementById('seriesName').value,
+      seriesOrder: document.getElementById('seriesOrder').value
     };
     localStorage.setItem('moph_admin_draft', JSON.stringify(draft));
     setAutosaveState('saved');
@@ -473,7 +482,7 @@ function loadDraft() {
     const raw = localStorage.getItem('moph_admin_draft');
     if (!raw) return;
     const d = JSON.parse(raw);
-    if (!d.title && !d.content && !d.tags && !d.pollQ) return;
+    if (!d.title && !d.content && !d.tags && !d.pollQ && !d.seriesName) return;
     if (!confirm('You have an unsaved draft. Restore it?')) { localStorage.removeItem('moph_admin_draft'); return; }
     document.getElementById('editId').value = d.id || '';
     document.getElementById('tTitle').value = d.title || '';
@@ -498,6 +507,8 @@ function loadDraft() {
     syncPill('qaPill', 'qaChk');
     syncPill('anonPill', 'anonChk');
     currentCrossId = d.crossId || null;
+    document.getElementById('seriesName').value = d.seriesName || '';
+    document.getElementById('seriesOrder').value = d.seriesOrder || '';
     if (d.pollOn) document.getElementById('pollFields').classList.remove('hidden');
     if (d.id) applyEditMode(true);
     if (coverImageUrl) { document.getElementById('coverPreview').src = coverImageUrl; document.getElementById('coverPreview').classList.remove('hidden'); document.getElementById('coverLabel').textContent = '✓ Draft cover'; document.getElementById('clearCoverBtn').classList.remove('hidden'); }
@@ -508,9 +519,6 @@ function loadDraft() {
   } catch (e) {}
 }
 
-/* ============================================================
-   TOGGLE PILLS
-   ============================================================ */
 function togglePill(pillId, chkId) {
   const pill = document.getElementById(pillId);
   const chk = document.getElementById(chkId);
@@ -529,7 +537,7 @@ function togglePoll() {
   saveDraft();
 }
 
-['tTitle','tTags','pollQuestion','pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => {
+['tTitle','tTags','pollQuestion','pollOpt1','pollOpt2','pollOpt3','pollOpt4','seriesName','seriesOrder'].forEach(id => {
   document.getElementById(id)?.addEventListener('input', saveDraft);
 });
 ['pinChk','featuredChk','qaChk','anonChk'].forEach(id => {
@@ -539,9 +547,6 @@ document.getElementById('qaChk').addEventListener('change', () => syncPill('qaPi
 document.getElementById('anonChk').addEventListener('change', () => syncPill('anonPill','anonChk'));
 document.getElementById('crossQuestionSelect').addEventListener('change', (e) => { currentCrossId = e.target.value || null; saveDraft(); });
 
-/* ============================================================
-   COVER
-   ============================================================ */
 document.getElementById('coverDrop').addEventListener('click', () => document.getElementById('coverInput').click());
 document.getElementById('coverInput').addEventListener('change', (e) => {
   const file = e.target.files[0]; if (!file) return;
@@ -567,9 +572,6 @@ function clearCover() {
   saveDraft();
 }
 
-/* ============================================================
-   VIDEO
-   ============================================================ */
 document.getElementById('videoDrop').addEventListener('click', (e) => { if (e.target.id !== 'videoPreview') document.getElementById('videoInput').click(); });
 document.getElementById('videoInput').addEventListener('change', (e) => {
   const file = e.target.files[0]; if (!file) return;
@@ -605,9 +607,6 @@ function clearVideo() {
   saveDraft();
 }
 
-/* ============================================================
-   AUTH
-   ============================================================ */
 function unlock() {
   const key = document.getElementById('adminKeyInput').value.trim();
   if (!key) { showLockError('Enter the key'); return; }
@@ -623,9 +622,6 @@ function showAdmin() {
   updateEditorMeta();
 }
 
-/* ============================================================
-   EDIT MODE HELPERS
-   ============================================================ */
 function applyEditMode(isEdit) {
   document.getElementById('modeLabel').textContent = isEdit ? 'Edit mode' : 'Create mode';
   document.getElementById('publishText').textContent = isEdit ? 'Update Teaching' : 'Publish Teaching';
@@ -663,6 +659,8 @@ function newTeaching() {
   document.getElementById('pollQuestion').value = '';
   ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('crossQuestionSelect').value = '';
+  document.getElementById('seriesName').value = '';
+  document.getElementById('seriesOrder').value = '';
   currentCrossId = null;
   coverImageUrl = null; videoFileBase64 = null; videoUrlExternal = null;
   existingCoverUrl = null; existingVideoUrl = null;
@@ -680,9 +678,6 @@ function newTeaching() {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ============================================================
-   PUBLISH
-   ============================================================ */
 function hasMedia() {
   return !!(coverImageUrl || existingCoverUrl || videoFileBase64 || videoUrlExternal || existingVideoUrl);
 }
@@ -715,6 +710,9 @@ async function publish() {
   const isAnonymous = document.getElementById('anonChk').checked;
   const crossQuestionId = document.getElementById('crossQuestionSelect').value;
   const crossQuestionIdNum = crossQuestionId ? Number(crossQuestionId) : null;
+  const seriesName = document.getElementById('seriesName').value.trim();
+  const seriesOrderRaw = document.getElementById('seriesOrder').value.trim();
+  const seriesOrder = seriesOrderRaw ? Number(seriesOrderRaw) : null;
 
   let poll = null;
   if (document.getElementById('pollChk').checked) {
@@ -740,7 +738,9 @@ async function publish() {
       title, content, tags, pinned, featured, poll,
       is_question: isQuestion,
       is_anonymous: isAnonymous,
-      cross_question_id: crossQuestionIdNum
+      cross_question_id: crossQuestionIdNum,
+      series_name: seriesName || null,
+      series_order: seriesOrder
     };
     if (isEdit) payload.id = editId;
     if (coverImageUrl) payload.cover_image = coverImageUrl;
@@ -771,16 +771,16 @@ async function publish() {
     if (isQuestion) msg += ' · Q&A';
     if (isAnonymous) msg += ' · Anonymous';
     if (crossQuestionIdNum) msg += ' · Linked';
+    if (seriesName) msg += ' · Series: ' + seriesName;
     if (!isEdit && sendEmail) msg += ' · 📨 Sending emails in background';
     showStatus(msg, 'success');
 
-    // Fire email in the background — do not await it
     if (!isEdit && sendEmail && data.teaching && data.teaching.id) {
       fetch('/api/send-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminKey, teachingId: data.teaching.id })
-      }).catch(() => { /* silent */ });
+      }).catch(() => {});
     }
 
     localStorage.removeItem('moph_admin_draft');
@@ -790,31 +790,7 @@ async function publish() {
     if (isEdit) {
       setTimeout(() => { newTeaching(); loadRecent(); }, 900);
     } else {
-      document.getElementById('tTitle').value = '';
-      editor.innerHTML = '';
-      document.getElementById('tTags').value = '';
-      document.getElementById('pinChk').checked = false;
-      document.getElementById('featuredChk').checked = false;
-      document.getElementById('qaChk').checked = false;
-      document.getElementById('anonChk').checked = false;
-      syncPill('qaPill','qaChk'); syncPill('anonPill','anonChk');
-      document.getElementById('pollChk').checked = false;
-      syncPill('pollPill','pollChk');
-      document.getElementById('pollFields').classList.add('hidden');
-      document.getElementById('pollQuestion').value = '';
-      ['pollOpt1','pollOpt2','pollOpt3','pollOpt4'].forEach(id => document.getElementById(id).value = '');
-      document.getElementById('crossQuestionSelect').value = '';
-      coverImageUrl = null; videoFileBase64 = null; videoUrlExternal = null;
-      existingCoverUrl = null; existingVideoUrl = null;
-      document.getElementById('coverPreview').classList.add('hidden'); document.getElementById('coverPreview').src = '';
-      document.getElementById('coverLabel').textContent = 'Tap to upload cover image (max 3MB)';
-      document.getElementById('coverInput').value = '';
-      document.getElementById('clearCoverBtn').classList.add('hidden');
-      document.getElementById('videoPreview').classList.add('hidden'); document.getElementById('videoPreview').src = '';
-      document.getElementById('videoInput').value = ''; document.getElementById('videoUrlInput').value = '';
-      document.getElementById('videoLabel').textContent = 'Tap to upload video (max 3MB) or paste link below';
-      document.getElementById('clearVideoBtn').classList.add('hidden');
-      updateEditorMeta();
+      newTeaching();
       await loadRecent();
     }
   } catch (e) {
@@ -831,9 +807,6 @@ function showStatus(msg, type) {
   el.classList.remove('hidden');
 }
 
-/* ============================================================
-   LOAD LIST + CROSS-QUESTION
-   ============================================================ */
 async function loadRecent() {
   const el = document.getElementById('recentTeachings');
   el.innerHTML = '<div class="text-center py-4"><span class="spinner"></span></div>';
@@ -857,6 +830,7 @@ async function loadRecent() {
       const isQ = !!t.is_question;
       const isAnon = !!t.is_anonymous;
       const isPinned = !!t.pinned;
+      const seriesBadge = t.series_name ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-600/30 text-purple-300">📚 ${escapeHtml(t.series_name)}${t.series_order ? ' #' + t.series_order : ''}</span>` : '';
       return `<div class="bg-void-800/50 rounded-xl p-3 border border-void-600">
         <div class="flex items-start justify-between gap-2">
           <div class="min-w-0 flex-1">
@@ -866,6 +840,7 @@ async function loadRecent() {
               ${isFeatured ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amethyst-600/30 text-amethyst-300">⭐</span>' : ''}
               ${isQ ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600/30 text-blue-300">Q&A</span>' : ''}
               ${isAnon ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-gray-600/30 text-gray-300">anon</span>' : ''}
+              ${seriesBadge}
             </div>
             <p class="text-[10px] text-gray-600 mt-1">${new Date(t.created_at).toLocaleString()}</p>
           </div>
@@ -915,6 +890,8 @@ async function editTeaching(t) {
   document.getElementById('anonChk').checked = !!t.is_anonymous;
   syncPill('qaPill', 'qaChk');
   syncPill('anonPill', 'anonChk');
+  document.getElementById('seriesName').value = t.series_name || '';
+  document.getElementById('seriesOrder').value = t.series_order || '';
 
   applyEditMode(true);
 
@@ -982,9 +959,6 @@ async function editTeaching(t) {
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-/* ============================================================
-   DELETE
-   ============================================================ */
 function askDelete(id) { pendingDeleteId = id; document.getElementById('deleteModal').classList.remove('hidden'); }
 function closeDeleteModal() { pendingDeleteId = null; document.getElementById('deleteModal').classList.add('hidden'); }
 async function confirmDelete() {
@@ -1004,9 +978,6 @@ async function confirmDelete() {
   btn.textContent = 'Delete'; btn.disabled = false;
 }
 
-/* ============================================================
-   ANALYTICS
-   ============================================================ */
 function showAnalytics() {
   document.getElementById('analyticsModal').classList.remove('hidden');
   loadAnalytics();
@@ -1032,6 +1003,7 @@ async function loadAnalytics() {
           <div class="flex items-center gap-1 flex-shrink-0">
             ${t.is_question ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-blue-600/30 text-blue-300">Q&A</span>' : ''}
             ${t.hasPoll ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-green-600/30 text-green-300">poll</span>' : ''}
+            ${t.series_name ? '<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-purple-600/30 text-purple-300">series</span>' : ''}
           </div>
         </div>
         <div class="grid grid-cols-4 gap-2 text-[10px]">
