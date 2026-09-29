@@ -7,7 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Moph Echo">
-<meta name="app-version" content="v2.4">
+<meta name="app-version" content="v2.5">
 <title>Moph Echo Mirror</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icon.svg">
@@ -65,7 +65,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .card { border-radius: 1.25rem; } .card-lg { border-radius: 1.5rem; }
 .btn { transition: all 0.18s cubic-bezier(0.2,0.8,0.3,1); }
 .btn:hover { transform: translateY(-1px); } .btn:active { transform: translateY(0) scale(0.98); }
-.profile-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 500; color: #6a6a8a; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+.profile-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 12px; font-weight: 500; color: #6a6a8a; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
 .profile-tab.active { color: var(--accent-400); border-bottom-color: var(--accent-500); }
 .post-card { background: rgba(16,16,28,0.55); border: 1px solid #2a2a3a; border-radius: 1.25rem; padding: 16px; transition: all 0.2s; }
 .post-card:hover { border-color: rgba(var(--accent-rgb),0.3); }
@@ -100,7 +100,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .reaction-picker button:hover { background: rgba(var(--accent-rgb),0.2); transform: scale(1.15); }
 .reaction-picker button.is-selected { background: rgba(var(--accent-rgb),0.4); }
 .sub-tabs { display: flex; }
-.sub-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 13px; font-weight: 500; color: #6a6a8a; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
+.sub-tab { flex: 1; padding: 12px 0; text-align: center; font-size: 12px; font-weight: 500; color: #6a6a8a; border-bottom: 2px solid transparent; cursor: pointer; transition: all 0.2s; }
 .sub-tab.active { color: var(--accent-400); border-bottom-color: var(--accent-500); }
 .composer { background: rgba(16,16,28,0.55); border: 1px solid #2a2a3a; border-radius: 20px; padding: 12px 14px; transition: all 0.2s; }
 .composer.compact { padding: 10px 12px; border-radius: 16px; }
@@ -122,6 +122,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .accepted-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(34,197,94,0.15); border:1px solid rgba(34,197,94,0.45); color:#4ade80; padding:2px 8px; border-radius:10px; font-size:9px; font-weight:700; letter-spacing:.3px; }
 .accepted-comment-body { border:1px solid rgba(34,197,94,0.35) !important; background:rgba(34,197,94,0.04) !important; }
 .anon-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(120,120,140,0.18); border:1px solid rgba(120,120,140,0.35); color:#9a9ab8; padding:2px 7px; border-radius:10px; font-size:9px; font-weight:600; }
+.pin-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.45); color:#facc15; padding:2px 7px; border-radius:10px; font-size:9px; font-weight:600; }
 .poll-wrap { margin: 12px 0 4px; padding: 14px 16px; border-radius: 16px; background: rgba(16,16,28,0.5); border: 1px solid #2a2a3a; }
 .poll-question { font-size: 13px; font-weight: 600; color: #d0d0e8; margin-bottom: 12px; }
 .poll-option { position: relative; width:100%; text-align:left; padding: 10px 14px; border-radius: 12px; border: 1px solid #2a2a3a; background: #0a0a12; color: #d0d0e8; font-size: 13px; cursor: pointer; transition: all .15s; overflow: hidden; margin-bottom: 8px; display: block; }
@@ -139,12 +140,12 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .quote-preview .qp-x { color: #6a6a8a; background: transparent; border: none; padding: 0 4px; cursor: pointer; font-size: 14px; line-height: 1; }
 .quoted-inline { border-left: 2px solid rgba(var(--accent-rgb),0.35); padding: 4px 10px; margin: 6px 0 4px 0; background: rgba(var(--accent-rgb),0.04); border-radius: 8px; font-size: 11px; color: #8a8aa8; font-style: italic; }
 .quoted-inline .qi-user { color: var(--accent-400); font-weight: 600; font-style: normal; }
+.quoted-teaching { border: 1px solid rgba(var(--accent-rgb),0.35); background: rgba(var(--accent-rgb),0.05); border-radius: 12px; padding: 10px 12px; margin-top: 8px; cursor: pointer; transition: all 0.15s; }
+.quoted-teaching:hover { background: rgba(var(--accent-rgb),0.10); }
 .smart-toggle { display:inline-flex; align-items:center; gap:4px; padding:5px 9px; border-radius:12px; cursor:pointer; font-size:11px; font-weight:600; transition:all .15s; user-select:none; flex-shrink:0; }
 .smart-toggle input { display:none; }
 .smart-toggle.qa { background:rgba(var(--accent-rgb),0.10); border:1px solid rgba(var(--accent-rgb),0.30); color:var(--accent-400); }
 .smart-toggle.qa.active { background:rgba(var(--accent-rgb),0.35); border-color:rgba(var(--accent-rgb),0.65); color:#fff; }
-.smart-toggle.anon { background:rgba(120,120,140,0.10); border:1px solid rgba(120,120,140,0.28); color:#9a9ab8; }
-.smart-toggle.anon.active { background:rgba(120,120,140,0.28); border-color:rgba(120,120,140,0.55); color:#d0d0e8; }
 .activity-grid { display:grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
 .activity-cell { width:100%; aspect-ratio:1; border-radius:4px; background:#1a1a2e; transition: background .2s; }
 .activity-cell.a1 { background:rgba(var(--accent-rgb),0.35); }
@@ -161,6 +162,26 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .unread-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--accent-500); flex-shrink:0; }
 .danger-btn { padding: 11px 16px; border-radius: 14px; font-size: 12px; font-weight: 600; border: 1px solid rgba(239,68,68,0.4); background: rgba(239,68,68,0.08); color: #f87171; cursor: pointer; transition: all .18s; width: 100%; }
 .danger-btn:hover { background: rgba(239,68,68,0.18); border-color: rgba(239,68,68,0.6); }
+
+/* Sort pills */
+.sort-pills { display:flex; gap: 6px; }
+.sort-pill { padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 500; color: #6a6a8a; background: rgba(16,16,28,0.5); border: 1px solid #2a2a3a; cursor: pointer; transition: all 0.15s; }
+.sort-pill:hover { color: var(--accent-400); border-color: rgba(var(--accent-rgb),0.35); }
+.sort-pill.active { background: rgba(var(--accent-rgb),0.2); border-color: rgba(var(--accent-rgb),0.55); color: var(--accent-400); }
+
+/* Folder chips */
+.folder-chips { display:flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.folder-chip { flex-shrink: 0; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 500; color: #6a6a8a; background: rgba(16,16,28,0.5); border: 1px solid #2a2a3a; cursor: pointer; transition: all 0.15s; }
+.folder-chip:hover { color: var(--accent-400); border-color: rgba(var(--accent-rgb),0.35); }
+.folder-chip.active { background: rgba(var(--accent-rgb),0.2); border-color: rgba(var(--accent-rgb),0.55); color: var(--accent-400); }
+
+/* Reading progress */
+.reading-progress { position: sticky; top: 0; height: 2px; background: rgba(var(--accent-rgb),0.15); z-index: 5; }
+.reading-progress-fill { height: 100%; background: var(--accent-500); width: 0; transition: width 0.1s linear; }
+
+/* Profile reply expand */
+.replies-toggle { display:inline-flex; align-items:center; gap: 5px; font-size: 11px; color: var(--accent-400); font-weight: 500; cursor: pointer; margin-top: 8px; padding: 2px 0; }
+.replies-toggle:hover { color: var(--accent-300); }
 </style>
 </head>
 <body class="font-sans text-gray-200" data-theme="amethyst">
@@ -330,12 +351,17 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       </div>
     </div>
 
-    <div class="px-3 sm:px-4 py-4 space-y-4">
+    <div class="px-3 sm:px-4 py-4 space-y-3">
       <div id="featuredBanner" class="hidden"></div>
-      <div class="glass card p-5 border border-void-600 space-y-3.5">
+      <div class="glass card p-4 border border-void-600 space-y-3">
         <div class="relative" id="searchWrap">
           <svg class="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
           <input type="text" id="searchInput" placeholder="Search the teachings..." oninput="filterTeachings()" class="w-full bg-void-900 border border-void-600 rounded-2xl pl-10 pr-3.5 py-2.5 text-sm focus:border-amethyst-500 focus:outline-none transition">
+        </div>
+        <div id="sortWrap" class="sort-pills">
+          <button class="sort-pill active" data-sort="latest" onclick="setSort('latest')">Latest</button>
+          <button class="sort-pill" data-sort="top-week" onclick="setSort('top-week')">Top this week</button>
+          <button class="sort-pill" data-sort="top-all" onclick="setSort('top-all')">Top all time</button>
         </div>
         <div id="tagFilters" class="flex flex-wrap gap-1.5"></div>
       </div>
@@ -373,6 +399,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 
     <div class="flex border-b border-void-600 mb-3">
       <div class="profile-tab active" id="pTabPosts" onclick="switchProfileTab('posts')">Posts</div>
+      <div class="profile-tab" id="pTabReplies" onclick="switchProfileTab('replies')">Replies</div>
       <div class="profile-tab" id="pTabSaved" onclick="switchProfileTab('saved')">Saved</div>
       <div class="profile-tab" id="pTabAbout" onclick="switchProfileTab('about')">About</div>
     </div>
@@ -385,7 +412,15 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       <div id="myPostsList" class="space-y-3"></div>
     </div>
 
+    <div id="profileReplies" class="hidden space-y-3">
+      <div id="myRepliesList" class="space-y-3"></div>
+    </div>
+
     <div id="profileSaved" class="hidden space-y-3">
+      <div id="folderChips" class="folder-chips">
+        <button class="folder-chip active" data-folder="__all__" onclick="filterSavedFolder('__all__')">All</button>
+        <button class="folder-chip" data-folder="__none__" onclick="filterSavedFolder('__none__')">Unfiled</button>
+      </div>
       <div id="mySavedList" class="space-y-3"></div>
     </div>
 
@@ -527,6 +562,56 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
       <button onclick="closeDownloadModal()" class="btn flex-1 py-3 rounded-2xl bg-void-800 text-gray-300 text-sm font-medium">Cancel</button>
       <button onclick="downloadAs('txt')" class="btn flex-1 py-3 rounded-2xl bg-void-800 border border-void-600 text-gray-200 text-sm font-medium">Text</button>
       <button onclick="downloadAs('pdf')" class="btn flex-1 py-3 rounded-2xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-sm font-medium">PDF</button>
+    </div>
+  </div>
+</div>
+
+<div id="editCommentModal" class="hidden fixed inset-0 z-[79] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+  <div class="glass card w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-5 border border-void-600">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold">Edit comment</h3>
+      <button onclick="closeEditCommentModal()" class="p-1 text-gray-500 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <textarea id="editCommentText" rows="4" class="w-full bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition resize-none" placeholder="Edit your comment..."></textarea>
+    <div class="flex gap-2 mt-4">
+      <button onclick="closeEditCommentModal()" class="flex-1 py-2.5 rounded-xl bg-void-800 border border-void-600 text-gray-300 text-sm font-medium">Cancel</button>
+      <button onclick="saveEditedComment()" id="saveEditBtn" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-sm font-medium">Save</button>
+    </div>
+  </div>
+</div>
+
+<div id="quoteTeachingModal" class="hidden fixed inset-0 z-[79] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+  <div class="glass card w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-5 border border-void-600">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold">Quote this teaching</h3>
+      <button onclick="closeQuoteTeachingModal()" class="p-1 text-gray-500 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <textarea id="quoteTeachingCaption" rows="3" class="w-full bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition resize-none" placeholder="Add your thoughts (optional)"></textarea>
+    <div id="quoteTeachingPreview" class="mt-3"></div>
+    <div class="flex gap-2 mt-4">
+      <button onclick="closeQuoteTeachingModal()" class="flex-1 py-2.5 rounded-xl bg-void-800 border border-void-600 text-gray-300 text-sm font-medium">Cancel</button>
+      <button onclick="submitQuoteTeaching()" id="quoteTeachingBtn" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-sm font-medium">Post to profile</button>
+    </div>
+  </div>
+</div>
+
+<div id="folderPickerModal" class="hidden fixed inset-0 z-[79] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+  <div class="glass card w-full max-w-sm rounded-t-2xl sm:rounded-2xl p-5 border border-void-600">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold">Save to folder</h3>
+      <button onclick="closeFolderPicker()" class="p-1 text-gray-500 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div id="folderList" class="space-y-2 max-h-64 overflow-y-auto"></div>
+    <input type="text" id="newFolderName" placeholder="New folder name" class="w-full mt-3 bg-void-900 border border-void-600 rounded-xl px-4 py-2.5 text-sm focus:border-amethyst-500 focus:outline-none transition">
+    <div class="flex gap-2 mt-3">
+      <button onclick="closeFolderPicker()" class="flex-1 py-2.5 rounded-xl bg-void-800 border border-void-600 text-gray-300 text-sm font-medium">Cancel</button>
+      <button onclick="createNewFolder()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-sm font-medium">Create</button>
     </div>
   </div>
 </div>
