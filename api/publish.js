@@ -32,7 +32,8 @@ async function createTeaching(body, supabaseUrl, serviceKey, res) {
   const {
     title, content, cover_image, video_file, video_url,
     tags, pinned, featured, poll,
-    is_question, is_anonymous, cross_question_id
+    is_question, is_anonymous, cross_question_id,
+    series_name, series_order
   } = body;
 
   const hasMedia = !!(cover_image || video_file || video_url);
@@ -65,7 +66,9 @@ async function createTeaching(body, supabaseUrl, serviceKey, res) {
     featured_date: featured ? new Date().toISOString().split('T')[0] : null,
     is_question: !!is_question,
     is_anonymous: !!is_anonymous,
-    cross_question_id: cross_question_id || null
+    cross_question_id: cross_question_id || null,
+    series_name: (series_name && series_name.trim()) ? series_name.trim() : null,
+    series_order: (series_order !== undefined && series_order !== null && series_order !== '') ? Number(series_order) : null
   };
 
   const insertRes = await fetch(`${supabaseUrl}/rest/v1/teachings`, {
@@ -96,7 +99,8 @@ async function createTeaching(body, supabaseUrl, serviceKey, res) {
 async function updateTeaching(body, supabaseUrl, serviceKey, res) {
   const {
     id, title, content, cover_image, video_file, video_url, tags, pinned, featured, poll,
-    is_question, is_anonymous, cross_question_id
+    is_question, is_anonymous, cross_question_id,
+    series_name, series_order
   } = body;
 
   if (!id) return res.status(400).json({ error: 'Missing id' });
@@ -114,7 +118,9 @@ async function updateTeaching(body, supabaseUrl, serviceKey, res) {
     pinned: pinned || false,
     is_question: !!is_question,
     is_anonymous: !!is_anonymous,
-    cross_question_id: cross_question_id || null
+    cross_question_id: cross_question_id || null,
+    series_name: (series_name && series_name.trim()) ? series_name.trim() : null,
+    series_order: (series_order !== undefined && series_order !== null && series_order !== '') ? Number(series_order) : null
   };
 
   if (featured) {
@@ -189,7 +195,7 @@ async function deleteTeaching(body, supabaseUrl, serviceKey, res) {
 async function getAnalytics(body, supabaseUrl, serviceKey, res) {
   try {
     const [tRes, readRes, cRes, rRes, pRes, vRes] = await Promise.all([
-      fetch(`${supabaseUrl}/rest/v1/teachings?select=id,title,created_at,is_question,pinned&order=created_at.desc&limit=200`,
+      fetch(`${supabaseUrl}/rest/v1/teachings?select=id,title,created_at,is_question,pinned,series_name,series_order&order=created_at.desc&limit=200`,
         { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }),
       fetch(`${supabaseUrl}/rest/v1/teachings_read?select=teaching_id`,
         { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }),
@@ -221,6 +227,8 @@ async function getAnalytics(body, supabaseUrl, serviceKey, res) {
       created_at: t.created_at,
       is_question: !!t.is_question,
       pinned: !!t.pinned,
+      series_name: t.series_name || null,
+      series_order: t.series_order || null,
       reads: readsBy[t.id] || 0,
       comments: commentsBy[t.id] || 0,
       reactions: reactionsBy[t.id] || 0,
