@@ -1,16 +1,6 @@
 /* ============================================================
    app.js — Moph Echo Mirror
-   v2.5 — Delivery 1:
-     - Pin a post to profile
-     - Replies under profile posts
-     - Posts / Replies / Saved / About tabs
-     - Edit / delete from profile (modal, no prompt)
-     - Quote a teaching to profile
-     - Feed sort (Latest / Top week / Top all)
-     - Reading progress bar in viewer
-     - Bookmark folders
-     - Mute users
-     - Nested reply notifications
+   v2.5 — Delivery 1
    ============================================================ */
 
 import {
@@ -172,7 +162,6 @@ const state = {
   myPostsSearch: '',
   activeSort: 'latest',
   activeSavedFolder: '__all__',
-
   expandedCommentTeachingIds: new Set(),
   expandedReplies: new Set(),
   expandedProfileReplies: new Set(),
@@ -184,8 +173,6 @@ const state = {
   viewerOpenedAt: 0,
   expandedCards: new Set(),
   teachingsLoading: false,
-
-  // Modals
   editingCommentId: null,
   editingCommentTeachingId: null,
   quotingTeachingId: null,
@@ -871,7 +858,6 @@ async function toggleBookmark(teachingId, btn) {
     if (btn) btn.classList.remove('active');
     renderSavedFolderChips();
   } else {
-    // Save without folder first, user can move later from Saved tab
     await sb.from('bookmarks').insert({ user_id: state.user.id, teaching_id: teachingId });
     state.myBookmarkedIds.add(teachingId);
     state.myBookmarkFolders[teachingId] = null;
@@ -916,7 +902,6 @@ function renderSavedFolderChips() {
 async function loadMySaved() {
   const el = document.getElementById('mySavedList');
   el.innerHTML = '<p class="text-xs text-gray-600 text-center py-6">Loading...</p>';
-  // Refresh bookmarks from DB to get latest folder state
   await loadBookmarks();
   renderSavedFolderChips();
   renderMySavedList();
@@ -958,6 +943,24 @@ function moveToFolder(teachingId) {
   const name = window.prompt('Move to folder (leave empty to unfile):', current);
   if (name === null) return;
   setBookmarkFolder(teachingId, name.trim() || null);
+}
+
+function closeFolderPicker() {
+  const modal = document.getElementById('folderPickerModal');
+  if (modal) modal.classList.add('hidden');
+  document.body.style.overflow = '';
+  state.pendingBookmarkTeachingId = null;
+}
+
+function createNewFolder() {
+  const name = document.getElementById('newFolderName').value.trim();
+  if (!name) { alert('Enter a folder name.'); return; }
+  if (state.pendingBookmarkTeachingId) {
+    setBookmarkFolder(state.pendingBookmarkTeachingId, name);
+  }
+  closeFolderPicker();
+  renderSavedFolderChips();
+  renderMySavedList();
 }
 
 /* ============================================================
@@ -1390,7 +1393,7 @@ function toggleSmartFlag(el) {
 }
 
 /* ============================================================
-   QUOTE COMMENT (existing) + QUOTE TEACHING (new)
+   QUOTE
    ============================================================ */
 
 function setQuote(teachingId, comment) {
@@ -1576,7 +1579,6 @@ function ensureTeachingViewer() {
     </div>
   `;
   document.body.appendChild(modal);
-  // Attach scroll listener for reading progress
   modal.addEventListener('scroll', () => {
     const fill = document.getElementById('viewerProgressFill');
     if (!fill) return;
@@ -1654,7 +1656,6 @@ function openTeachingViewer(id, opts = {}) {
   modal.classList.remove('hidden');
   document.body.style.overflow = 'hidden';
 
-  // Reset progress bar
   const fill = document.getElementById('viewerProgressFill');
   if (fill) fill.style.width = '0%';
 
@@ -2026,11 +2027,9 @@ function openCommentMenu(commentId, teachingId) {
 async function pinComment(commentId, shouldPin) {
   try {
     if (shouldPin) {
-      // Unpin any existing pinned comment for this user
       await sb.from('teaching_comments').update({ pinned: false }).eq('user_id', state.user.id).eq('pinned', true);
     }
     await sb.from('teaching_comments').update({ pinned: shouldPin }).eq('id', commentId);
-    // Update local state
     for (const t of state.teachings) {
       t.comments.forEach(c => {
         if (c.user_id === state.user.id) {
@@ -2040,7 +2039,6 @@ async function pinComment(commentId, shouldPin) {
         }
       });
     }
-    // Refresh profile posts and replies
     await loadMyPosts();
     await loadMyReplies();
     renderMyPosts();
@@ -2049,7 +2047,7 @@ async function pinComment(commentId, shouldPin) {
 }
 
 /* ============================================================
-   EDIT COMMENT MODAL (replaces prompt)
+   EDIT COMMENT MODAL
    ============================================================ */
 
 function openEditCommentModal(commentId, teachingId) {
@@ -2082,7 +2080,6 @@ async function saveEditedComment() {
   btn.textContent = 'Saving...';
   try {
     await sb.from('teaching_comments').update({ content: newText, updated_at: new Date().toISOString() }).eq('id', commentId);
-    // Update local state
     for (const t of state.teachings) {
       const c = t.comments.find(x => x.id === commentId);
       if (c) { c.content = newText; c.updated_at = new Date().toISOString(); break; }
@@ -2186,7 +2183,7 @@ function extractMentions(text) {
 }
 
 /* ============================================================
-   SUBMIT COMMENT (with nested reply notifications)
+   SUBMIT COMMENT
    ============================================================ */
 
 function findRootComment(comments, comment) {
@@ -2266,11 +2263,9 @@ async function submitComment(teachingId, parentId, uid) {
     }
     if (parentId) state.expandedReplies.add(parentId);
 
-    // Notifications
     if (parentId && t) {
       const parent = t.comments.find(c => c.id === parentId);
       if (parent && parent.user_id !== state.user.id) {
-        // Direct reply to the parent
         await sb.from('notifications').insert({
           user_id: parent.user_id, type: 'reply',
           actor_id: state.user.id, actor_username: state.profile.username,
@@ -2278,11 +2273,9 @@ async function submitComment(teachingId, parentId, uid) {
           message: '@' + state.profile.username + ' replied to your comment'
         });
       }
-      // Nested reply: find the root of this thread and notify its author once
       if (parent && parent.parent_id) {
         const root = findRootComment(t.comments, parent);
         if (root && root.user_id !== state.user.id && root.id !== (parent ? parent.id : null)) {
-          // Check if we've already notified this root in the last 24h about this thread
           const since = new Date(Date.now() - 86400000).toISOString();
           const { data: existing } = await sb.from('notifications')
             .select('id')
@@ -2711,7 +2704,6 @@ function renderMyPosts() {
   const el = document.getElementById('myPostsList');
   const q = (state.myPostsSearch || '').toLowerCase();
   let filtered = q ? state.myPosts.filter(c => (c.content || '').toLowerCase().includes(q)) : state.myPosts;
-  // Pin first
   filtered = [...filtered].sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
 
   if (!filtered || filtered.length === 0) {
@@ -2728,7 +2720,6 @@ function renderProfilePostCard(c) {
   const anonBadge = c.is_anonymous ? '<span class="anon-badge">anon</span>' : '';
   const pinBadge = c.pinned ? '<span class="pin-badge">📌 Pinned</span>' : '';
   const quotedTeaching = c.quoted_teaching_id ? state.teachings.find(x => x.id === c.quoted_teaching_id) : null;
-  // Count direct replies
   const replies = t ? t.comments.filter(x => x.parent_id === c.id && !state.myMutes.has(x.user_id)) : [];
   const repliesExpanded = state.expandedProfileReplies.has(c.id);
 
