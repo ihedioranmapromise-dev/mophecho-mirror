@@ -1,5 +1,6 @@
 // /api/publish.js
-// Admin: create / update / delete teachings + polls + email + analytics
+// Admin: create / update / delete teachings + polls + analytics
+// NOTE: Email is handled by /api/send-email — publish returns instantly.
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -27,10 +28,9 @@ export default async function handler(req, res) {
   return res.status(400).json({ error: 'Invalid action' });
 }
 
-// ============ CREATE ============
 async function createTeaching(body, supabaseUrl, serviceKey, res) {
   const {
-    title, content, cover_image, video_file, video_url, sendEmail,
+    title, content, cover_image, video_file, video_url,
     tags, pinned, featured, poll,
     is_question, is_anonymous, cross_question_id
   } = body;
@@ -86,24 +86,13 @@ async function createTeaching(body, supabaseUrl, serviceKey, res) {
   const inserted = await insertRes.json();
   const teaching = inserted[0];
 
-  // Create poll if provided
   if (poll && poll.question && poll.options && poll.options.filter(o => o.trim()).length >= 2) {
     await createPoll(teaching.id, poll, supabaseUrl, serviceKey);
   }
 
-  // Email with hard timeout — never blocks the response longer than 4 seconds
-  let emailResult = { sent: false };
-  if (sendEmail) {
-    emailResult = await Promise.race([
-      sendEmailBlast(title, content, finalCoverUrl),
-      new Promise(r => setTimeout(() => r({ sent: false, timeout: true }), 4000))
-    ]).catch(e => ({ sent: false, error: e.message }));
-  }
-
-  return res.status(200).json({ success: true, teaching, emailResult });
+  return res.status(200).json({ success: true, teaching });
 }
 
-// ============ UPDATE ============
 async function updateTeaching(body, supabaseUrl, serviceKey, res) {
   const {
     id, title, content, cover_image, video_file, video_url, tags, pinned, featured, poll,
@@ -181,7 +170,6 @@ async function updateTeaching(body, supabaseUrl, serviceKey, res) {
   return res.status(200).json({ success: true, teaching: updated[0] });
 }
 
-// ============ DELETE ============
 async function deleteTeaching(body, supabaseUrl, serviceKey, res) {
   const { id } = body;
   if (!id) return res.status(400).json({ error: 'Missing id' });
@@ -198,7 +186,6 @@ async function deleteTeaching(body, supabaseUrl, serviceKey, res) {
   return res.status(200).json({ success: true });
 }
 
-// ============ ANALYTICS ============
 async function getAnalytics(body, supabaseUrl, serviceKey, res) {
   try {
     const [tRes, readRes, cRes, rRes, pRes, vRes] = await Promise.all([
@@ -247,7 +234,6 @@ async function getAnalytics(body, supabaseUrl, serviceKey, res) {
   }
 }
 
-// ============ HELPERS ============
 async function createPoll(teachingId, poll, supabaseUrl, serviceKey) {
   const opts = poll.options.map(o => o.trim()).filter(Boolean).slice(0, 4);
   const r = await fetch(`${supabaseUrl}/rest/v1/teaching_polls`, {
@@ -294,36 +280,4 @@ async function uploadBase64ToStorage(dataUrl, folder, supabaseUrl, serviceKey) {
   });
   if (!uploadRes.ok) return null;
   return `${supabaseUrl}/storage/v1/object/public/teaching-media/${path}`;
-}
-
-async function sendEmailBlast(title, content, coverImage) {
-  const resendKey = process.env.RESEND_API_KEY;
-  const segmentId = process.env.RESEND_SEGMENT_ID;
-  if (!resendKey) return { sent: false, error: 'RESEND_API_KEY not set' };
-  if (!segmentId) return { sent: false, error: 'RESEND_SEGMENT_ID not set' };
-  try {
-    const html = buildEmailHtml(title, content, coverImage);
-    const subject = title ? `New Teaching: ${title}` : 'New Teaching from Moph Echo';
-    const createRes = await fetch('https://api.resend.com/broadcasts', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ audience_id: segmentId, from: 'Moph Echo <onboarding@resend.dev>', subject, html })
-    });
-    const broadcast = await createRes.json();
-    if (!createRes.ok) return { sent: false, error: broadcast.message || 'Broadcast failed' };
-    const sendRes = await fetch(`https://api.resend.com/broadcasts/${broadcast.id}/send`, {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${resendKey}` }
-    });
-    return { sent: sendRes.ok, method: 'broadcast' };
-  } catch (e) {
-    return { sent: false, error: e.message };
-  }
-}
-
-function buildEmailHtml(title, content, coverImage) {
-  const safeTitle = (title || '').replace(/</g, '&lt;');
-  const plainContent = (content || '').replace(/<[^>]*>/g, '').trim();
-  const safeContent = plainContent.replace(/\n\n/g, '</p><p style="margin:0 0 14px 0;">').replace(/\n/g, '<br>');
-  return `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#06060a;font-family:-apple-system,BlinkMacSystemFont,'Inter',Arial,sans-serif;"><div style="max-width:560px;margin:0 auto;padding:32px 20px;"><div style="text-align:center;margin-bottom:28px;"><div style="display:inline-block;width:56px;height:56px;background:linear-gradient(135deg,#7c3aed,#6d28d9);border-radius:16px;line-height:56px;font-size:26px;">⚡</div><h1 style="color:#a78bfa;font-size:20px;font-weight:600;letter-spacing:2px;margin:14px 0 4px 0;">MOPH ECHO</h1></div><div style="background:#10101c;border-radius:18px;padding:28px 24px;border:1px solid #2a2a3a;">${safeTitle ? `<h2 style="color:#d0d0e8;font-size:20px;font-weight:600;margin:0 0 16px 0;">${safeTitle}</h2>` : ''}${coverImage ? `<img src="${coverImage}" style="width:100%;border-radius:12px;margin-bottom:20px;">` : ''}${safeContent ? `<div style="color:#c0c0d8;font-size:15px;line-height:1.7;"><p style="margin:0 0 14px 0;">${safeContent}</p></div>` : ''}<div style="margin-top:28px;padding-top:20px;border-top:1px solid #2a2a3a;"><a href="https://mophecho-mirror.vercel.app" style="display:inline-block;padding:12px 24px;background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;text-decoration:none;border-radius:10px;font-size:14px;font-weight:600;">Open the Mirror</a></div></div><p style="color:#4a4a5a;font-size:11px;text-align:center;margin-top:24px;">Moph Echo Support Team</p></div></body></html>`;
 }
