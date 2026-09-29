@@ -1,9 +1,9 @@
 /* ============================================================
    Moph Echo Mirror — Service Worker
-   v5 — network-first for code, cache-first for assets.
+   v6 — network-first for code, cache-first for assets.
    ============================================================ */
 
-const CACHE = 'moph-echo-v5';
+const CACHE = 'moph-echo-v6';
 const PRECACHE = [
   '/',
   '/index.html',
@@ -37,7 +37,6 @@ self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);
   const req = e.request;
 
-  // Never touch API, Supabase, or non-GET
   if (url.pathname.startsWith('/api/')) return;
   if (url.hostname.includes('supabase')) return;
   if (req.method !== 'GET') return;
@@ -54,7 +53,6 @@ self.addEventListener('fetch', (e) => {
   );
 
   if (isCode) {
-    // Network first. Fall back to cache only if offline.
     e.respondWith(
       fetch(req)
         .then(res => {
@@ -69,7 +67,6 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Assets (images, fonts, icons, CDN): cache first, then network.
   e.respondWith(
     caches.match(req).then(cached => {
       if (cached) return cached;
