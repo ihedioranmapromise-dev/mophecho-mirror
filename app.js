@@ -1,6 +1,7 @@
 /* ============================================================
    app.js — Moph Echo Mirror
-   v2.3 — sanitizeRich for teachings, human error messages.
+   v2.4 — X-style collapsed cards, loading states, pull-to-refresh
+   spinner fix, describeError for humans.
    ============================================================ */
 
 import {
@@ -22,10 +23,6 @@ function showNetworkBanner(msg) {
 function hideNetworkBanner() { document.getElementById('networkBanner').classList.remove('show'); }
 function isOnline() { return navigator.onLine !== false; }
 
-/**
- * Turn any error into a sentence a human can act on.
- * Never returns "Failed to fetch".
- */
 function describeError(e) {
   if (!navigator.onLine) {
     return 'You are offline. Turn on data or Wi-Fi, then try again.';
@@ -178,7 +175,9 @@ const state = {
   teachingViewerId: null,
   teachingsLoaded: false,
   readTeachingIds: new Set(),
-  viewerOpenedAt: 0
+  viewerOpenedAt: 0,
+  expandedCards: new Set(),
+  teachingsLoading: false
 };
 
 const EMOJIS = ['👍','❤️','😂','😮','😢','🙏'];
@@ -533,11 +532,11 @@ function attachPullToRefresh() {
     }
     if (dy > 20 && !indicator) {
       indicator = document.createElement('div');
-      indicator.style.cssText = 'position:fixed;top:60px;left:50%;transform:translateX(-50%);z-index:35;padding:8px 14px;border-radius:20px;background:rgba(16,16,28,0.9);border:1px solid rgba(var(--accent-rgb),0.4);color:#d0d0e8;font-size:11px;display:flex;align-items:center;gap:8px;pointer-events:none;';
+      indicator.style.cssText = 'position:fixed;top:130px;left:50%;transform:translateX(-50%);z-index:50;padding:10px 16px;border-radius:20px;background:rgba(16,16,28,0.95);border:1px solid rgba(var(--accent-rgb),0.5);color:#fff;font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;pointer-events:none;box-shadow:0 8px 24px rgba(0,0,0,0.5);min-width:150px;justify-content:center;';
       indicator.innerHTML = '<div class="spinner" style="width:12px;height:12px;"></div><span>Release to refresh</span>';
       document.body.appendChild(indicator);
     }
-    if (indicator) indicator.style.opacity = Math.min(1, dy / 80);
+    if (indicator) indicator.style.opacity = Math.max(0.75, Math.min(1, dy / 80));
   }, { passive: true });
 
   app.addEventListener('touchend', async () => {
@@ -548,7 +547,7 @@ function attachPullToRefresh() {
       await doRefresh(currentPanel);
       setTimeout(() => {
         if (indicator) { indicator.remove(); indicator = null; }
-      }, 300);
+      }, 600);
     } else if (indicator) {
       indicator.remove();
       indicator = null;
@@ -693,7 +692,7 @@ function updateStreakUI() {
 
 function showTeachingsSkeleton() {
   const el = document.getElementById('teachingsFeed');
-  el.innerHTML = Array(3).fill(0).map(() => `<div class="glass card border border-void-600 p-5 space-y-3.5"><div class="skeleton h-4 w-3/4"></div><div class="skeleton h-3 w-full"></div><div class="skeleton h-3 w-5/6"></div></div>`).join('');
+  el.innerHTML = Array(3).fill(0).map(() => `<div class="glass card border border-void-600 p-4 space-y-3"><div class="skeleton h-4 w-3/4"></div><div class="skeleton h-3 w-full"></div><div class="skeleton h-3 w-5/6"></div></div>`).join('');
 }
 
 /* ============================================================
@@ -826,6 +825,8 @@ async function toggleBookmark(teachingId, btn) {
 
 async function loadTeachings(force = false) {
   if (state.teachingsLoaded && !force) return;
+  state.teachingsLoading = true;
+  renderTeachings();
   try {
     const { data: teachings, error } = await sb.from('teachings').select('*').order('pinned', { ascending: false }).order('created_at', { ascending: false }).limit(50);
     if (error || !teachings) { state.teachings = []; return; }
@@ -884,6 +885,10 @@ async function loadTeachings(force = false) {
     renderTagFilters();
     renderFeaturedBanner();
   } catch (e) { state.teachings = []; }
+  finally {
+    state.teachingsLoading = false;
+    renderTeachings();
+  }
 }
 
 function renderFeaturedBanner() {
@@ -927,6 +932,11 @@ function switchSubTab(tab) {
 }
 
 function filterTeachings() {
+  const el = document.getElementById('teachingsFeed');
+  if (state.teachingsLoading) {
+    el.innerHTML = '<div class="glass card p-8 border border-void-600 text-center"><div class="spinner mx-auto mb-3"></div><p class="text-xs text-gray-500">Loading teachings…</p></div>';
+    return;
+  }
   if (state.activeSubTab === 'following') { renderFollowingFeed(); return; }
   if (state.activeSubTab === 'qa') { renderQaFeed(); return; }
   if (state.activeSubTab === 'polls') { renderPollsFeed(); return; }
@@ -935,7 +945,6 @@ function filterTeachings() {
   let filtered = state.teachings;
   if (state.activeTag) filtered = filtered.filter(t => (t.tags || []).includes(state.activeTag));
   if (q) filtered = filtered.filter(t => ((t.title || '') + ' ' + (t.content || '')).toLowerCase().includes(q));
-  const el = document.getElementById('teachingsFeed');
   if (filtered.length === 0) {
     el.innerHTML = `<div class="glass card p-6 border border-void-600 text-center"><p class="text-xs text-gray-600">Nothing matches.</p></div>`;
     return;
@@ -973,7 +982,7 @@ function renderFollowPost(c, t) {
     <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true})" class="text-[10px] px-3 py-1.5 rounded-full bg-void-800 border border-void-600 text-gray-400 hover:border-amethyst-500/40 hover:text-amethyst-400 transition mb-2 inline-flex items-center gap-1.5 max-w-full">
       <span class="truncate">Replying on: ${escapeHtml(t.title || 'Untitled')}</span>
     </button>
-    ${c.content ? `<p class="text-sm text-gray-200 prose-content">${escapeHtml(c.content)}</p>` : ''}
+    ${c.content ? `<p class="text-sm text-gray-200 prose-content clamp-4">${escapeHtml(c.content)}</p>` : ''}
     ${c.image_url ? `<img src="${escapeHtml(c.image_url)}" class="rounded-2xl mt-3 max-h-64 object-cover cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(c.image_url)}')">` : ''}
     <div class="mt-3" onclick="event.stopPropagation()">${reactionTriggerHtml(c, 'comment')}</div>
     <div class="flex items-center justify-between mt-3.5 pt-3 border-t border-void-600/50">
@@ -1011,20 +1020,19 @@ function renderQaFeed() {
 
 function renderQaCommentCard(c, t) {
   const info = state.profileCache[c.user_id] || { username: 'architect', avatar_url: null };
-  const isOwner = c.user_id === state.user.id;
   const isAnon = c.is_anonymous === true;
   const isAccepted = c.accepted_answer_id;
   const kids = t.comments.filter(x => x.parent_id === c.id);
   const acceptedReply = isAccepted ? t.comments.find(x => x.id === isAccepted) : null;
 
   return `<article class="glass card-lg border border-void-600 overflow-hidden fade-in">
-    <div class="p-5">
+    <div class="p-4">
       <div class="flex items-center gap-2 mb-2 flex-wrap">
         <span class="q-badge">Q&amp;A</span>
         <button onclick="openPublicProfile('${c.user_id}')" class="text-xs font-medium text-amethyst-300 hover:underline truncate max-w-[140px]">@${escapeHtml(isAnon ? 'anonymous' : info.username)}</button>
         <span class="text-[10px] text-gray-600 flex-shrink-0">${relativeTime(c.created_at)}</span>
       </div>
-      <div class="text-sm text-gray-300 prose-content break-words">${escapeHtml(c.content || '')}</div>
+      <div class="text-sm text-gray-300 prose-content break-words clamp-4">${escapeHtml(c.content || '')}</div>
       <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true})" class="mt-3 text-[10px] px-3 py-1.5 rounded-full bg-void-800 border border-void-600 text-gray-400 hover:border-amethyst-500/40 hover:text-amethyst-400 transition inline-flex items-center gap-1.5 max-w-full">
         <span class="truncate">On: ${escapeHtml(t.title || 'Untitled')}</span>
       </button>
@@ -1149,13 +1157,13 @@ function renderPollHtml(t) {
   const myVote = votes.find(v => v.user_id === state.user.id);
   const total = votes.length || 1;
   const showResults = !!myVote;
-  return `<div class="poll-wrap" data-poll-id="${poll.id}">
+  return `<div class="poll-wrap" data-poll-id="${poll.id}" onclick="event.stopPropagation()">
     ${poll.question ? `<p class="poll-question break-words">${escapeHtml(poll.question)}</p>` : ''}
     ${opts.map((opt, i) => {
       const count = votes.filter(v => v.option_index === i).length;
       const pct = Math.round((count / total) * 100);
       const mine = myVote && myVote.option_index === i;
-      return `<button class="poll-option ${mine ? 'mine' : ''} ${showResults ? 'voted' : ''}" onclick="votePoll(${poll.id}, ${i}, ${t.id})" ${myVote ? 'disabled' : ''}>
+      return `<button class="poll-option ${mine ? 'mine' : ''} ${showResults ? 'voted' : ''}" onclick="event.stopPropagation(); votePoll(${poll.id}, ${i}, ${t.id})" ${myVote ? 'disabled' : ''}>
         ${showResults ? `<div class="poll-fill" style="width:${pct}%"></div>` : ''}
         <div class="poll-content"><span class="truncate">${mine ? '◉' : '○'} ${escapeHtml(opt)}</span>${showResults ? `<span class="poll-pct flex-shrink-0">${pct}%</span>` : ''}</div>
       </button>`;
@@ -1229,62 +1237,85 @@ function clearQuote() {
 }
 
 /* ============================================================
-   TEACHING CARD — uses sanitizeRich
+   CARD EXPAND (X-style)
+   ============================================================ */
+
+function toggleCardExpand(teachingId) {
+  if (state.expandedCards.has(teachingId)) state.expandedCards.delete(teachingId);
+  else state.expandedCards.add(teachingId);
+  renderTeachings();
+}
+
+/* ============================================================
+   TEACHING CARD — X-style collapsed
    ============================================================ */
 
 function renderTeachingPost(t) {
-  const tagHtml = (t.tags || []).slice(0, 4).map(tag => `<span class="text-[10px] px-2.5 py-1 rounded-full bg-void-800 border border-void-600 text-gray-400 max-w-[140px] truncate">#${escapeHtml(tag)}</span>`).join('');
-  const pinnedHtml = t.pinned ? `<span class="text-[10px] px-2.5 py-1 rounded-full bg-gold-400/20 border border-gold-400/40 text-gold-300">📌 Pinned</span>` : '';
-  const featuredHtml = (state.featuredTeaching && state.featuredTeaching.id === t.id) ? `<span class="text-[10px] px-2.5 py-1 rounded-full bg-amethyst-600/30 border border-amethyst-500/40 text-amethyst-300">⭐ Today's Teaching</span>` : '';
+  const tagHtml = (t.tags || []).slice(0, 3).map(tag => `<span class="text-[9px] px-2 py-0.5 rounded-full bg-void-800 border border-void-600 text-gray-400 max-w-[100px] truncate">#${escapeHtml(tag)}</span>`).join('');
+  const pinnedHtml = t.pinned ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-gold-400/20 border border-gold-400/40 text-gold-300">📌</span>` : '';
+  const featuredHtml = (state.featuredTeaching && state.featuredTeaching.id === t.id) ? `<span class="text-[9px] px-2 py-0.5 rounded-full bg-amethyst-600/30 border border-amethyst-500/40 text-amethyst-300">⭐</span>` : '';
   const qBadge = t.is_question ? `<span class="q-badge">Q&amp;A</span>` : '';
   const pollBadge = t.poll ? `<span class="q-badge" style="background:rgba(34,197,94,0.15); border-color:rgba(34,197,94,0.45); color:#4ade80;">POLL</span>` : '';
   const isBookmarked = state.myBookmarkedIds.has(t.id);
   const isRead = state.readTeachingIds.has(t.id);
+  const isExpanded = state.expandedCards.has(t.id);
   const hasContent = t.content && t.content.replace(/<[^>]*>/g, '').trim().length > 0;
 
-  let mediaHtml = '';
-  if (t.video_url) {
-    const isExternal = !t.video_url.includes('teaching-media') && !t.video_url.match(/\.(mp4|webm|mov)$/i);
-    if (isExternal) mediaHtml = `<div class="rounded-2xl overflow-hidden mb-3.5 bg-void-800 p-4 text-center cursor-pointer" onclick="window.open('${escapeHtml(t.video_url)}', '_blank')"><p class="text-xs text-amethyst-400">🎬 Watch video on external site</p></div>`;
-    else mediaHtml = `<div class="video-wrapper mb-3.5 cursor-pointer" onclick="openVideoViewer('${escapeHtml(t.video_url)}')"><video src="${escapeHtml(t.video_url)}" autoplay muted loop playsinline preload="metadata"></video><div class="absolute inset-0 flex items-center justify-center pointer-events-none" style="background:rgba(0,0,0,0.1);"><div class="bg-black/50 rounded-full p-3.5" style="backdrop-filter:blur(6px);"><svg class="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></div></div></div>`;
-  }
-  if (t.cover_image) mediaHtml += `<img src="${escapeHtml(t.cover_image)}" class="w-full rounded-2xl mb-3.5 cursor-pointer" loading="lazy" onclick="openImageViewer('${escapeHtml(t.cover_image)}')">`;
+  const plainText = (t.content || '').replace(/<[^>]*>/g, ' ').trim();
+  const contentIsLong = plainText.length > 220;
 
-  return `<article class="glass card-lg border border-void-600 overflow-hidden fade-in" data-teaching-id="${t.id}">
-    <div class="p-5">
-      <div class="flex items-start justify-between gap-2 mb-2.5">
-        <div class="flex flex-wrap gap-1.5 flex-1 items-center min-w-0">
+  let mediaHtml = '';
+  if (t.video_url && !t.video_url.includes('teaching-media')) {
+    mediaHtml = `<div class="rounded-xl overflow-hidden mt-2.5 bg-void-800 p-3 text-center cursor-pointer" onclick="event.stopPropagation(); window.open('${escapeHtml(t.video_url)}', '_blank')"><p class="text-[11px] text-amethyst-400">🎬 Watch video</p></div>`;
+  } else if (t.video_url) {
+    mediaHtml = `<div class="rounded-xl overflow-hidden mt-2.5 cursor-pointer" onclick="event.stopPropagation(); openVideoViewer('${escapeHtml(t.video_url)}')"><video src="${escapeHtml(t.video_url)}" class="w-full rounded-xl max-h-[180px] object-cover" muted playsinline preload="metadata"></video></div>`;
+  } else if (t.cover_image) {
+    mediaHtml = `<div class="mt-2.5"><img src="${escapeHtml(t.cover_image)}" class="w-full rounded-xl object-cover cursor-pointer ${isExpanded ? 'max-h-[420px]' : 'max-h-[140px]'}" loading="lazy" onclick="event.stopPropagation(); openImageViewer('${escapeHtml(t.cover_image)}')"></div>`;
+  }
+
+  const contentClass = isExpanded ? '' : 'clamp-4';
+  const titleClass = isExpanded ? '' : 'clamp-1';
+
+  const showMoreLink = contentIsLong
+    ? (isExpanded
+        ? `<button onclick="event.stopPropagation(); toggleCardExpand(${t.id})" class="text-[11px] text-amethyst-400 hover:text-amethyst-300 font-medium mt-1.5">Show less</button>`
+        : `<button onclick="event.stopPropagation(); toggleCardExpand(${t.id})" class="text-[11px] text-amethyst-400 hover:text-amethyst-300 font-medium mt-1.5">Show more</button>`)
+    : '';
+
+  return `<article class="glass card-lg border border-void-600 overflow-hidden fade-in cursor-pointer" data-teaching-id="${t.id}" onclick="openTeachingViewer(${t.id})">
+    <div class="p-4">
+      <div class="flex items-start justify-between gap-2 mb-2">
+        <div class="flex flex-wrap gap-1 flex-1 items-center min-w-0">
           ${featuredHtml}${pinnedHtml}${qBadge}${pollBadge}${tagHtml}
         </div>
-        <button data-bookmark-btn="${t.id}" onclick="toggleBookmark(${t.id}, this)" class="bookmark-btn ${isBookmarked ? 'active' : ''} flex-shrink-0">
+        <button data-bookmark-btn="${t.id}" onclick="event.stopPropagation(); toggleBookmark(${t.id}, this)" class="bookmark-btn ${isBookmarked ? 'active' : ''} flex-shrink-0">
           <svg class="w-4 h-4" fill="${isBookmarked ? 'currentColor' : 'none'}" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"/></svg>
         </button>
       </div>
-      ${t.title ? `<h3 class="text-base font-semibold mb-2.5 break-words">${escapeHtml(t.title)}</h3>` : ''}
+      ${t.title ? `<h3 class="text-[15px] font-semibold mb-1.5 break-words ${titleClass}">${escapeHtml(t.title)}</h3>` : ''}
+      ${hasContent ? `<div class="text-sm text-gray-300 prose-content ${contentClass}">${sanitizeRich(t.content)}</div>` : ''}
+      ${showMoreLink}
       ${mediaHtml}
-      ${hasContent ? `<div class="text-sm text-gray-300 prose-content">${sanitizeRich(t.content)}</div>` : ''}
       ${renderPollHtml(t)}
-      <div class="flex items-center gap-3 mt-3.5 text-[10px] text-gray-600">
-        <span>${relativeTime(t.created_at)}</span><span>·</span>
-        ${isRead ? `<span class="read-badge">✓ Read · ${readingTime(t.content)} min</span>` : `<span class="unread-dot" title="Unread"></span>`}
-      </div>
-      <div class="mt-3.5">${reactionTriggerHtml(t, 'teaching')}</div>
-      <div class="flex items-center justify-between mt-3.5 border-b border-void-600 pb-3.5">
-        <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
-          ${t.comments.length} ${t.comments.length === 1 ? 'comment' : 'comments'}
-        </button>
-        <button onclick="shareTeaching(${t.id})" class="text-xs text-gray-400 hover:text-amethyst-400 transition flex items-center gap-1.5">
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/></svg>
-          Share
-        </button>
+      <div class="flex items-center justify-between mt-3 pt-2.5 border-t border-void-600/60">
+        <div class="flex items-center gap-2" onclick="event.stopPropagation()">
+          ${reactionTriggerHtml(t, 'teaching')}
+          <button onclick="openTeachingViewer(${t.id}, {scrollToComments: true})" class="text-[11px] text-gray-500 hover:text-amethyst-400 transition flex items-center gap-1">
+            💬 ${t.comments.length}
+          </button>
+          <button onclick="shareTeaching(${t.id})" class="text-[11px] text-gray-500 hover:text-amethyst-400 transition">↗</button>
+        </div>
+        <div class="flex items-center gap-2 text-[10px] text-gray-600">
+          <span>${relativeTime(t.created_at)}</span>
+          ${isRead ? `<span class="read-badge">✓</span>` : `<span class="unread-dot" title="Unread"></span>`}
+        </div>
       </div>
     </div>
   </article>`;
 }
 
 /* ============================================================
-   FOCUSED TEACHING VIEWER — uses sanitizeRich
+   FOCUSED TEACHING VIEWER
    ============================================================ */
 
 function ensureTeachingViewer() {
@@ -2567,7 +2598,8 @@ Object.assign(window, {
   insertMention, submitComment, previewCommentImage, removeCommentImage, autoGrow, autoGrowChat,
   handleMention, showReplyBox, cancelReply, sendPoke, acceptAnswer,
   setQuote, clearQuote, toggleSmartFlag, updateSmartToggles,
-  openTeachingViewer, closeTeachingViewer, toggleReplies, toggleViewerComments, shareTeaching
+  openTeachingViewer, closeTeachingViewer, toggleReplies, toggleViewerComments, shareTeaching,
+  toggleCardExpand
 });
 
 /* ============================================================
