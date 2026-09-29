@@ -4,10 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1">
 <meta name="theme-color" content="#7c3aed">
+<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Moph Echo">
-<meta name="app-version" content="v2.5">
+<meta name="app-version" content="v2.6">
 <title>Moph Echo Mirror</title>
 <link rel="manifest" href="/manifest.json">
 <link rel="apple-touch-icon" href="/icon.svg">
@@ -123,6 +124,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 .accepted-comment-body { border:1px solid rgba(34,197,94,0.35) !important; background:rgba(34,197,94,0.04) !important; }
 .anon-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(120,120,140,0.18); border:1px solid rgba(120,120,140,0.35); color:#9a9ab8; padding:2px 7px; border-radius:10px; font-size:9px; font-weight:600; }
 .pin-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(234,179,8,0.15); border:1px solid rgba(234,179,8,0.45); color:#facc15; padding:2px 7px; border-radius:10px; font-size:9px; font-weight:600; }
+.series-badge { display:inline-flex; align-items:center; gap:3px; background:rgba(147,51,234,0.15); border:1px solid rgba(147,51,234,0.45); color:#c084fc; padding:2px 8px; border-radius:10px; font-size:9px; font-weight:600; letter-spacing:.3px; }
 .poll-wrap { margin: 12px 0 4px; padding: 14px 16px; border-radius: 16px; background: rgba(16,16,28,0.5); border: 1px solid #2a2a3a; }
 .poll-question { font-size: 13px; font-weight: 600; color: #d0d0e8; margin-bottom: 12px; }
 .poll-option { position: relative; width:100%; text-align:left; padding: 10px 14px; border-radius: 12px; border: 1px solid #2a2a3a; background: #0a0a12; color: #d0d0e8; font-size: 13px; cursor: pointer; transition: all .15s; overflow: hidden; margin-bottom: 8px; display: block; }
@@ -182,6 +184,45 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
 /* Profile reply expand */
 .replies-toggle { display:inline-flex; align-items:center; gap: 5px; font-size: 11px; color: var(--accent-400); font-weight: 500; cursor: pointer; margin-top: 8px; padding: 2px 0; }
 .replies-toggle:hover { color: var(--accent-300); }
+
+/* ============ DELIVERY 2 ============ */
+
+/* Mood row */
+.mood-row { display:flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; }
+.mood-btn { flex-shrink: 0; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 10px; border-radius: 12px; background: rgba(16,16,28,0.5); border: 1px solid #2a2a3a; cursor: pointer; transition: all 0.15s; min-width: 62px; }
+.mood-btn:hover { border-color: rgba(var(--accent-rgb),0.4); }
+.mood-btn.selected { background: rgba(var(--accent-rgb),0.18); border-color: rgba(var(--accent-rgb),0.55); }
+.mood-btn .emoji { font-size: 18px; line-height: 1; }
+.mood-btn .label { font-size: 9px; color: #8a8aa8; font-weight: 500; letter-spacing: 0.2px; }
+.mood-btn.selected .label { color: var(--accent-400); }
+
+/* Daily reflection banner */
+.daily-reflection { border-left: 3px solid var(--accent-500); background: rgba(var(--accent-rgb),0.06); padding: 14px 16px; border-radius: 14px; }
+.daily-reflection .dr-label { font-size: 10px; color: var(--accent-400); font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px; }
+.daily-reflection .dr-text { font-size: 13px; color: #d0d0e8; line-height: 1.65; }
+
+/* Milestone card */
+.milestone-card { background: linear-gradient(135deg, rgba(234,179,8,0.12), rgba(234,179,8,0.04)); border: 1px solid rgba(234,179,8,0.35); border-radius: 14px; padding: 16px; }
+.milestone-card .ml-label { font-size: 10px; color: #facc15; font-weight: 700; letter-spacing: 0.5px; margin-bottom: 6px; }
+
+/* Golden timeline */
+.gold-timeline { position: relative; padding-left: 22px; }
+.gold-timeline::before { content:''; position:absolute; left: 7px; top: 6px; bottom: 6px; width: 1px; background: rgba(var(--accent-rgb),0.25); }
+.gold-node { position: relative; margin-bottom: 14px; }
+.gold-node::before { content:''; position:absolute; left: -22px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: #facc15; border: 2px solid #0a0a12; box-shadow: 0 0 0 1px #facc15; }
+.gold-node .gn-date { font-size: 10px; color: #6a6a8a; }
+.gold-node .gn-trait { display:inline-flex; padding: 1px 7px; border-radius: 10px; font-size: 9px; font-weight: 600; margin-left: 6px; }
+.gold-node .gn-text { font-size: 12px; color: #d0d0e8; margin-top: 4px; line-height: 1.6; }
+
+/* Private note */
+.private-note-box { background: rgba(234,179,8,0.05); border: 1px solid rgba(234,179,8,0.25); border-radius: 12px; padding: 12px 14px; }
+.private-note-box .pn-label { font-size: 10px; color: #facc15; font-weight: 700; letter-spacing: 0.4px; margin-bottom: 6px; }
+
+/* Series nav */
+.series-nav { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 12px; border-radius: 12px; background: rgba(147,51,234,0.06); border: 1px solid rgba(147,51,234,0.28); margin-top: 12px; }
+.series-nav-btn { font-size: 11px; color: #c084fc; font-weight: 600; cursor: pointer; padding: 4px 8px; border-radius: 8px; transition: all 0.15s; }
+.series-nav-btn:hover { background: rgba(147,51,234,0.15); color: #e9d5ff; }
+.series-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 </style>
 </head>
 <body class="font-sans text-gray-200" data-theme="amethyst">
@@ -328,6 +369,9 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
     <div id="groundingAlert" class="hidden mx-3 mb-2 px-3.5 py-2.5 rounded-2xl bg-red-900/20 border border-red-500/30 text-red-300 text-xs text-center">
       <strong>Vessel Check:</strong> Honor your temple with water or fruit today.
     </div>
+    <div id="moodWrap" class="px-3 pt-2">
+      <div id="moodRow" class="mood-row"></div>
+    </div>
     <div class="glass border-t border-void-600/70 p-3 safe-bottom">
       <div class="composer">
         <textarea id="userInput" rows="1" placeholder="Speak..." class="composer-textarea" oninput="autoGrowChat(this)"></textarea>
@@ -432,6 +476,7 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Longest</p><p id="pLongestStreak" class="text-sm font-medium text-orange-400">0 days</p></div>
         </div>
       </div>
+
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-3">Spiritual Stats</h3>
         <div class="grid grid-cols-2 gap-3">
@@ -441,6 +486,13 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           <div class="bg-void-800/80 rounded-2xl p-3.5 border border-void-600"><p class="text-[10px] text-gray-500 uppercase tracking-wider mb-1">Core Gift</p><p id="pGift" class="text-sm font-medium text-gray-400">—</p></div>
         </div>
       </div>
+
+      <div class="glass card p-5 border border-void-600">
+        <h3 class="text-sm font-semibold mb-3">Mood — last 7 days</h3>
+        <div id="moodStrip" class="flex items-end gap-1.5 h-20"></div>
+        <p id="moodEmpty" class="text-xs text-gray-600 mt-2">Log a mood in the Mirror tab to see your rhythm.</p>
+      </div>
+
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-3">Last 30 Days</h3>
         <div id="activityGrid" class="activity-grid"></div>
@@ -460,13 +512,20 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
           <div class="flex justify-between text-[10px] text-gray-500"><span>Poll votes</span><span id="statVotes" class="text-gray-400 font-medium">0</span></div>
         </div>
       </div>
+
       <div class="glass card p-5 border border-void-600">
         <h3 class="text-sm font-semibold mb-3">Notifications</h3>
         <button id="pushEnableBtn" class="push-btn" onclick="enablePush()">Enable push notifications</button>
         <p class="text-[10px] text-gray-600 mt-2 text-center">A signal when someone replies, mentions, or waves.</p>
       </div>
+
+      <!-- Golden Moments timeline -->
       <div class="glass card p-5 border border-void-600">
-        <div class="flex items-center gap-2 mb-3.5"><svg class="w-4 h-4 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg><h3 class="text-sm font-semibold">Golden Moments</h3></div>
+        <div class="flex items-center gap-2 mb-4">
+          <svg class="w-4 h-4 text-gold-400" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+          <h3 class="text-sm font-semibold">Golden Moments</h3>
+        </div>
+        <div id="goldenTimeline" class="gold-timeline hidden"></div>
         <div id="goldenList" class="space-y-2.5"><p class="text-xs text-gray-600">Your first golden moment is still unwritten.</p></div>
       </div>
     </div>
@@ -612,6 +671,25 @@ input:-webkit-autofill, input:-webkit-autofill:focus { -webkit-box-shadow: 0 0 0
     <div class="flex gap-2 mt-3">
       <button onclick="closeFolderPicker()" class="flex-1 py-2.5 rounded-xl bg-void-800 border border-void-600 text-gray-300 text-sm font-medium">Cancel</button>
       <button onclick="createNewFolder()" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-sm font-medium">Create</button>
+    </div>
+  </div>
+</div>
+
+<!-- Private note editor -->
+<div id="privateNoteModal" class="hidden fixed inset-0 z-[79] bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-4">
+  <div class="glass card w-full max-w-lg rounded-t-2xl sm:rounded-2xl p-5 border border-void-600">
+    <div class="flex items-center justify-between mb-3">
+      <h3 class="text-sm font-semibold">📝 My private note</h3>
+      <button onclick="closePrivateNoteModal()" class="p-1 text-gray-500 hover:text-white">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <p class="text-[10px] text-gray-500 mb-3">Only you see this. It stays attached to this teaching.</p>
+    <textarea id="privateNoteText" rows="6" class="w-full bg-void-900 border border-void-600 rounded-2xl px-4 py-3 text-sm focus:border-amethyst-500 focus:outline-none transition resize-none" placeholder="Write a note to yourself about this teaching..."></textarea>
+    <div class="flex gap-2 mt-4">
+      <button onclick="deletePrivateNote()" id="deleteNoteBtn" class="hidden flex-1 py-2.5 rounded-xl bg-void-800 border border-red-500/30 text-red-400 text-sm font-medium">Delete note</button>
+      <button onclick="closePrivateNoteModal()" class="flex-1 py-2.5 rounded-xl bg-void-800 border border-void-600 text-gray-300 text-sm font-medium">Cancel</button>
+      <button onclick="savePrivateNote()" id="saveNoteBtn" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-amethyst-600 to-amethyst-700 text-white text-sm font-medium">Save</button>
     </div>
   </div>
 </div>
